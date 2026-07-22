@@ -9,21 +9,12 @@
   --bg-page:#14161c; --bg-panel:#1b1e26; --bg-card:#20232c;
   --border:#2c303a; --orange:#e35f2e; --orange-dim:#b8481f;
   --text-primary:#f2f1ee; --text-secondary:#9aa0ab; --text-muted:#6b7280;
-  --olive:#585844; --olive-dark:#454633; --tan:#c9bfa0; --tan-dark:#8a7f60;
 }
 *{box-sizing:border-box;}
 body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family:'Inter',sans-serif;}
 
-.topbar{display:flex; align-items:center; justify-content:space-between; padding:14px 32px; background:var(--bg-panel); border-bottom:1px solid var(--border);}
-.brand{display:flex; align-items:center; gap:10px;}
-.brand svg{width:32px; height:32px;}
-.brand-text{font-family:'Poppins'; font-weight:700; font-size:21px; color:var(--orange);}
-.top-actions{display:flex; align-items:center; gap:20px; color:var(--text-secondary); font-size:13.5px;}
-.user-chip{display:flex; align-items:center; gap:8px; font-weight:500; color:var(--text-primary);}
-.user-chip .av{width:24px; height:24px; border-radius:5px; background:var(--orange-dim);}
-
-.subnav{display:flex; gap:30px; padding:0 32px; background:var(--bg-page); border-bottom:1px solid var(--border);}
-.subnav a{color:var(--text-secondary); text-decoration:none; font-size:14px; font-weight:500; padding:13px 2px; border-bottom:2px solid transparent;}
+.subnav{display:flex; gap:30px; padding:16px 32px; background:var(--bg-panel); border-bottom:1px solid var(--border);}
+.subnav a{color:var(--text-secondary); text-decoration:none; font-size:14px; font-weight:500; padding-bottom:4px; border-bottom:2px solid transparent;}
 .subnav a.active{color:var(--orange); border-color:var(--orange);}
 
 main{max-width:1100px; margin:0 auto; padding:32px; display:grid; grid-template-columns:1fr 380px; gap:24px;}
@@ -33,12 +24,12 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 .panel{background:var(--bg-panel); border:1px solid var(--border); border-radius:14px; padding:24px;}
 .preview-panel{display:flex; flex-direction:column; align-items:center;}
-.jacket-stage{position:relative; width:520px; height:346px; transform-origin:top left;}
-.part{position:absolute;}
-.name-tape span{display:flex; align-items:center; justify-content:center; height:100%; font-family:'JetBrains Mono'; font-weight:600; font-size:9px; letter-spacing:.03em; color:#2b2717;}
-.ribbon{border-radius:1.5px; border:1px solid rgba(0,0,0,.35);}
-.shoulder-board{display:flex; align-items:center; justify-content:center; border-radius:3px; border:1px solid rgba(0,0,0,.3);}
-.shoulder-board span{font-family:'Poppins'; font-weight:700; font-size:8px; color:#c9a84c; letter-spacing:.04em;}
+
+.jacket-mini{position:relative; width:100%; aspect-ratio:1400/950; background:url('jacket-base.jpg') center/cover no-repeat; border-radius:8px; overflow:hidden;}
+.ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35);}
+.ribbon-cover{position:absolute; background:#4f4c38; border-radius:2px;}
+.name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px;}
+.name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; font-size:clamp(8px,1.6vw,13px); white-space:nowrap;}
 
 .field{margin-bottom:18px;}
 .field label{display:block; font-size:12px; color:var(--text-secondary); margin-bottom:6px; letter-spacing:.03em; text-transform:uppercase;}
@@ -61,21 +52,9 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 </head>
 <body>
 
-<div class="topbar">
-  <div class="brand">
-    <svg viewBox="0 0 48 48"><path d="M24 3l18 6v13c0 12-8 19-18 23C14 41 6 34 6 22V9z" fill="none" stroke="#e35f2e" stroke-width="2.5"/><text x="24" y="27" font-family="Poppins" font-weight="700" font-size="13" fill="#e35f2e" text-anchor="middle">US</text></svg>
-    <span class="brand-text">UNKSO</span>
-  </div>
-  <div class="top-actions">
-    <span>+ Create</span><span>&#128276;</span><span>&#9993;</span>
-    <span class="user-chip"><span class="av"></span>2LT.Civoen=US=</span>
-  </div>
-</div>
-
 <div class="subnav">
-  <a href="index.html">Jacket</a>
-  <a href="#">PERSCOM</a>
-  <a href="#" class="active">Admin</a>
+  <a href="index.html">Jackets</a>
+  <a href="admin.html" class="active">Admin</a>
 </div>
 
 <main>
@@ -109,7 +88,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   </div>
 
   <div class="panel preview-panel">
-    <div class="jacket-stage" id="stage"></div>
+    <div class="jacket-mini" id="stage"></div>
   </div>
 </main>
 
@@ -138,10 +117,15 @@ const RIBBON_LABELS = {
 };
 
 const DEFAULT_MEMBERS = [
-  { id:"dentalmav", name:"LTC.DentalMav", rank:"LTC", unit:"Battalion Command", ribbons:["national_defense","valor_purple","combat_readiness","meritorious","marksmanship","achievement","overseas_service","campaign_service","unit_citation","good_conduct","longevity","bct_completion"] },
-  { id:"vincentvanghost", name:"VincentVanGhost", rank:"SPC", unit:"2nd Platoon, Charlie Co.", ribbons:["combat_readiness","national_defense","marksmanship"] },
-  { id:"semperfi1371", name:"SemperFi1371", rank:"SPC", unit:"1st Platoon, Charlie Co.", ribbons:["combat_readiness","meritorious"] },
-  { id:"civoen", name:"2LT.Civoen", rank:"2LT", unit:"1st Platoon, Charlie Co.", ribbons:["national_defense","marksmanship","good_conduct","achievement","bct_completion"] }
+  { id:"dentalmav", name:"LTC.DentalMav", rank:"LTC", unit:"Battalion Commander", section:"Battalion Staff", ribbons:["national_defense","valor_purple","combat_readiness","meritorious","marksmanship","achievement","overseas_service","campaign_service","unit_citation","good_conduct","longevity","bct_completion"] },
+  { id:"ironsight", name:"MAJ.IronSight", rank:"MAJ", unit:"Battalion XO", section:"Battalion Staff", ribbons:["national_defense","meritorious","achievement","overseas_service","longevity"] },
+  { id:"falconer", name:"1LT.Falconer", rank:"1LT", unit:"Bravo Company Commander", section:"Bravo Company", ribbons:["national_defense","combat_readiness","marksmanship","achievement"] },
+  { id:"hollowpoint", name:"SGT.Hollowpoint", rank:"SGT", unit:"Bravo Company", section:"Bravo Company", ribbons:["combat_readiness","good_conduct","marksmanship"] },
+  { id:"civoen", name:"2LT.Civoen", rank:"2LT", unit:"Charlie Company", section:"Charlie Company", ribbons:["national_defense","marksmanship","good_conduct","achievement","bct_completion"] },
+  { id:"vincentvanghost", name:"VincentVanGhost", rank:"SPC", unit:"2nd Platoon, Charlie Co.", section:"Charlie Company", ribbons:["combat_readiness","national_defense","marksmanship"] },
+  { id:"semperfi1371", name:"SemperFi1371", rank:"SPC", unit:"1st Platoon, Charlie Co.", section:"Charlie Company", ribbons:["combat_readiness","meritorious"] },
+  { id:"tekk", name:"PFC.Tekk", rank:"PFC", unit:"Delta Company", section:"Delta Company", ribbons:["national_defense","bct_completion"] },
+  { id:"bluebunny", name:"SPC.BlueBunny", rank:"SPC", unit:"Delta Company", section:"Delta Company", ribbons:["combat_readiness","marksmanship","good_conduct"] }
 ];
 
 let MEMBERS = [];
@@ -150,20 +134,14 @@ async function loadMembers(){
   try{
     if(window.storage){
       const result = await window.storage.get('unkso-members', true);
-      if(result && result.value){
-        return JSON.parse(result.value);
-      }
+      if(result && result.value) return JSON.parse(result.value);
     }
-  }catch(err){
-    console.log('No saved roster yet, using defaults', err);
-  }
+  }catch(err){ console.log('No saved roster yet, using defaults', err); }
   try{
     if(window.storage){
       await window.storage.set('unkso-members', JSON.stringify(DEFAULT_MEMBERS), true);
     }
-  }catch(err){
-    console.log('Could not seed storage', err);
-  }
+  }catch(err){ console.log('Could not seed storage', err); }
   return DEFAULT_MEMBERS;
 }
 
@@ -173,51 +151,34 @@ async function saveMembers(){
       const result = await window.storage.set('unkso-members', JSON.stringify(MEMBERS), true);
       return !!result;
     }
-  }catch(err){
-    console.log('Save failed', err);
-    return false;
-  }
+  }catch(err){ console.log('Save failed', err); return false; }
   return false;
 }
 
-function ribbonRows(keys){
-  const rows = [];
-  for (let i=0;i<keys.length;i+=4) rows.push(keys.slice(i,i+4));
-  return rows;
+function chunk(arr,n){ const out=[]; for(let i=0;i<arr.length;i+=n) out.push(arr.slice(i,i+n)); return out; }
+
+function ribbonHTML(ribbons){
+  const rows = chunk(ribbons,4);
+  const cellW=4.6, cellH=2.9, colGap=0.35, rowGap=0.35;
+  const rackLeft=62.5, rackBottom=58.5;
+  const R = rows.length;
+  let html='';
+  rows.forEach((row,ri)=>{
+    const rowsFromBottom = R-1-ri;
+    const top = rackBottom - (rowsFromBottom+1)*(cellH+rowGap);
+    row.forEach((key,ci)=>{
+      const left = rackLeft + ci*(cellW+colGap);
+      html += `<div class="ribbon" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background:${RIBBONS[key]};"></div>`;
+    });
+  });
+  return html;
 }
 
 function renderJacket(stage, member){
-  const scale = 0.72;
-  stage.style.transform = `scale(${scale})`;
-  const rows = ribbonRows(member.ribbons);
-  let rackHTML = "";
-  rows.forEach((row,ri)=>{
-    row.forEach((key,ci)=>{
-      const x = 388 + ci*40;
-      const y = 300 - (rows.length-1-ri)*15;
-      rackHTML += `<div class="part ribbon" style="left:${x}px; top:${y}px; width:38px; height:13px; background:${RIBBONS[key]};"></div>`;
-    });
-  });
-
   stage.innerHTML = `
-    <div class="part" style="left:130px; top:110px; width:460px; height:370px; background:var(--olive); clip-path:polygon(0% 8%, 26% 0%, 74% 0%, 100% 8%, 113% 100%, -13% 100%);"></div>
-    <div class="part shoulder-board" style="left:150px; top:100px; width:70px; height:24px; background:var(--olive-dark); transform:rotate(-8deg);"><span>${member.rank}</span></div>
-    <div class="part shoulder-board" style="left:500px; top:100px; width:70px; height:24px; background:var(--olive-dark); transform:rotate(8deg);"><span>${member.rank}</span></div>
-    <div class="part" style="left:290px; top:45px; width:180px; height:255px; background:var(--tan); clip-path:polygon(0% 0%, 100% 0%, 50% 100%);"></div>
-    <div class="part" style="left:348px; top:60px; width:24px; height:240px; background:var(--olive-dark); clip-path:polygon(0% 0%, 100% 0%, 50% 100%);"></div>
-    <div class="part" style="left:290px; top:48px; width:16px; height:16px; border-radius:50%; background:#c9a84c; border:1px solid #8f7a3a;"></div>
-    <div class="part" style="left:454px; top:48px; width:16px; height:16px; border-radius:50%; background:#c9a84c; border:1px solid #8f7a3a;"></div>
-    <div class="part" style="left:352px; top:170px; width:16px; height:16px; border-radius:50%; background:var(--tan); border:1px solid var(--tan-dark);"></div>
-    <div class="part" style="left:352px; top:270px; width:16px; height:16px; border-radius:50%; background:var(--tan); border:1px solid var(--tan-dark);"></div>
-    <div class="part" style="left:352px; top:370px; width:16px; height:16px; border-radius:50%; background:var(--tan); border:1px solid var(--tan-dark);"></div>
-    <div class="part" style="left:170px; top:310px; width:170px; height:24px; border-radius:4px 4px 0 0; background:var(--olive-dark);"></div>
-    <div class="part" style="left:170px; top:330px; width:170px; height:150px; border-radius:6px; background:var(--olive-dark);"></div>
-    <div class="part" style="left:247px; top:325px; width:14px; height:14px; border-radius:50%; background:var(--tan); border:1px solid var(--tan-dark);"></div>
-    <div class="part" style="left:380px; top:310px; width:170px; height:24px; border-radius:4px 4px 0 0; background:var(--olive-dark);"></div>
-    <div class="part" style="left:380px; top:330px; width:170px; height:150px; border-radius:6px; background:var(--olive-dark);"></div>
-    <div class="part" style="left:457px; top:325px; width:14px; height:14px; border-radius:50%; background:var(--tan); border:1px solid var(--tan-dark);"></div>
-    <div class="part name-tape" style="left:185px; top:344px; width:140px; height:28px; background:var(--tan); border-radius:3px;"><span>${member.name.toUpperCase()}</span></div>
-    ${rackHTML}
+    <div class="ribbon-cover" style="left:62%; top:47.5%; width:21%; height:12%;"></div>
+    <div class="name-tape" style="left:24%; top:58.5%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
+    ${ribbonHTML(member.ribbons)}
   `;
 }
 
@@ -247,7 +208,7 @@ function loadMember(id){
 function currentEdits(){
   const m = MEMBERS.find(x=>x.id===memberSelect.value);
   const ribbons = Array.from(ribbonGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key);
-  return { id:m.id, name:nameInput.value, rank:rankSelect.value, unit:m.unit, ribbons };
+  return { id:m.id, name:nameInput.value, rank:rankSelect.value, unit:m.unit, section:m.section, ribbons };
 }
 
 function refreshPreview(){ renderJacket(stage, currentEdits()); }
