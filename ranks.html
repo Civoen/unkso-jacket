@@ -30,9 +30,16 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 .panel{background:var(--bg-panel); border:1px solid var(--border); border-radius:14px; padding:20px;}
 
-.rank-row{display:flex; align-items:center; gap:10px; padding:9px 4px; border-bottom:1px solid var(--border);}
+.search-row{margin-bottom:16px;}
+.search-row input{
+  width:100%; background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
+  padding:10px 14px; border-radius:8px; font-size:14px; font-family:'Inter';
+}
+
+.rank-row{display:flex; align-items:center; gap:10px; padding:9px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
 .rank-row:last-child{border-bottom:none;}
-.rank-row .handle{color:var(--text-muted); font-size:12px; width:20px; text-align:center;}
+.rank-row.dragging{opacity:.4;}
+.rank-row .handle{color:var(--text-muted); font-size:15px; width:20px; text-align:center; cursor:grab; user-select:none;}
 .rank-row input{
   flex:1; background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
   padding:8px 12px; border-radius:6px; font-size:14px; font-family:'JetBrains Mono'; font-weight:600; letter-spacing:.03em;
@@ -72,6 +79,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <div class="sub">CONTROLS THE RANK DROPDOWN ON THE ADMIN PAGE</div>
 
   <div class="panel">
+    <div class="search-row"><input id="searchInput" type="text" placeholder="Search ranks…"></div>
     <div id="rankList"></div>
     <div class="add-row">
       <input id="newRankInput" type="text" placeholder="Add a rank abbreviation, e.g. WO1" maxlength="6">
@@ -117,15 +125,28 @@ async function saveJSON(key, value){
 }
 
 let RANKS = [];
+let searchTerm = '';
+let dragSrcIdx = null;
 
 function renderRanks(){
   const list = document.getElementById('rankList');
   list.innerHTML = '';
-  RANKS.forEach((rank, idx)=>{
+  const q = searchTerm.trim().toLowerCase();
+  const visibleIdx = RANKS.map((_,i)=>i).filter(i => !q || RANKS[i].toLowerCase().includes(q));
+
+  if(visibleIdx.length === 0){
+    list.innerHTML = '<div class="note" style="margin-top:6px;">No ranks match your search.</div>';
+    return;
+  }
+
+  visibleIdx.forEach(idx=>{
+    const rank = RANKS[idx];
     const row = document.createElement('div');
     row.className = 'rank-row';
+    row.draggable = true;
+    row.dataset.idx = idx;
     row.innerHTML = `
-      <span class="handle">${idx+1}</span>
+      <span class="handle" title="Drag to reorder">&#8942;&#8942;</span>
       <input type="text" value="${rank}" maxlength="6" data-idx="${idx}">
       <button class="icon-btn danger" title="Remove">&times;</button>
     `;
@@ -142,9 +163,31 @@ function renderRanks(){
       await saveJSON('ranks', RANKS);
       renderRanks();
     });
+    row.addEventListener('dragstart', ()=>{
+      dragSrcIdx = idx;
+      row.classList.add('dragging');
+    });
+    row.addEventListener('dragend', ()=> row.classList.remove('dragging'));
+    row.addEventListener('dragover', (e)=> e.preventDefault());
+    row.addEventListener('drop', async (e)=>{
+      e.preventDefault();
+      if(dragSrcIdx === null || dragSrcIdx === idx) return;
+      const targetValue = RANKS[idx];
+      const [moved] = RANKS.splice(dragSrcIdx, 1);
+      const newTargetIdx = RANKS.indexOf(targetValue);
+      RANKS.splice(newTargetIdx, 0, moved);
+      dragSrcIdx = null;
+      await saveJSON('ranks', RANKS);
+      renderRanks();
+    });
     list.appendChild(row);
   });
 }
+
+document.getElementById('searchInput').addEventListener('input', (e)=>{
+  searchTerm = e.target.value;
+  renderRanks();
+});
 
 document.getElementById('addBtn').addEventListener('click', async ()=>{
   const input = document.getElementById('newRankInput');

@@ -33,7 +33,8 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
 .new-btn:hover{background:var(--orange-dim); color:#1c1108;}
 
 .member-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px;}
-.member-card{position:relative; background:var(--bg-panel); border:1px solid var(--border); border-radius:12px; padding:14px;}
+.member-card{position:relative; background:var(--bg-panel); border:1px solid var(--border); border-radius:12px; padding:14px; cursor:pointer; transition:border-color .15s;}
+.member-card:hover{border-color:var(--orange-dim);}
 
 .remove-btn{
   position:absolute; top:8px; right:8px; width:22px; height:22px; border-radius:50%;
@@ -54,6 +55,12 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
 
 .loading{color:var(--text-muted); padding:40px; text-align:center; font-size:13px;}
 .empty-note{color:var(--text-muted); font-size:12.5px; padding:10px 2px;}
+
+.search-row{margin-bottom:26px;}
+.search-row input{
+  width:100%; background:var(--bg-panel); border:1px solid var(--border); color:var(--text-primary);
+  padding:11px 16px; border-radius:10px; font-size:14px; font-family:'Inter';
+}
 </style>
 </head>
 <body>
@@ -65,8 +72,11 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
   <a href="admin.html" class="nav-cta">Admin</a>
 </div>
 
-<main id="main">
-  <div class="loading">Loading roster…</div>
+<main>
+  <div class="search-row"><input id="searchInput" type="text" placeholder="Search by name, rank, position, or unit…"></div>
+  <div id="main">
+    <div class="loading">Loading roster…</div>
+  </div>
 </main>
 
 <script>
@@ -148,7 +158,7 @@ function chunk(arr,n){ const out=[]; for(let i=0;i<arr.length;i+=n) out.push(arr
 function ribbonHTML(ribbonKeys, ribbonMap){
   const rows = chunk(ribbonKeys,4);
   const cellW=4.6, cellH=2.9, colGap=0.35, rowGap=0.35;
-  const rackLeft=62.5, rackBottom=58.5;
+  const rackLeft=57, rackBottom=54;
   const R = rows.length;
   let html='';
   rows.forEach((row,ri)=>{
@@ -207,12 +217,24 @@ async function removeMember(id){
   renderRoster();
 }
 
+let searchTerm = '';
+
+function matchesSearch(m){
+  const q = searchTerm.trim().toLowerCase();
+  if(!q) return true;
+  return m.name.toLowerCase().includes(q)
+    || m.rank.toLowerCase().includes(q)
+    || m.position.toLowerCase().includes(q)
+    || m.unit.toLowerCase().includes(q);
+}
+
 function renderRoster(){
   const main = document.getElementById('main');
   main.innerHTML = '';
   const ribbonMap = ribbonMapOf();
   UNIT_OPTIONS.forEach(unit=>{
-    const members = MEMBERS.filter(m=>m.unit===unit);
+    const allInUnit = MEMBERS.filter(m=>m.unit===unit);
+    const members = allInUnit.filter(matchesSearch);
     const section = document.createElement('section');
     section.className = 'company';
     section.innerHTML = `
@@ -225,7 +247,9 @@ function renderRoster(){
     section.querySelector('.new-btn').addEventListener('click', ()=>addMember(unit));
     const grid = section.querySelector('.member-grid');
     if(members.length === 0){
-      grid.innerHTML = `<div class="empty-note">No members yet in ${unit}.</div>`;
+      grid.innerHTML = allInUnit.length === 0
+        ? `<div class="empty-note">No members yet in ${unit}.</div>`
+        : `<div class="empty-note">No matches in ${unit}.</div>`;
     }
     members.forEach(m=>{
       const card = document.createElement('div');
@@ -234,17 +258,28 @@ function renderRoster(){
         <button class="remove-btn" title="Remove">&times;</button>
         <div class="jacket-mini">${jacketHTML(m, ribbonMap)}</div>
         <div class="mcaption">
-          <div class="mname">${m.name}</div>
-          <div class="mrank">${m.rank} &middot; ${m.position}</div>
+          <div class="mname">${m.rank}.${m.name}</div>
+          <div class="mrank">${m.position} - ${m.unit}</div>
         </div>
       `;
-      card.querySelector('.remove-btn').addEventListener('click', ()=>removeMember(m.id));
+      card.querySelector('.remove-btn').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        removeMember(m.id);
+      });
+      card.addEventListener('click', ()=>{
+        window.location.href = 'admin.html?member=' + encodeURIComponent(m.id);
+      });
       grid.appendChild(card);
     });
     main.appendChild(section);
   });
   document.querySelectorAll('.name-tape').forEach(fitNameTape);
 }
+
+document.getElementById('searchInput').addEventListener('input', (e)=>{
+  searchTerm = e.target.value;
+  renderRoster();
+});
 
 window.addEventListener('resize', () => {
   document.querySelectorAll('.name-tape').forEach(fitNameTape);

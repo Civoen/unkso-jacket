@@ -30,8 +30,16 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 .panel{background:var(--bg-panel); border:1px solid var(--border); border-radius:14px; padding:20px;}
 
-.ribbon-row{display:grid; grid-template-columns:56px 1fr 110px 40px 40px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border);}
+.search-row{margin-bottom:16px;}
+.search-row input{
+  width:100%; background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
+  padding:10px 14px; border-radius:8px; font-size:14px; font-family:'Inter';
+}
+
+.ribbon-row{display:grid; grid-template-columns:22px 56px 1fr 110px 40px 40px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
 .ribbon-row:last-child{border-bottom:none;}
+.ribbon-row.dragging{opacity:.4;}
+.drag-handle{color:var(--text-muted); font-size:15px; text-align:center; cursor:grab; user-select:none;}
 .swatch{width:100%; height:18px; border-radius:2px; border:1px solid rgba(0,0,0,.35);}
 .ribbon-row input[type=text]{
   background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
@@ -50,7 +58,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 }
 .icon-btn:hover{border-color:var(--red); color:var(--red);}
 
-.col-labels{display:grid; grid-template-columns:56px 1fr 110px 40px 40px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
+.col-labels{display:grid; grid-template-columns:22px 56px 1fr 110px 40px 40px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
 
 .add-panel{margin-top:20px; padding-top:18px; border-top:1px solid var(--border);}
 .add-panel h3{font-family:'Poppins'; font-size:14px; font-weight:600; margin:0 0 12px; color:var(--orange);}
@@ -89,7 +97,8 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <div class="sub">CONTROLS THE RIBBON CHECKLIST ON THE ADMIN PAGE</div>
 
   <div class="panel">
-    <div class="col-labels"><span>Preview</span><span>Name</span><span>Pattern</span><span>Color 1</span><span>Color 2</span><span></span></div>
+    <div class="search-row"><input id="searchInput" type="text" placeholder="Search ribbons…"></div>
+    <div class="col-labels"><span></span><span>Preview</span><span>Name</span><span>Pattern</span><span>Color 1</span><span>Color 2</span><span></span></div>
     <div id="ribbonList"></div>
 
     <div class="add-panel">
@@ -177,6 +186,8 @@ function newKey(label){
 
 let RIBBONS = [];
 let MEMBERS = [];
+let searchTerm = '';
+let dragSrcIdx = null;
 
 async function pruneFromMembers(key){
   MEMBERS = MEMBERS.map(m => ({...m, ribbons: m.ribbons.filter(k=>k!==key)}));
@@ -186,10 +197,22 @@ async function pruneFromMembers(key){
 function renderRibbons(){
   const list = document.getElementById('ribbonList');
   list.innerHTML = '';
-  RIBBONS.forEach((r, idx)=>{
+  const q = searchTerm.trim().toLowerCase();
+  const visibleIdx = RIBBONS.map((_,i)=>i).filter(i => !q || RIBBONS[i].label.toLowerCase().includes(q));
+
+  if(visibleIdx.length === 0){
+    list.innerHTML = '<div class="note" style="margin-top:6px;">No ribbons match your search.</div>';
+    return;
+  }
+
+  visibleIdx.forEach(idx=>{
+    const r = RIBBONS[idx];
     const row = document.createElement('div');
     row.className = 'ribbon-row';
+    row.draggable = true;
+    row.dataset.idx = idx;
     row.innerHTML = `
+      <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
       <div class="swatch" style="background:${ribbonCSS(r)}"></div>
       <input type="text" value="${r.label}" data-field="label">
       <select data-field="pattern">
@@ -220,9 +243,31 @@ function renderRibbons(){
       await saveJSON('ribbons', RIBBONS);
       renderRibbons();
     });
+    row.addEventListener('dragstart', ()=>{
+      dragSrcIdx = idx;
+      row.classList.add('dragging');
+    });
+    row.addEventListener('dragend', ()=> row.classList.remove('dragging'));
+    row.addEventListener('dragover', (e)=> e.preventDefault());
+    row.addEventListener('drop', async (e)=>{
+      e.preventDefault();
+      if(dragSrcIdx === null || dragSrcIdx === idx) return;
+      const targetKey = RIBBONS[idx].key;
+      const [moved] = RIBBONS.splice(dragSrcIdx, 1);
+      const newTargetIdx = RIBBONS.findIndex(r=>r.key===targetKey);
+      RIBBONS.splice(newTargetIdx, 0, moved);
+      dragSrcIdx = null;
+      await saveJSON('ribbons', RIBBONS);
+      renderRibbons();
+    });
     list.appendChild(row);
   });
 }
+
+document.getElementById('searchInput').addEventListener('input', (e)=>{
+  searchTerm = e.target.value;
+  renderRibbons();
+});
 
 document.getElementById('addBtn').addEventListener('click', async ()=>{
   const label = document.getElementById('newLabel').value.trim();

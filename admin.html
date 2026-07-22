@@ -201,7 +201,7 @@ function chunk(arr,n){ const out=[]; for(let i=0;i<arr.length;i+=n) out.push(arr
 function ribbonHTML(ribbonKeys, ribbonMap){
   const rows = chunk(ribbonKeys,4);
   const cellW=4.6, cellH=2.9, colGap=0.35, rowGap=0.35;
-  const rackLeft=62.5, rackBottom=58.5;
+  const rackLeft=57, rackBottom=54;
   const R = rows.length;
   let html='';
   rows.forEach((row,ri)=>{
@@ -275,6 +275,16 @@ function populateRibbonGrid(){
   });
 }
 
+function sortMembersBySeniority(){
+  MEMBERS.sort((a,b)=>{
+    const ai = RANKS.indexOf(a.rank); const bi = RANKS.indexOf(b.rank);
+    const aRank = ai === -1 ? RANKS.length : ai;
+    const bRank = bi === -1 ? RANKS.length : bi;
+    if(aRank !== bRank) return aRank - bRank;
+    return a.name.localeCompare(b.name);
+  });
+}
+
 function populateMemberSelect(selectedId){
   memberSelect.innerHTML = MEMBERS.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
   if(selectedId) memberSelect.value = selectedId;
@@ -315,6 +325,8 @@ document.getElementById('saveBtn').addEventListener('click', async ()=>{
   const original = btn.textContent;
   btn.textContent = 'Saving…';
   const ok = await saveJSON('members', MEMBERS);
+  sortMembersBySeniority();
+  populateMemberSelect(edits.id);
   btn.textContent = ok ? 'Saved' : 'Save failed — retry';
   setTimeout(()=>{ btn.textContent = original; }, 1400);
 });
@@ -323,6 +335,7 @@ document.getElementById('newBtn').addEventListener('click', async ()=>{
   const member = { id:newId(), name:"New Member", rank: RANKS[0] || "PVT", unit: UNIT_OPTIONS[0], position:"Member", ribbons:[] };
   MEMBERS.push(member);
   await saveJSON('members', MEMBERS);
+  sortMembersBySeniority();
   populateMemberSelect(member.id);
   loadMember(member.id);
 });
@@ -333,6 +346,7 @@ document.getElementById('removeBtn').addEventListener('click', async ()=>{
   const id = memberSelect.value;
   MEMBERS = MEMBERS.filter(m=>m.id!==id);
   await saveJSON('members', MEMBERS);
+  sortMembersBySeniority();
   populateMemberSelect(MEMBERS[0].id);
   loadMember(MEMBERS[0].id);
 });
@@ -346,11 +360,16 @@ async function init(){
   MEMBERS = await loadJSON('members', DEFAULT_MEMBERS);
   RANKS = await loadJSON('ranks', DEFAULT_RANKS);
   RIBBONS = await loadJSON('ribbons', DEFAULT_RIBBONS);
+  sortMembersBySeniority();
   populateStaticSelects();
   populateRankSelect();
   populateRibbonGrid();
-  populateMemberSelect();
-  loadMember(MEMBERS[0].id);
+
+  const requestedId = new URLSearchParams(window.location.search).get('member');
+  const initialId = (requestedId && MEMBERS.some(m=>m.id===requestedId)) ? requestedId : MEMBERS[0].id;
+
+  populateMemberSelect(initialId);
+  loadMember(initialId);
 }
 
 init();
