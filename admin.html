@@ -34,6 +34,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 .jacket-mini{position:relative; width:100%; aspect-ratio:5747/3902; background:url('jacket-template.svg') center/cover no-repeat; border-radius:8px; overflow:hidden;}
 .ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35);}
+.badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3);}
 .name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px; padding:0 4%; overflow:hidden;}
 .name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; white-space:nowrap; display:inline-block;}
 
@@ -60,6 +61,11 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .ribbon-check input{margin:0;}
 .ribbon-check .swatch{width:26px; height:10px; border-radius:1.5px; border:1px solid rgba(0,0,0,.35); flex-shrink:0;}
 
+.badge-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+.badge-check{display:flex; align-items:center; gap:8px; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:12.5px; cursor:pointer;}
+.badge-check input{margin:0;}
+.badge-check .swatch{width:16px; height:16px; border:1px solid rgba(0,0,0,.35); flex-shrink:0;}
+
 .save-btn{
   margin-top:6px; width:100%; background:var(--orange); color:#1c1108; border:none; border-radius:8px;
   padding:12px; font-family:'Poppins'; font-weight:600; font-size:14px; cursor:pointer;
@@ -73,6 +79,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <a href="index.html">Jackets</a>
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
+  <a href="badges.html">Badges</a>
   <a href="admin.html" class="nav-cta active">Admin</a>
 </div>
 
@@ -112,6 +119,10 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
         <label>Ribbons &amp; decorations</label>
         <div class="ribbon-grid" id="ribbonGrid"></div>
       </div>
+      <div class="field">
+        <label>Badges</label>
+        <div class="badge-grid" id="badgeGrid"></div>
+      </div>
       <button class="save-btn" id="saveBtn">Save changes</button>
     </div>
   </div>
@@ -141,16 +152,23 @@ const DEFAULT_RIBBONS = [
   { key:"unit_citation",     label:"Unit Citation Ribbon",       pattern:"stripes",  color1:"#7a1f1f", color2:"#f2f1ee" }
 ];
 
+const DEFAULT_BADGES = [
+  { key:"expert_marksman", label:"Expert Marksmanship Badge", shape:"circle",  color:"#c9a84c" },
+  { key:"airborne_wings",  label:"Airborne Wings",             shape:"diamond", color:"#8a9bb0" },
+  { key:"combat_infantry", label:"Combat Infantryman Badge",   shape:"square",  color:"#3a4a2c" },
+  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       shape:"circle",  color:"#7a1f1f" }
+];
+
 const DEFAULT_MEMBERS = [
-  { id:"dentalmav", name:"LTC.DentalMav", rank:"LTC", unit:"Battalion", position:"CO", ribbons:["national_defense","valor_purple","combat_readiness","meritorious","marksmanship","achievement","overseas_service","campaign_service","unit_citation","good_conduct","longevity","bct_completion"] },
-  { id:"ironsight", name:"MAJ.IronSight", rank:"MAJ", unit:"Battalion", position:"XO", ribbons:["national_defense","meritorious","achievement","overseas_service","longevity"] },
-  { id:"falconer", name:"1LT.Falconer", rank:"1LT", unit:"Bravo", position:"CO", ribbons:["national_defense","combat_readiness","marksmanship","achievement"] },
-  { id:"hollowpoint", name:"SGT.Hollowpoint", rank:"SGT", unit:"Bravo", position:"SL", ribbons:["combat_readiness","good_conduct","marksmanship"] },
-  { id:"civoen", name:"2LT.Civoen", rank:"2LT", unit:"Charlie", position:"CO", ribbons:["national_defense","marksmanship","good_conduct","achievement","bct_completion"] },
-  { id:"vincentvanghost", name:"VincentVanGhost", rank:"SPC", unit:"Charlie", position:"Member", ribbons:["combat_readiness","national_defense","marksmanship"] },
-  { id:"semperfi1371", name:"SemperFi1371", rank:"SPC", unit:"Charlie", position:"Member", ribbons:["combat_readiness","meritorious"] },
-  { id:"tekk", name:"PFC.Tekk", rank:"PFC", unit:"Delta", position:"Member", ribbons:["national_defense","bct_completion"] },
-  { id:"bluebunny", name:"SPC.BlueBunny", rank:"SPC", unit:"Delta", position:"Member", ribbons:["combat_readiness","marksmanship","good_conduct"] }
+  { id:"dentalmav", name:"LTC.DentalMav", rank:"LTC", unit:"Battalion", position:"CO", ribbons:["national_defense","valor_purple","combat_readiness","meritorious","marksmanship","achievement","overseas_service","campaign_service","unit_citation","good_conduct","longevity","bct_completion"], badges:["combat_infantry","expert_marksman"] },
+  { id:"ironsight", name:"MAJ.IronSight", rank:"MAJ", unit:"Battalion", position:"XO", ribbons:["national_defense","meritorious","achievement","overseas_service","longevity"], badges:["drill_sergeant"] },
+  { id:"falconer", name:"1LT.Falconer", rank:"1LT", unit:"Bravo", position:"CO", ribbons:["national_defense","combat_readiness","marksmanship","achievement"], badges:["airborne_wings"] },
+  { id:"hollowpoint", name:"SGT.Hollowpoint", rank:"SGT", unit:"Bravo", position:"SL", ribbons:["combat_readiness","good_conduct","marksmanship"], badges:[] },
+  { id:"civoen", name:"2LT.Civoen", rank:"2LT", unit:"Charlie", position:"CO", ribbons:["national_defense","marksmanship","good_conduct","achievement","bct_completion"], badges:[] },
+  { id:"vincentvanghost", name:"VincentVanGhost", rank:"SPC", unit:"Charlie", position:"Member", ribbons:["combat_readiness","national_defense","marksmanship"], badges:[] },
+  { id:"semperfi1371", name:"SemperFi1371", rank:"SPC", unit:"Charlie", position:"Member", ribbons:["combat_readiness","meritorious"], badges:[] },
+  { id:"tekk", name:"PFC.Tekk", rank:"PFC", unit:"Delta", position:"Member", ribbons:["national_defense","bct_completion"], badges:[] },
+  { id:"bluebunny", name:"SPC.BlueBunny", rank:"SPC", unit:"Delta", position:"Member", ribbons:["combat_readiness","marksmanship","good_conduct"], badges:[] }
 ];
 
 // Set this to your deployed Worker URL (no trailing slash), e.g. 'https://unkso-api.yoursubdomain.workers.dev'
@@ -201,7 +219,7 @@ function chunk(arr,n){ const out=[]; for(let i=0;i<arr.length;i+=n) out.push(arr
 function ribbonHTML(ribbonKeys, ribbonMap){
   const rows = chunk(ribbonKeys,4);
   const cellW=4.6, cellH=2.9, colGap=0.35, rowGap=0.35;
-  const rackLeft=57, rackBottom=54;
+  const rackLeft=59.5, rackBottom=54;
   const R = rows.length;
   let html='';
   rows.forEach((row,ri)=>{
@@ -212,6 +230,28 @@ function ribbonHTML(ribbonKeys, ribbonMap){
       const def = ribbonMap[key];
       if(!def) return;
       html += `<div class="ribbon" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background:${ribbonCSS(def)};"></div>`;
+    });
+  });
+  return html;
+}
+
+function badgeHTML(badgeKeys, badgeMap){
+  const cellSize=3.4, gap=0.4, rowBottom=63, centerX=68.8;
+  const rows = chunk(badgeKeys,3);
+  const R = rows.length;
+  let html='';
+  rows.forEach((row,ri)=>{
+    const rowsFromBottom = R-1-ri;
+    const top = rowBottom - (rowsFromBottom+1)*(cellSize+gap);
+    const totalW = row.length*cellSize + (row.length-1)*gap;
+    const left0 = centerX - totalW/2;
+    row.forEach((key,ci)=>{
+      const def = badgeMap[key];
+      if(!def) return;
+      const left = left0 + ci*(cellSize+gap);
+      const radius = def.shape === 'circle' ? '50%' : '0';
+      const clip = def.shape === 'diamond' ? 'clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);' : '';
+      html += `<div class="badge" style="left:${left}%; top:${top}%; width:${cellSize}%; height:${cellSize}%; background:${def.color}; border-radius:${radius}; ${clip}"></div>`;
     });
   });
   return html;
@@ -234,15 +274,19 @@ function fitNameTape(tapeEl){
 let MEMBERS = [];
 let RANKS = [];
 let RIBBONS = [];
+let BADGES = [];
 
 function ribbonMapOf(){ const m={}; RIBBONS.forEach(r=>m[r.key]=r); return m; }
+function badgeMapOf(){ const m={}; BADGES.forEach(b=>m[b.key]=b); return m; }
 function newId(){ return 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
 function renderJacket(stage, member){
   const ribbonMap = ribbonMapOf();
+  const badgeMap = badgeMapOf();
   stage.innerHTML = `
     <div class="name-tape" style="left:24%; top:58.5%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
     ${ribbonHTML(member.ribbons, ribbonMap)}
+    ${badgeHTML(member.badges||[], badgeMap)}
   `;
   const tape = stage.querySelector('.name-tape');
   if(tape) fitNameTape(tape);
@@ -254,6 +298,7 @@ const rankSelect = document.getElementById('rankSelect');
 const unitSelect = document.getElementById('unitSelect');
 const positionSelect = document.getElementById('positionSelect');
 const ribbonGrid = document.getElementById('ribbonGrid');
+const badgeGrid = document.getElementById('badgeGrid');
 const stage = document.getElementById('stage');
 
 function populateStaticSelects(){
@@ -272,6 +317,18 @@ function populateRibbonGrid(){
     wrap.className = 'ribbon-check';
     wrap.innerHTML = `<input type="checkbox" data-key="${r.key}"><span class="swatch" style="background:${ribbonCSS(r)}"></span>${r.label}`;
     ribbonGrid.appendChild(wrap);
+  });
+}
+
+function populateBadgeGrid(){
+  badgeGrid.innerHTML = '';
+  BADGES.forEach(b=>{
+    const wrap = document.createElement('label');
+    wrap.className = 'badge-check';
+    const radius = b.shape === 'circle' ? '50%' : (b.shape === 'diamond' ? '0' : '3px');
+    const clip = b.shape === 'diamond' ? 'clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);' : '';
+    wrap.innerHTML = `<input type="checkbox" data-key="${b.key}"><span class="swatch" style="background:${b.color}; border-radius:${radius}; ${clip}"></span>${b.label}`;
+    badgeGrid.appendChild(wrap);
   });
 }
 
@@ -300,13 +357,17 @@ function loadMember(id){
   ribbonGrid.querySelectorAll('input[type=checkbox]').forEach(cb=>{
     cb.checked = m.ribbons.includes(cb.dataset.key);
   });
+  badgeGrid.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.checked = (m.badges||[]).includes(cb.dataset.key);
+  });
   renderJacket(stage, m);
 }
 
 function currentEdits(){
   const m = MEMBERS.find(x=>x.id===memberSelect.value);
   const ribbons = Array.from(ribbonGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key);
-  return { id:m.id, name:nameInput.value, rank:rankSelect.value, unit:unitSelect.value, position:positionSelect.value, ribbons };
+  const badges = Array.from(badgeGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key);
+  return { id:m.id, name:nameInput.value, rank:rankSelect.value, unit:unitSelect.value, position:positionSelect.value, ribbons, badges };
 }
 
 function refreshPreview(){ renderJacket(stage, currentEdits()); }
@@ -317,6 +378,7 @@ rankSelect.addEventListener('change', refreshPreview);
 unitSelect.addEventListener('change', refreshPreview);
 positionSelect.addEventListener('change', refreshPreview);
 ribbonGrid.addEventListener('change', refreshPreview);
+badgeGrid.addEventListener('change', refreshPreview);
 
 document.getElementById('saveBtn').addEventListener('click', async ()=>{
   const edits = currentEdits();
@@ -332,7 +394,7 @@ document.getElementById('saveBtn').addEventListener('click', async ()=>{
 });
 
 document.getElementById('newBtn').addEventListener('click', async ()=>{
-  const member = { id:newId(), name:"New Member", rank: RANKS[0] || "PVT", unit: UNIT_OPTIONS[0], position:"Member", ribbons:[] };
+  const member = { id:newId(), name:"New Member", rank: RANKS[0] || "PVT", unit: UNIT_OPTIONS[0], position:"Member", ribbons:[], badges:[] };
   MEMBERS.push(member);
   await saveJSON('members', MEMBERS);
   sortMembersBySeniority();
@@ -360,10 +422,12 @@ async function init(){
   MEMBERS = await loadJSON('members', DEFAULT_MEMBERS);
   RANKS = await loadJSON('ranks', DEFAULT_RANKS);
   RIBBONS = await loadJSON('ribbons', DEFAULT_RIBBONS);
+  BADGES = await loadJSON('badges', DEFAULT_BADGES);
   sortMembersBySeniority();
   populateStaticSelects();
   populateRankSelect();
   populateRibbonGrid();
+  populateBadgeGrid();
 
   const requestedId = new URLSearchParams(window.location.search).get('member');
   const initialId = (requestedId && MEMBERS.some(m=>m.id===requestedId)) ? requestedId : MEMBERS[0].id;

@@ -29,6 +29,9 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
 .company{margin-bottom:40px;}
 .company-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid var(--border);}
 .company-head h2{font-family:'Poppins'; font-weight:600; font-size:19px; margin:0; color:var(--orange);}
+.head-actions{display:flex; gap:8px;}
+.collapse-btn{background:transparent; border:1px solid var(--border); color:var(--text-secondary); font-size:12px; font-weight:500; padding:6px 12px; border-radius:6px; cursor:pointer; font-family:'Inter';}
+.collapse-btn:hover{border-color:var(--orange-dim); color:var(--orange);}
 .new-btn{background:var(--bg-card); border:1px solid var(--orange-dim); color:var(--orange); font-size:12.5px; font-weight:600; padding:6px 14px; border-radius:6px; cursor:pointer; font-family:'Inter';}
 .new-btn:hover{background:var(--orange-dim); color:#1c1108;}
 
@@ -46,6 +49,7 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
 
 .jacket-mini{position:relative; width:100%; aspect-ratio:5747/3902; background:url('jacket-template.svg') center/cover no-repeat; border-radius:8px; overflow:hidden;}
 .ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35);}
+.badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3);}
 .name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px; padding:0 4%; overflow:hidden;}
 .name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; white-space:nowrap; display:inline-block;}
 
@@ -69,6 +73,7 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
   <a href="index.html" class="active">Jackets</a>
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
+  <a href="badges.html">Badges</a>
   <a href="admin.html" class="nav-cta">Admin</a>
 </div>
 
@@ -81,6 +86,7 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
 
 <script>
 const UNIT_OPTIONS = ["Battalion","Bravo","Charlie","Delta"];
+const POSITION_SENIORITY = ["CO","XO","1SG","PS","SL","Member"];
 const DEFAULT_RANKS = ["LTC","MAJ","2LT","1LT","CSM","SFC","SSG","SGT","CPL","SPC","PFC","PV2","PVT","RT"];
 
 const DEFAULT_RIBBONS = [
@@ -99,15 +105,22 @@ const DEFAULT_RIBBONS = [
 ];
 
 const DEFAULT_MEMBERS = [
-  { id:"dentalmav", name:"LTC.DentalMav", rank:"LTC", unit:"Battalion", position:"CO", ribbons:["national_defense","valor_purple","combat_readiness","meritorious","marksmanship","achievement","overseas_service","campaign_service","unit_citation","good_conduct","longevity","bct_completion"] },
-  { id:"ironsight", name:"MAJ.IronSight", rank:"MAJ", unit:"Battalion", position:"XO", ribbons:["national_defense","meritorious","achievement","overseas_service","longevity"] },
-  { id:"falconer", name:"1LT.Falconer", rank:"1LT", unit:"Bravo", position:"CO", ribbons:["national_defense","combat_readiness","marksmanship","achievement"] },
-  { id:"hollowpoint", name:"SGT.Hollowpoint", rank:"SGT", unit:"Bravo", position:"SL", ribbons:["combat_readiness","good_conduct","marksmanship"] },
-  { id:"civoen", name:"2LT.Civoen", rank:"2LT", unit:"Charlie", position:"CO", ribbons:["national_defense","marksmanship","good_conduct","achievement","bct_completion"] },
-  { id:"vincentvanghost", name:"VincentVanGhost", rank:"SPC", unit:"Charlie", position:"Member", ribbons:["combat_readiness","national_defense","marksmanship"] },
-  { id:"semperfi1371", name:"SemperFi1371", rank:"SPC", unit:"Charlie", position:"Member", ribbons:["combat_readiness","meritorious"] },
-  { id:"tekk", name:"PFC.Tekk", rank:"PFC", unit:"Delta", position:"Member", ribbons:["national_defense","bct_completion"] },
-  { id:"bluebunny", name:"SPC.BlueBunny", rank:"SPC", unit:"Delta", position:"Member", ribbons:["combat_readiness","marksmanship","good_conduct"] }
+  { id:"dentalmav", name:"LTC.DentalMav", rank:"LTC", unit:"Battalion", position:"CO", ribbons:["national_defense","valor_purple","combat_readiness","meritorious","marksmanship","achievement","overseas_service","campaign_service","unit_citation","good_conduct","longevity","bct_completion"], badges:["combat_infantry","expert_marksman"] },
+  { id:"ironsight", name:"MAJ.IronSight", rank:"MAJ", unit:"Battalion", position:"XO", ribbons:["national_defense","meritorious","achievement","overseas_service","longevity"], badges:["drill_sergeant"] },
+  { id:"falconer", name:"1LT.Falconer", rank:"1LT", unit:"Bravo", position:"CO", ribbons:["national_defense","combat_readiness","marksmanship","achievement"], badges:["airborne_wings"] },
+  { id:"hollowpoint", name:"SGT.Hollowpoint", rank:"SGT", unit:"Bravo", position:"SL", ribbons:["combat_readiness","good_conduct","marksmanship"], badges:[] },
+  { id:"civoen", name:"2LT.Civoen", rank:"2LT", unit:"Charlie", position:"CO", ribbons:["national_defense","marksmanship","good_conduct","achievement","bct_completion"], badges:[] },
+  { id:"vincentvanghost", name:"VincentVanGhost", rank:"SPC", unit:"Charlie", position:"Member", ribbons:["combat_readiness","national_defense","marksmanship"], badges:[] },
+  { id:"semperfi1371", name:"SemperFi1371", rank:"SPC", unit:"Charlie", position:"Member", ribbons:["combat_readiness","meritorious"], badges:[] },
+  { id:"tekk", name:"PFC.Tekk", rank:"PFC", unit:"Delta", position:"Member", ribbons:["national_defense","bct_completion"], badges:[] },
+  { id:"bluebunny", name:"SPC.BlueBunny", rank:"SPC", unit:"Delta", position:"Member", ribbons:["combat_readiness","marksmanship","good_conduct"], badges:[] }
+];
+
+const DEFAULT_BADGES = [
+  { key:"expert_marksman", label:"Expert Marksmanship Badge", shape:"circle",  color:"#c9a84c" },
+  { key:"airborne_wings",  label:"Airborne Wings",             shape:"diamond", color:"#8a9bb0" },
+  { key:"combat_infantry", label:"Combat Infantryman Badge",   shape:"square",  color:"#3a4a2c" },
+  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       shape:"circle",  color:"#7a1f1f" }
 ];
 
 // Set this to your deployed Worker URL (no trailing slash), e.g. 'https://unkso-api.yoursubdomain.workers.dev'
@@ -158,7 +171,7 @@ function chunk(arr,n){ const out=[]; for(let i=0;i<arr.length;i+=n) out.push(arr
 function ribbonHTML(ribbonKeys, ribbonMap){
   const rows = chunk(ribbonKeys,4);
   const cellW=4.6, cellH=2.9, colGap=0.35, rowGap=0.35;
-  const rackLeft=57, rackBottom=54;
+  const rackLeft=59.5, rackBottom=54;
   const R = rows.length;
   let html='';
   rows.forEach((row,ri)=>{
@@ -169,6 +182,28 @@ function ribbonHTML(ribbonKeys, ribbonMap){
       const def = ribbonMap[key];
       if(!def) return;
       html += `<div class="ribbon" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background:${ribbonCSS(def)};"></div>`;
+    });
+  });
+  return html;
+}
+
+function badgeHTML(badgeKeys, badgeMap){
+  const cellSize=3.4, gap=0.4, rowBottom=63, centerX=68.8;
+  const rows = chunk(badgeKeys,3);
+  const R = rows.length;
+  let html='';
+  rows.forEach((row,ri)=>{
+    const rowsFromBottom = R-1-ri;
+    const top = rowBottom - (rowsFromBottom+1)*(cellSize+gap);
+    const totalW = row.length*cellSize + (row.length-1)*gap;
+    const left0 = centerX - totalW/2;
+    row.forEach((key,ci)=>{
+      const def = badgeMap[key];
+      if(!def) return;
+      const left = left0 + ci*(cellSize+gap);
+      const radius = def.shape === 'circle' ? '50%' : '0';
+      const clip = def.shape === 'diamond' ? 'clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);' : '';
+      html += `<div class="badge" style="left:${left}%; top:${top}%; width:${cellSize}%; height:${cellSize}%; background:${def.color}; border-radius:${radius}; ${clip}"></div>`;
     });
   });
   return html;
@@ -188,23 +223,26 @@ function fitNameTape(tapeEl){
   }
 }
 
-function jacketHTML(member, ribbonMap){
+function jacketHTML(member, ribbonMap, badgeMap){
   return `
     <div class="name-tape" style="left:24%; top:58.5%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
     ${ribbonHTML(member.ribbons, ribbonMap)}
+    ${badgeHTML(member.badges||[], badgeMap)}
   `;
 }
 
 let MEMBERS = [];
 let RANKS = [];
 let RIBBONS = [];
+let BADGES = [];
 
 function ribbonMapOf(){ const m={}; RIBBONS.forEach(r=>m[r.key]=r); return m; }
+function badgeMapOf(){ const m={}; BADGES.forEach(b=>m[b.key]=b); return m; }
 
 function newId(){ return 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
 async function addMember(unit){
-  const member = { id:newId(), name:"New Member", rank: RANKS[0] || "PVT", unit: unit, position:"Member", ribbons:[] };
+  const member = { id:newId(), name:"New Member", rank: RANKS[0] || "PVT", unit: unit, position:"Member", ribbons:[], badges:[] };
   MEMBERS.push(member);
   await saveJSON('members', MEMBERS);
   renderRoster();
@@ -228,23 +266,49 @@ function matchesSearch(m){
     || m.unit.toLowerCase().includes(q);
 }
 
+function sortBySeniority(list){
+  return [...list].sort((a,b)=>{
+    const ap = POSITION_SENIORITY.indexOf(a.position); const bp = POSITION_SENIORITY.indexOf(b.position);
+    const aPos = ap === -1 ? POSITION_SENIORITY.length : ap;
+    const bPos = bp === -1 ? POSITION_SENIORITY.length : bp;
+    if(aPos !== bPos) return aPos - bPos;
+    const ar = RANKS.indexOf(a.rank); const br = RANKS.indexOf(b.rank);
+    const aRank = ar === -1 ? RANKS.length : ar;
+    const bRank = br === -1 ? RANKS.length : br;
+    if(aRank !== bRank) return aRank - bRank;
+    return a.name.localeCompare(b.name);
+  });
+}
+
+let collapsedUnits = new Set();
+
 function renderRoster(){
   const main = document.getElementById('main');
   main.innerHTML = '';
   const ribbonMap = ribbonMapOf();
+  const badgeMap = badgeMapOf();
   UNIT_OPTIONS.forEach(unit=>{
     const allInUnit = MEMBERS.filter(m=>m.unit===unit);
-    const members = allInUnit.filter(matchesSearch);
+    const members = sortBySeniority(allInUnit.filter(matchesSearch));
+    const isCollapsed = collapsedUnits.has(unit);
     const section = document.createElement('section');
     section.className = 'company';
     section.innerHTML = `
       <div class="company-head">
         <h2>${unit}</h2>
-        <button class="new-btn" data-unit="${unit}">+ New</button>
+        <div class="head-actions">
+          <button class="collapse-btn" title="${isCollapsed ? 'Expand' : 'Collapse'}">${isCollapsed ? '▸ Expand' : '▾ Collapse'}</button>
+          <button class="new-btn" data-unit="${unit}">+ New</button>
+        </div>
       </div>
-      <div class="member-grid"></div>
+      <div class="member-grid" style="${isCollapsed ? 'display:none;' : ''}"></div>
     `;
     section.querySelector('.new-btn').addEventListener('click', ()=>addMember(unit));
+    section.querySelector('.collapse-btn').addEventListener('click', ()=>{
+      if(collapsedUnits.has(unit)) collapsedUnits.delete(unit);
+      else collapsedUnits.add(unit);
+      renderRoster();
+    });
     const grid = section.querySelector('.member-grid');
     if(members.length === 0){
       grid.innerHTML = allInUnit.length === 0
@@ -256,7 +320,7 @@ function renderRoster(){
       card.className = 'member-card';
       card.innerHTML = `
         <button class="remove-btn" title="Remove">&times;</button>
-        <div class="jacket-mini">${jacketHTML(m, ribbonMap)}</div>
+        <div class="jacket-mini">${jacketHTML(m, ribbonMap, badgeMap)}</div>
         <div class="mcaption">
           <div class="mname">${m.rank}.${m.name}</div>
           <div class="mrank">${m.position} - ${m.unit}</div>
@@ -289,6 +353,7 @@ async function init(){
   MEMBERS = await loadJSON('members', DEFAULT_MEMBERS);
   RANKS = await loadJSON('ranks', DEFAULT_RANKS);
   RIBBONS = await loadJSON('ribbons', DEFAULT_RIBBONS);
+  BADGES = await loadJSON('badges', DEFAULT_BADGES);
   renderRoster();
 }
 init();
