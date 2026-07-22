@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UNKSO — Admin</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
+:root{
+  --bg-page:#14161c; --bg-panel:#1b1e26; --bg-card:#20232c;
+  --border:#2c303a; --orange:#e35f2e; --orange-dim:#b8481f;
+  --text-primary:#f2f1ee; --text-secondary:#9aa0ab; --text-muted:#6b7280;
+  --olive:#585844; --olive-dark:#454633; --tan:#c9bfa0; --tan-dark:#8a7f60;
+}
+*{box-sizing:border-box;}
+body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family:'Inter',sans-serif;}
+
+.topbar{display:flex; align-items:center; justify-content:space-between; padding:14px 32px; background:var(--bg-panel); border-bottom:1px solid var(--border);}
+.brand{display:flex; align-items:center; gap:10px;}
+.brand svg{width:32px; height:32px;}
+.brand-text{font-family:'Poppins'; font-weight:700; font-size:21px; color:var(--orange);}
+.top-actions{display:flex; align-items:center; gap:20px; color:var(--text-secondary); font-size:13.5px;}
+.user-chip{display:flex; align-items:center; gap:8px; font-weight:500; color:var(--text-primary);}
+.user-chip .av{width:24px; height:24px; border-radius:5px; background:var(--orange-dim);}
+
+.subnav{display:flex; gap:30px; padding:0 32px; background:var(--bg-page); border-bottom:1px solid var(--border);}
+.subnav a{color:var(--text-secondary); text-decoration:none; font-size:14px; font-weight:500; padding:13px 2px; border-bottom:2px solid transparent;}
+.subnav a.active{color:var(--orange); border-color:var(--orange);}
+
+main{max-width:1100px; margin:0 auto; padding:32px; display:grid; grid-template-columns:1fr 380px; gap:24px;}
+
+h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
+.sub{color:var(--text-muted); font-size:12.5px; margin-bottom:22px; letter-spacing:.03em;}
+
+.panel{background:var(--bg-panel); border:1px solid var(--border); border-radius:14px; padding:24px;}
+.preview-panel{display:flex; flex-direction:column; align-items:center;}
+.jacket-stage{position:relative; width:520px; height:346px; transform-origin:top left;}
+.part{position:absolute;}
+.name-tape span{display:flex; align-items:center; justify-content:center; height:100%; font-family:'JetBrains Mono'; font-weight:600; font-size:9px; letter-spacing:.03em; color:#2b2717;}
+.ribbon{border-radius:1.5px; border:1px solid rgba(0,0,0,.35);}
+.shoulder-board{display:flex; align-items:center; justify-content:center; border-radius:3px; border:1px solid rgba(0,0,0,.3);}
+.shoulder-board span{font-family:'Poppins'; font-weight:700; font-size:8px; color:#c9a84c; letter-spacing:.04em;}
+
+.field{margin-bottom:18px;}
+.field label{display:block; font-size:12px; color:var(--text-secondary); margin-bottom:6px; letter-spacing:.03em; text-transform:uppercase;}
+.field input, .field select{
+  width:100%; background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
+  padding:9px 12px; border-radius:8px; font-size:14px; font-family:'Inter';
+}
+
+.ribbon-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+.ribbon-check{display:flex; align-items:center; gap:8px; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:12.5px; cursor:pointer;}
+.ribbon-check input{margin:0;}
+.ribbon-check .swatch{width:26px; height:10px; border-radius:1.5px; border:1px solid rgba(0,0,0,.35); flex-shrink:0;}
+
+.save-btn{
+  margin-top:6px; width:100%; background:var(--orange); color:#1c1108; border:none; border-radius:8px;
+  padding:12px; font-family:'Poppins'; font-weight:600; font-size:14px; cursor:pointer;
+}
+.save-btn:hover{background:#f06c37;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <svg viewBox="0 0 48 48"><path d="M24 3l18 6v13c0 12-8 19-18 23C14 41 6 34 6 22V9z" fill="none" stroke="#e35f2e" stroke-width="2.5"/><text x="24" y="27" font-family="Poppins" font-weight="700" font-size="13" fill="#e35f2e" text-anchor="middle">US</text></svg>
+    <span class="brand-text">UNKSO</span>
+  </div>
+  <div class="top-actions">
+    <span>+ Create</span><span>&#128276;</span><span>&#9993;</span>
+    <span class="user-chip"><span class="av"></span>2LT.Civoen=US=</span>
+  </div>
+</div>
+
+<div class="subnav">
+  <a href="index.html">Jacket</a>
+  <a href="#">PERSCOM</a>
+  <a href="#" class="active">Admin</a>
+</div>
+
+<main>
+  <div>
+    <h1>Edit jacket</h1>
+    <div class="sub">CHANGES SYNC BACK TO THE MEMBER'S JACKET IMMEDIATELY</div>
+
+    <div class="panel">
+      <div class="field">
+        <label>Member</label>
+        <select id="memberSelect"></select>
+      </div>
+      <div class="field">
+        <label>Display name</label>
+        <input id="nameInput" type="text">
+      </div>
+      <div class="field">
+        <label>Rank</label>
+        <select id="rankSelect">
+          <option>PVT</option><option>PFC</option><option>SPC</option><option>SGT</option>
+          <option>SSG</option><option>2LT</option><option>1LT</option><option>CPT</option>
+          <option>MAJ</option><option>LTC</option><option>COL</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Ribbons &amp; decorations</label>
+        <div class="ribbon-grid" id="ribbonGrid"></div>
+      </div>
+      <button class="save-btn" id="saveBtn">Save changes</button>
+    </div>
+  </div>
+
+  <div class="panel preview-panel">
+    <div class="jacket-stage" id="stage"></div>
+  </div>
+</main>
+
+<script>
+const RIBBONS = {
+  combat_readiness:  "repeating-linear-gradient(90deg,#8a3630 0 8px,#1c1e15 8px 10px,#8a3630 10px 18px)",
+  national_defense:  "linear-gradient(90deg,#3a4a7a 0 30%,#e8e1cc 30% 40%,#8a3630 40% 60%,#e8e1cc 60% 70%,#3a4a7a 70% 100%)",
+  marksmanship:      "repeating-linear-gradient(45deg,#4f6b34 0 6px,#c9a84c 6px 9px)",
+  meritorious:       "linear-gradient(90deg,#5a3a6b 0 50%,#c9a84c 50% 100%)",
+  good_conduct:      "repeating-linear-gradient(90deg,#c9a84c 0 5px,#3a4a2c 5px 10px)",
+  bct_completion:    "#8f7a3a",
+  valor_purple:      "#5b2a86",
+  overseas_service:  "#6fa8d6",
+  campaign_service:  "repeating-linear-gradient(90deg,#e35f2e 0 6px,#1c1e15 6px 8px)",
+  longevity:         "repeating-linear-gradient(90deg,#2f5233 0 10px,#c9a84c 10px 12px)",
+  achievement:       "#1b2a4a",
+  unit_citation:     "repeating-linear-gradient(90deg,#7a1f1f 0 4px,#f2f1ee 4px 8px)"
+};
+const RIBBON_LABELS = {
+  combat_readiness:"Combat readiness medal", national_defense:"National defense service",
+  marksmanship:"Marksmanship ribbon", meritorious:"Meritorious service medal",
+  good_conduct:"Good conduct ribbon", bct_completion:"BCT completion ribbon",
+  valor_purple:"Valor commendation", overseas_service:"Overseas service ribbon",
+  campaign_service:"Campaign service medal", longevity:"Longevity service ribbon",
+  achievement:"Achievement medal", unit_citation:"Unit citation ribbon"
+};
+
+const DEFAULT_MEMBERS = [
+  { id:"dentalmav", name:"LTC.DentalMav", rank:"LTC", unit:"Battalion Command", ribbons:["national_defense","valor_purple","combat_readiness","meritorious","marksmanship","achievement","overseas_service","campaign_service","unit_citation","good_conduct","longevity","bct_completion"] },
+  { id:"vincentvanghost", name:"VincentVanGhost", rank:"SPC", unit:"2nd Platoon, Charlie Co.", ribbons:["combat_readiness","national_defense","marksmanship"] },
+  { id:"semperfi1371", name:"SemperFi1371", rank:"SPC", unit:"1st Platoon, Charlie Co.", ribbons:["combat_readiness","meritorious"] },
+  { id:"civoen", name:"2LT.Civoen", rank:"2LT", unit:"1st Platoon, Charlie Co.", ribbons:["national_defense","marksmanship","good_conduct","achievement","bct_completion"] }
+];
+
+let MEMBERS = [];
+
+async function loadMembers(){
+  try{
+    if(window.storage){
+      const result = await window.storage.get('unkso-members', true);
+      if(result && result.value){
+        return JSON.parse(result.value);
+      }
+    }
+  }catch(err){
+    console.log('No saved roster yet, using defaults', err);
+  }
+  try{
+    if(window.storage){
+      await window.storage.set('unkso-members', JSON.stringify(DEFAULT_MEMBERS), true);
+    }
+  }catch(err){
+    console.log('Could not seed storage', err);
+  }
+  return DEFAULT_MEMBERS;
+}
+
+async function saveMembers(){
+  try{
+    if(window.storage){
+      const result = await window.storage.set('unkso-members', JSON.stringify(MEMBERS), true);
+      return !!result;
+    }
+  }catch(err){
+    console.log('Save failed', err);
+    return false;
+  }
+  return false;
+}
+
+function ribbonRows(keys){
+  const rows = [];
+  for (let i=0;i<keys.length;i+=4) rows.push(keys.slice(i,i+4));
+  return rows;
+}
+
+function renderJacket(stage, member){
+  const scale = 0.72;
+  stage.style.transform = `scale(${scale})`;
+  const rows = ribbonRows(member.ribbons);
+  let rackHTML = "";
+  rows.forEach((row,ri)=>{
+    row.forEach((key,ci)=>{
+      const x = 388 + ci*40;
+      const y = 300 - (rows.length-1-ri)*15;
+      rackHTML += `<div class="part ribbon" style="left:${x}px; top:${y}px; width:38px; height:13px; background:${RIBBONS[key]};"></div>`;
+    });
+  });
+
+  stage.innerHTML = `
+    <div class="part" style="left:130px; top:110px; width:460px; height:370px; background:var(--olive); clip-path:polygon(0% 8%, 26% 0%, 74% 0%, 100% 8%, 113% 100%, -13% 100%);"></div>
+    <div class="part shoulder-board" style="left:150px; top:100px; width:70px; height:24px; background:var(--olive-dark); transform:rotate(-8deg);"><span>${member.rank}</span></div>
+    <div class="part shoulder-board" style="left:500px; top:100px; width:70px; height:24px; background:var(--olive-dark); transform:rotate(8deg);"><span>${member.rank}</span></div>
+    <div class="part" style="left:290px; top:45px; width:180px; height:255px; background:var(--tan); clip-path:polygon(0% 0%, 100% 0%, 50% 100%);"></div>
+    <div class="part" style="left:348px; top:60px; width:24px; height:240px; background:var(--olive-dark); clip-path:polygon(0% 0%, 100% 0%, 50% 100%);"></div>
+    <div class="part" style="left:290px; top:48px; width:16px; height:16px; border-radius:50%; background:#c9a84c; border:1px solid #8f7a3a;"></div>
+    <div class="part" style="left:454px; top:48px; width:16px; height:16px; border-radius:50%; background:#c9a84c; border:1px solid #8f7a3a;"></div>
+    <div class="part" style="left:352px; top:170px; width:16px; height:16px; border-radius:50%; background:var(--tan); border:1px solid var(--tan-dark);"></div>
+    <div class="part" style="left:352px; top:270px; width:16px; height:16px; border-radius:50%; background:var(--tan); border:1px solid var(--tan-dark);"></div>
+    <div class="part" style="left:352px; top:370px; width:16px; height:16px; border-radius:50%; background:var(--tan); border:1px solid var(--tan-dark);"></div>
+    <div class="part" style="left:170px; top:310px; width:170px; height:24px; border-radius:4px 4px 0 0; background:var(--olive-dark);"></div>
+    <div class="part" style="left:170px; top:330px; width:170px; height:150px; border-radius:6px; background:var(--olive-dark);"></div>
+    <div class="part" style="left:247px; top:325px; width:14px; height:14px; border-radius:50%; background:var(--tan); border:1px solid var(--tan-dark);"></div>
+    <div class="part" style="left:380px; top:310px; width:170px; height:24px; border-radius:4px 4px 0 0; background:var(--olive-dark);"></div>
+    <div class="part" style="left:380px; top:330px; width:170px; height:150px; border-radius:6px; background:var(--olive-dark);"></div>
+    <div class="part" style="left:457px; top:325px; width:14px; height:14px; border-radius:50%; background:var(--tan); border:1px solid var(--tan-dark);"></div>
+    <div class="part name-tape" style="left:185px; top:344px; width:140px; height:28px; background:var(--tan); border-radius:3px;"><span>${member.name.toUpperCase()}</span></div>
+    ${rackHTML}
+  `;
+}
+
+const memberSelect = document.getElementById('memberSelect');
+const nameInput = document.getElementById('nameInput');
+const rankSelect = document.getElementById('rankSelect');
+const ribbonGrid = document.getElementById('ribbonGrid');
+const stage = document.getElementById('stage');
+
+Object.keys(RIBBONS).forEach(key=>{
+  const wrap = document.createElement('label');
+  wrap.className = 'ribbon-check';
+  wrap.innerHTML = `<input type="checkbox" data-key="${key}"><span class="swatch" style="background:${RIBBONS[key]}"></span>${RIBBON_LABELS[key]}`;
+  ribbonGrid.appendChild(wrap);
+});
+
+function loadMember(id){
+  const m = MEMBERS.find(x=>x.id===id);
+  nameInput.value = m.name;
+  rankSelect.value = m.rank;
+  ribbonGrid.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.checked = m.ribbons.includes(cb.dataset.key);
+  });
+  renderJacket(stage, m);
+}
+
+function currentEdits(){
+  const m = MEMBERS.find(x=>x.id===memberSelect.value);
+  const ribbons = Array.from(ribbonGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key);
+  return { id:m.id, name:nameInput.value, rank:rankSelect.value, unit:m.unit, ribbons };
+}
+
+function refreshPreview(){ renderJacket(stage, currentEdits()); }
+
+memberSelect.addEventListener('change', e=>loadMember(e.target.value));
+nameInput.addEventListener('input', refreshPreview);
+rankSelect.addEventListener('change', refreshPreview);
+ribbonGrid.addEventListener('change', refreshPreview);
+
+document.getElementById('saveBtn').addEventListener('click', async ()=>{
+  const edits = currentEdits();
+  MEMBERS = MEMBERS.map(m => m.id===edits.id ? edits : m);
+  const btn = document.getElementById('saveBtn');
+  const original = btn.textContent;
+  btn.textContent = 'Saving…';
+  const ok = await saveMembers();
+  btn.textContent = ok ? 'Saved' : 'Save failed — retry';
+  setTimeout(()=>{ btn.textContent = original; }, 1400);
+});
+
+async function init(){
+  MEMBERS = await loadMembers();
+  MEMBERS.forEach(m=>{
+    const opt = document.createElement('option');
+    opt.value = m.id; opt.textContent = m.name;
+    memberSelect.appendChild(opt);
+  });
+  loadMember(MEMBERS[0].id);
+}
+
+init();
+</script>
+
+</body>
+</html>
