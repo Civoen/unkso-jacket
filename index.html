@@ -25,11 +25,10 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
 .member-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px;}
 .member-card{background:var(--bg-panel); border:1px solid var(--border); border-radius:12px; padding:14px;}
 
-.jacket-mini{position:relative; width:100%; aspect-ratio:1400/950; background:url('jacket-base.jpg') center/cover no-repeat; border-radius:8px; overflow:hidden;}
+.jacket-mini{position:relative; width:100%; aspect-ratio:5747/3902; background:url('jacket-template.svg') center/cover no-repeat; border-radius:8px; overflow:hidden;}
 .ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35);}
-.ribbon-cover{position:absolute; background:#4f4c38; border-radius:2px;}
-.name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px;}
-.name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; font-size:clamp(7px,1.4vw,12px); white-space:nowrap;}
+.name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px; padding:0 4%; overflow:hidden;}
+.name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; white-space:nowrap; display:inline-block; max-width:100%;}
 
 .mcaption{margin-top:10px; text-align:center;}
 .mcaption .mname{font-family:'Poppins'; font-weight:600; font-size:14.5px;}
@@ -117,10 +116,24 @@ function ribbonHTML(ribbons){
 
 function jacketHTML(member){
   return `
-    <div class="ribbon-cover" style="left:62%; top:47.5%; width:21%; height:12%;"></div>
     <div class="name-tape" style="left:24%; top:58.5%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
     ${ribbonHTML(member.ribbons)}
   `;
+}
+
+function fitNameTape(tapeEl){
+  const span = tapeEl.querySelector('span');
+  if(!span) return;
+  const maxWidth = tapeEl.clientWidth - (tapeEl.clientWidth * 0.08); // account for padding
+  let size = tapeEl.clientHeight * 0.55;
+  const minSize = tapeEl.clientHeight * 0.18;
+  span.style.fontSize = size + 'px';
+  let guard = 0;
+  while(span.scrollWidth > maxWidth && size > minSize && guard < 60){
+    size -= size * 0.06;
+    span.style.fontSize = size + 'px';
+    guard++;
+  }
 }
 
 function renderRoster(){
@@ -147,7 +160,12 @@ function renderRoster(){
     });
     main.appendChild(section);
   });
+  document.querySelectorAll('.name-tape').forEach(fitNameTape);
 }
+
+window.addEventListener('resize', () => {
+  document.querySelectorAll('.name-tape').forEach(fitNameTape);
+});
 
 async function init(){
   MEMBERS = await loadMembers();
