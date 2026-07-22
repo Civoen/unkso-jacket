@@ -14,9 +14,15 @@
 *{box-sizing:border-box;}
 body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family:'Inter',sans-serif;}
 
-.subnav{display:flex; gap:30px; padding:16px 32px; background:var(--bg-panel); border-bottom:1px solid var(--border);}
+.subnav{display:flex; align-items:center; gap:30px; padding:16px 32px; background:var(--bg-panel); border-bottom:1px solid var(--border);}
 .subnav a{color:var(--text-secondary); text-decoration:none; font-size:14px; font-weight:500; padding-bottom:4px; border-bottom:2px solid transparent;}
 .subnav a.active{color:var(--orange); border-color:var(--orange);}
+.subnav a.nav-cta{
+  margin-left:auto; color:#1c1108; background:var(--orange); padding:7px 18px; border-radius:7px;
+  font-weight:700; border-bottom:none; box-shadow:0 1px 0 rgba(0,0,0,.2);
+}
+.subnav a.nav-cta:hover{background:#f06c37;}
+.subnav a.nav-cta.active{background:#f06c37; box-shadow:0 0 0 2px rgba(227,95,46,.4);}
 
 main{max-width:640px; margin:0 auto; padding:32px;}
 h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
@@ -58,7 +64,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <a href="index.html">Jackets</a>
   <a href="ranks.html" class="active">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
-  <a href="admin.html">Admin</a>
+  <a href="admin.html" class="nav-cta">Admin</a>
 </div>
 
 <main>
@@ -78,23 +84,36 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 <script>
 const DEFAULT_RANKS = ["LTC","MAJ","2LT","1LT","CSM","SFC","SSG","SGT","CPL","SPC","PFC","PV2","PVT","RT"];
 
+// Set this to your deployed Worker URL (no trailing slash), e.g. 'https://unkso-api.yoursubdomain.workers.dev'
+const API_BASE = 'https://unkso-api.YOUR-SUBDOMAIN.workers.dev';
+
 async function loadJSON(key, defaults){
   try{
-    if(window.storage){
-      const result = await window.storage.get(key, true);
-      if(result && result.value) return JSON.parse(result.value);
+    const res = await fetch(`${API_BASE}/api/${key}`);
+    if(res.ok){
+      const data = await res.json();
+      if(data !== null) return data;
     }
-  }catch(err){ console.log('No stored value for '+key+', using defaults', err); }
+  }catch(err){ console.log('Could not load '+key+' from API, using defaults', err); }
   try{
-    if(window.storage){ await window.storage.set(key, JSON.stringify(defaults), true); }
+    await fetch(`${API_BASE}/api/${key}`, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(defaults)
+    });
   }catch(err){ console.log('Could not seed '+key, err); }
   return defaults;
 }
+
 async function saveJSON(key, value){
   try{
-    if(window.storage){ const r = await window.storage.set(key, JSON.stringify(value), true); return !!r; }
+    const res = await fetch(`${API_BASE}/api/${key}`, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(value)
+    });
+    return res.ok;
   }catch(err){ console.log('Save failed for '+key, err); return false; }
-  return false;
 }
 
 let RANKS = [];
@@ -114,13 +133,13 @@ function renderRanks(){
       const val = e.target.value.trim().toUpperCase();
       if(!val) { e.target.value = RANKS[idx]; return; }
       RANKS[idx] = val;
-      await saveJSON('unkso-ranks', RANKS);
+      await saveJSON('ranks', RANKS);
     });
     row.querySelector('.icon-btn').addEventListener('click', async ()=>{
       if(RANKS.length <= 1){ alert("You need at least one rank."); return; }
       if(!confirm(`Remove rank "${rank}"?`)) return;
       RANKS.splice(idx,1);
-      await saveJSON('unkso-ranks', RANKS);
+      await saveJSON('ranks', RANKS);
       renderRanks();
     });
     list.appendChild(row);
@@ -134,7 +153,7 @@ document.getElementById('addBtn').addEventListener('click', async ()=>{
   if(RANKS.includes(val)){ alert('That rank already exists.'); return; }
   RANKS.push(val);
   input.value = '';
-  await saveJSON('unkso-ranks', RANKS);
+  await saveJSON('ranks', RANKS);
   renderRanks();
 });
 
@@ -143,7 +162,7 @@ document.getElementById('newRankInput').addEventListener('keydown', (e)=>{
 });
 
 async function init(){
-  RANKS = await loadJSON('unkso-ranks', DEFAULT_RANKS);
+  RANKS = await loadJSON('ranks', DEFAULT_RANKS);
   renderRanks();
 }
 init();

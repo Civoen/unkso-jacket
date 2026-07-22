@@ -14,9 +14,15 @@
 *{box-sizing:border-box;}
 body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family:'Inter',sans-serif;}
 
-.subnav{display:flex; gap:30px; padding:16px 32px; background:var(--bg-panel); border-bottom:1px solid var(--border);}
+.subnav{display:flex; align-items:center; gap:30px; padding:16px 32px; background:var(--bg-panel); border-bottom:1px solid var(--border);}
 .subnav a{color:var(--text-secondary); text-decoration:none; font-size:14px; font-weight:500; padding-bottom:4px; border-bottom:2px solid transparent;}
 .subnav a.active{color:var(--orange); border-color:var(--orange);}
+.subnav a.nav-cta{
+  margin-left:auto; color:#1c1108; background:var(--orange); padding:7px 18px; border-radius:7px;
+  font-weight:700; border-bottom:none; box-shadow:0 1px 0 rgba(0,0,0,.2);
+}
+.subnav a.nav-cta:hover{background:#f06c37;}
+.subnav a.nav-cta.active{background:#f06c37; box-shadow:0 0 0 2px rgba(227,95,46,.4);}
 
 main{max-width:820px; margin:0 auto; padding:32px;}
 h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
@@ -75,7 +81,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <a href="index.html">Jackets</a>
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html" class="active">Ribbons</a>
-  <a href="admin.html">Admin</a>
+  <a href="admin.html" class="nav-cta">Admin</a>
 </div>
 
 <main>
@@ -122,23 +128,36 @@ const DEFAULT_RIBBONS = [
   { key:"unit_citation",     label:"Unit Citation Ribbon",       pattern:"stripes",  color1:"#7a1f1f", color2:"#f2f1ee" }
 ];
 
+// Set this to your deployed Worker URL (no trailing slash), e.g. 'https://unkso-api.yoursubdomain.workers.dev'
+const API_BASE = 'https://unkso-api.YOUR-SUBDOMAIN.workers.dev';
+
 async function loadJSON(key, defaults){
   try{
-    if(window.storage){
-      const result = await window.storage.get(key, true);
-      if(result && result.value) return JSON.parse(result.value);
+    const res = await fetch(`${API_BASE}/api/${key}`);
+    if(res.ok){
+      const data = await res.json();
+      if(data !== null) return data;
     }
-  }catch(err){ console.log('No stored value for '+key+', using defaults', err); }
+  }catch(err){ console.log('Could not load '+key+' from API, using defaults', err); }
   try{
-    if(window.storage){ await window.storage.set(key, JSON.stringify(defaults), true); }
+    await fetch(`${API_BASE}/api/${key}`, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(defaults)
+    });
   }catch(err){ console.log('Could not seed '+key, err); }
   return defaults;
 }
+
 async function saveJSON(key, value){
   try{
-    if(window.storage){ const r = await window.storage.set(key, JSON.stringify(value), true); return !!r; }
+    const res = await fetch(`${API_BASE}/api/${key}`, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(value)
+    });
+    return res.ok;
   }catch(err){ console.log('Save failed for '+key, err); return false; }
-  return false;
 }
 
 function ribbonCSS(r){
@@ -161,7 +180,7 @@ let MEMBERS = [];
 
 async function pruneFromMembers(key){
   MEMBERS = MEMBERS.map(m => ({...m, ribbons: m.ribbons.filter(k=>k!==key)}));
-  await saveJSON('unkso-members', MEMBERS);
+  await saveJSON('members', MEMBERS);
 }
 
 function renderRibbons(){
@@ -187,7 +206,7 @@ function renderRibbons(){
     row.querySelector('select').value = r.pattern;
     const update = async (field, value)=>{
       RIBBONS[idx][field] = value;
-      await saveJSON('unkso-ribbons', RIBBONS);
+      await saveJSON('ribbons', RIBBONS);
       row.querySelector('.swatch').style.background = ribbonCSS(RIBBONS[idx]);
     };
     row.querySelector('[data-field="label"]').addEventListener('change', e=>update('label', e.target.value));
@@ -198,7 +217,7 @@ function renderRibbons(){
       if(!confirm(`Remove "${r.label}"? This will unassign it from any jackets that have it.`)) return;
       await pruneFromMembers(r.key);
       RIBBONS.splice(idx,1);
-      await saveJSON('unkso-ribbons', RIBBONS);
+      await saveJSON('ribbons', RIBBONS);
       renderRibbons();
     });
     list.appendChild(row);
@@ -217,13 +236,13 @@ document.getElementById('addBtn').addEventListener('click', async ()=>{
   };
   RIBBONS.push(ribbon);
   document.getElementById('newLabel').value = '';
-  await saveJSON('unkso-ribbons', RIBBONS);
+  await saveJSON('ribbons', RIBBONS);
   renderRibbons();
 });
 
 async function init(){
-  RIBBONS = await loadJSON('unkso-ribbons', DEFAULT_RIBBONS);
-  MEMBERS = await loadJSON('unkso-members', []);
+  RIBBONS = await loadJSON('ribbons', DEFAULT_RIBBONS);
+  MEMBERS = await loadJSON('members', []);
   renderRibbons();
 }
 init();
