@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UNKSO — Ribbons</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
+:root{
+  --bg-page:#14161c; --bg-panel:#1b1e26; --bg-card:#20232c;
+  --border:#2c303a; --orange:#e35f2e; --orange-dim:#b8481f;
+  --text-primary:#f2f1ee; --text-secondary:#9aa0ab; --text-muted:#6b7280;
+  --red:#c0392b;
+}
+*{box-sizing:border-box;}
+body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family:'Inter',sans-serif;}
+
+.subnav{display:flex; gap:30px; padding:16px 32px; background:var(--bg-panel); border-bottom:1px solid var(--border);}
+.subnav a{color:var(--text-secondary); text-decoration:none; font-size:14px; font-weight:500; padding-bottom:4px; border-bottom:2px solid transparent;}
+.subnav a.active{color:var(--orange); border-color:var(--orange);}
+
+main{max-width:820px; margin:0 auto; padding:32px;}
+h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
+.sub{color:var(--text-muted); font-size:12.5px; margin-bottom:22px; letter-spacing:.03em;}
+
+.panel{background:var(--bg-panel); border:1px solid var(--border); border-radius:14px; padding:20px;}
+
+.ribbon-row{display:grid; grid-template-columns:56px 1fr 110px 40px 40px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border);}
+.ribbon-row:last-child{border-bottom:none;}
+.swatch{width:100%; height:18px; border-radius:2px; border:1px solid rgba(0,0,0,.35);}
+.ribbon-row input[type=text]{
+  background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
+  padding:8px 10px; border-radius:6px; font-size:13.5px; font-family:'Inter';
+}
+.ribbon-row select{
+  background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
+  padding:8px 6px; border-radius:6px; font-size:12.5px; font-family:'Inter';
+}
+.ribbon-row input[type=color]{
+  width:40px; height:34px; padding:2px; background:var(--bg-card); border:1px solid var(--border); border-radius:6px; cursor:pointer;
+}
+.icon-btn{
+  width:36px; height:34px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary);
+  border-radius:6px; font-size:16px; cursor:pointer; font-family:'Inter';
+}
+.icon-btn:hover{border-color:var(--red); color:var(--red);}
+
+.col-labels{display:grid; grid-template-columns:56px 1fr 110px 40px 40px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
+
+.add-panel{margin-top:20px; padding-top:18px; border-top:1px solid var(--border);}
+.add-panel h3{font-family:'Poppins'; font-size:14px; font-weight:600; margin:0 0 12px; color:var(--orange);}
+.add-grid{display:grid; grid-template-columns:1fr 110px 40px 40px auto; align-items:center; gap:10px;}
+.add-grid input[type=text]{
+  background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
+  padding:9px 12px; border-radius:6px; font-size:13.5px; font-family:'Inter';
+}
+.add-grid select{
+  background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
+  padding:9px 6px; border-radius:6px; font-size:12.5px;
+}
+.add-grid input[type=color]{
+  width:40px; height:36px; padding:2px; background:var(--bg-card); border:1px solid var(--border); border-radius:6px; cursor:pointer;
+}
+.add-btn{
+  background:var(--orange); color:#1c1108; border:none; border-radius:6px; padding:0 16px; height:36px;
+  font-family:'Poppins'; font-weight:600; font-size:13px; cursor:pointer;
+}
+.add-btn:hover{background:#f06c37;}
+
+.note{color:var(--text-muted); font-size:12px; margin-top:14px; line-height:1.5;}
+</style>
+</head>
+<body>
+
+<div class="subnav">
+  <a href="index.html">Jackets</a>
+  <a href="ranks.html">Ranks</a>
+  <a href="ribbons.html" class="active">Ribbons</a>
+  <a href="admin.html">Admin</a>
+</div>
+
+<main>
+  <h1>Ribbons</h1>
+  <div class="sub">CONTROLS THE RIBBON CHECKLIST ON THE ADMIN PAGE</div>
+
+  <div class="panel">
+    <div class="col-labels"><span>Preview</span><span>Name</span><span>Pattern</span><span>Color 1</span><span>Color 2</span><span></span></div>
+    <div id="ribbonList"></div>
+
+    <div class="add-panel">
+      <h3>Add a new ribbon</h3>
+      <div class="add-grid">
+        <input id="newLabel" type="text" placeholder="Ribbon name">
+        <select id="newPattern">
+          <option value="solid">Solid</option>
+          <option value="stripes">Stripes</option>
+          <option value="diagonal">Diagonal</option>
+          <option value="split">Split</option>
+          <option value="triband">Triband</option>
+        </select>
+        <input id="newColor1" type="color" value="#8a3630">
+        <input id="newColor2" type="color" value="#1c1e15">
+        <button class="add-btn" id="addBtn">Add ribbon</button>
+      </div>
+    </div>
+  </div>
+  <div class="note">Removing a ribbon here also removes it from any jacket it's currently assigned to.</div>
+</main>
+
+<script>
+const DEFAULT_RIBBONS = [
+  { key:"combat_readiness",  label:"Combat Readiness Medal",     pattern:"stripes",  color1:"#8a3630", color2:"#1c1e15" },
+  { key:"national_defense",  label:"National Defense Service",   pattern:"triband",  color1:"#3a4a7a", color2:"#e8e1cc" },
+  { key:"marksmanship",      label:"Marksmanship Ribbon",        pattern:"diagonal", color1:"#4f6b34", color2:"#c9a84c" },
+  { key:"meritorious",       label:"Meritorious Service Medal",  pattern:"split",    color1:"#5a3a6b", color2:"#c9a84c" },
+  { key:"good_conduct",      label:"Good Conduct Ribbon",        pattern:"stripes",  color1:"#c9a84c", color2:"#3a4a2c" },
+  { key:"bct_completion",    label:"BCT Completion Ribbon",      pattern:"solid",    color1:"#8f7a3a", color2:"#8f7a3a" },
+  { key:"valor_purple",      label:"Valor Commendation",         pattern:"solid",    color1:"#5b2a86", color2:"#5b2a86" },
+  { key:"overseas_service",  label:"Overseas Service Ribbon",    pattern:"solid",    color1:"#6fa8d6", color2:"#6fa8d6" },
+  { key:"campaign_service",  label:"Campaign Service Medal",     pattern:"stripes",  color1:"#e35f2e", color2:"#1c1e15" },
+  { key:"longevity",         label:"Longevity Service Ribbon",   pattern:"stripes",  color1:"#2f5233", color2:"#c9a84c" },
+  { key:"achievement",       label:"Achievement Medal",          pattern:"solid",    color1:"#1b2a4a", color2:"#1b2a4a" },
+  { key:"unit_citation",     label:"Unit Citation Ribbon",       pattern:"stripes",  color1:"#7a1f1f", color2:"#f2f1ee" }
+];
+
+async function loadJSON(key, defaults){
+  try{
+    if(window.storage){
+      const result = await window.storage.get(key, true);
+      if(result && result.value) return JSON.parse(result.value);
+    }
+  }catch(err){ console.log('No stored value for '+key+', using defaults', err); }
+  try{
+    if(window.storage){ await window.storage.set(key, JSON.stringify(defaults), true); }
+  }catch(err){ console.log('Could not seed '+key, err); }
+  return defaults;
+}
+async function saveJSON(key, value){
+  try{
+    if(window.storage){ const r = await window.storage.set(key, JSON.stringify(value), true); return !!r; }
+  }catch(err){ console.log('Save failed for '+key, err); return false; }
+  return false;
+}
+
+function ribbonCSS(r){
+  switch(r.pattern){
+    case 'solid': return r.color1;
+    case 'stripes': return `repeating-linear-gradient(90deg, ${r.color1} 0 8px, ${r.color2} 8px 10px)`;
+    case 'diagonal': return `repeating-linear-gradient(45deg, ${r.color1} 0 6px, ${r.color2} 6px 9px)`;
+    case 'split': return `linear-gradient(90deg, ${r.color1} 0 50%, ${r.color2} 50% 100%)`;
+    case 'triband': return `linear-gradient(90deg, ${r.color1} 0 30%, ${r.color2} 30% 70%, ${r.color1} 70% 100%)`;
+    default: return r.color1;
+  }
+}
+
+function newKey(label){
+  return 'r_' + label.toLowerCase().replace(/[^a-z0-9]+/g,'_').slice(0,24) + '_' + Math.random().toString(36).slice(2,5);
+}
+
+let RIBBONS = [];
+let MEMBERS = [];
+
+async function pruneFromMembers(key){
+  MEMBERS = MEMBERS.map(m => ({...m, ribbons: m.ribbons.filter(k=>k!==key)}));
+  await saveJSON('unkso-members', MEMBERS);
+}
+
+function renderRibbons(){
+  const list = document.getElementById('ribbonList');
+  list.innerHTML = '';
+  RIBBONS.forEach((r, idx)=>{
+    const row = document.createElement('div');
+    row.className = 'ribbon-row';
+    row.innerHTML = `
+      <div class="swatch" style="background:${ribbonCSS(r)}"></div>
+      <input type="text" value="${r.label}" data-field="label">
+      <select data-field="pattern">
+        <option value="solid">Solid</option>
+        <option value="stripes">Stripes</option>
+        <option value="diagonal">Diagonal</option>
+        <option value="split">Split</option>
+        <option value="triband">Triband</option>
+      </select>
+      <input type="color" value="${r.color1}" data-field="color1">
+      <input type="color" value="${r.color2}" data-field="color2">
+      <button class="icon-btn" title="Remove">&times;</button>
+    `;
+    row.querySelector('select').value = r.pattern;
+    const update = async (field, value)=>{
+      RIBBONS[idx][field] = value;
+      await saveJSON('unkso-ribbons', RIBBONS);
+      row.querySelector('.swatch').style.background = ribbonCSS(RIBBONS[idx]);
+    };
+    row.querySelector('[data-field="label"]').addEventListener('change', e=>update('label', e.target.value));
+    row.querySelector('[data-field="pattern"]').addEventListener('change', e=>update('pattern', e.target.value));
+    row.querySelector('[data-field="color1"]').addEventListener('input', e=>update('color1', e.target.value));
+    row.querySelector('[data-field="color2"]').addEventListener('input', e=>update('color2', e.target.value));
+    row.querySelector('.icon-btn').addEventListener('click', async ()=>{
+      if(!confirm(`Remove "${r.label}"? This will unassign it from any jackets that have it.`)) return;
+      await pruneFromMembers(r.key);
+      RIBBONS.splice(idx,1);
+      await saveJSON('unkso-ribbons', RIBBONS);
+      renderRibbons();
+    });
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('addBtn').addEventListener('click', async ()=>{
+  const label = document.getElementById('newLabel').value.trim();
+  if(!label) return;
+  const ribbon = {
+    key: newKey(label),
+    label,
+    pattern: document.getElementById('newPattern').value,
+    color1: document.getElementById('newColor1').value,
+    color2: document.getElementById('newColor2').value
+  };
+  RIBBONS.push(ribbon);
+  document.getElementById('newLabel').value = '';
+  await saveJSON('unkso-ribbons', RIBBONS);
+  renderRibbons();
+});
+
+async function init(){
+  RIBBONS = await loadJSON('unkso-ribbons', DEFAULT_RIBBONS);
+  MEMBERS = await loadJSON('unkso-members', []);
+  renderRibbons();
+}
+init();
+</script>
+
+</body>
+</html>

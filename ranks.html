@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UNKSO — Ranks</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
+:root{
+  --bg-page:#14161c; --bg-panel:#1b1e26; --bg-card:#20232c;
+  --border:#2c303a; --orange:#e35f2e; --orange-dim:#b8481f;
+  --text-primary:#f2f1ee; --text-secondary:#9aa0ab; --text-muted:#6b7280;
+  --red:#c0392b;
+}
+*{box-sizing:border-box;}
+body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family:'Inter',sans-serif;}
+
+.subnav{display:flex; gap:30px; padding:16px 32px; background:var(--bg-panel); border-bottom:1px solid var(--border);}
+.subnav a{color:var(--text-secondary); text-decoration:none; font-size:14px; font-weight:500; padding-bottom:4px; border-bottom:2px solid transparent;}
+.subnav a.active{color:var(--orange); border-color:var(--orange);}
+
+main{max-width:640px; margin:0 auto; padding:32px;}
+h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
+.sub{color:var(--text-muted); font-size:12.5px; margin-bottom:22px; letter-spacing:.03em;}
+
+.panel{background:var(--bg-panel); border:1px solid var(--border); border-radius:14px; padding:20px;}
+
+.rank-row{display:flex; align-items:center; gap:10px; padding:9px 4px; border-bottom:1px solid var(--border);}
+.rank-row:last-child{border-bottom:none;}
+.rank-row .handle{color:var(--text-muted); font-size:12px; width:20px; text-align:center;}
+.rank-row input{
+  flex:1; background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
+  padding:8px 12px; border-radius:6px; font-size:14px; font-family:'JetBrains Mono'; font-weight:600; letter-spacing:.03em;
+}
+.icon-btn{
+  flex-shrink:0; width:36px; height:36px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary);
+  border-radius:6px; font-size:16px; cursor:pointer; font-family:'Inter';
+}
+.icon-btn:hover{border-color:var(--orange-dim); color:var(--orange);}
+.icon-btn.danger:hover{border-color:var(--red); color:var(--red);}
+
+.add-row{display:flex; gap:10px; margin-top:16px;}
+.add-row input{
+  flex:1; background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
+  padding:9px 12px; border-radius:6px; font-size:14px; font-family:'JetBrains Mono';
+}
+.add-btn{
+  background:var(--orange); color:#1c1108; border:none; border-radius:6px; padding:0 18px;
+  font-family:'Poppins'; font-weight:600; font-size:13.5px; cursor:pointer;
+}
+.add-btn:hover{background:#f06c37;}
+
+.note{color:var(--text-muted); font-size:12px; margin-top:14px; line-height:1.5;}
+</style>
+</head>
+<body>
+
+<div class="subnav">
+  <a href="index.html">Jackets</a>
+  <a href="ranks.html" class="active">Ranks</a>
+  <a href="ribbons.html">Ribbons</a>
+  <a href="admin.html">Admin</a>
+</div>
+
+<main>
+  <h1>Ranks</h1>
+  <div class="sub">CONTROLS THE RANK DROPDOWN ON THE ADMIN PAGE</div>
+
+  <div class="panel">
+    <div id="rankList"></div>
+    <div class="add-row">
+      <input id="newRankInput" type="text" placeholder="Add a rank abbreviation, e.g. WO1" maxlength="6">
+      <button class="add-btn" id="addBtn">Add rank</button>
+    </div>
+  </div>
+  <div class="note">Order here is the order ranks appear in the Admin dropdown. Editing a rank's text updates it everywhere it's already assigned to a member.</div>
+</main>
+
+<script>
+const DEFAULT_RANKS = ["LTC","MAJ","2LT","1LT","CSM","SFC","SSG","SGT","CPL","SPC","PFC","PV2","PVT","RT"];
+
+async function loadJSON(key, defaults){
+  try{
+    if(window.storage){
+      const result = await window.storage.get(key, true);
+      if(result && result.value) return JSON.parse(result.value);
+    }
+  }catch(err){ console.log('No stored value for '+key+', using defaults', err); }
+  try{
+    if(window.storage){ await window.storage.set(key, JSON.stringify(defaults), true); }
+  }catch(err){ console.log('Could not seed '+key, err); }
+  return defaults;
+}
+async function saveJSON(key, value){
+  try{
+    if(window.storage){ const r = await window.storage.set(key, JSON.stringify(value), true); return !!r; }
+  }catch(err){ console.log('Save failed for '+key, err); return false; }
+  return false;
+}
+
+let RANKS = [];
+
+function renderRanks(){
+  const list = document.getElementById('rankList');
+  list.innerHTML = '';
+  RANKS.forEach((rank, idx)=>{
+    const row = document.createElement('div');
+    row.className = 'rank-row';
+    row.innerHTML = `
+      <span class="handle">${idx+1}</span>
+      <input type="text" value="${rank}" maxlength="6" data-idx="${idx}">
+      <button class="icon-btn danger" title="Remove">&times;</button>
+    `;
+    row.querySelector('input').addEventListener('change', async (e)=>{
+      const val = e.target.value.trim().toUpperCase();
+      if(!val) { e.target.value = RANKS[idx]; return; }
+      RANKS[idx] = val;
+      await saveJSON('unkso-ranks', RANKS);
+    });
+    row.querySelector('.icon-btn').addEventListener('click', async ()=>{
+      if(RANKS.length <= 1){ alert("You need at least one rank."); return; }
+      if(!confirm(`Remove rank "${rank}"?`)) return;
+      RANKS.splice(idx,1);
+      await saveJSON('unkso-ranks', RANKS);
+      renderRanks();
+    });
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('addBtn').addEventListener('click', async ()=>{
+  const input = document.getElementById('newRankInput');
+  const val = input.value.trim().toUpperCase();
+  if(!val) return;
+  if(RANKS.includes(val)){ alert('That rank already exists.'); return; }
+  RANKS.push(val);
+  input.value = '';
+  await saveJSON('unkso-ranks', RANKS);
+  renderRanks();
+});
+
+document.getElementById('newRankInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') document.getElementById('addBtn').click();
+});
+
+async function init(){
+  RANKS = await loadJSON('unkso-ranks', DEFAULT_RANKS);
+  renderRanks();
+}
+init();
+</script>
+
+</body>
+</html>

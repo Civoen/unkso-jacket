@@ -9,6 +9,7 @@
   --bg-page:#14161c; --bg-panel:#1b1e26; --bg-card:#20232c;
   --border:#2c303a; --orange:#e35f2e; --orange-dim:#b8481f;
   --text-primary:#f2f1ee; --text-secondary:#9aa0ab; --text-muted:#6b7280;
+  --red:#c0392b;
 }
 *{box-sizing:border-box;}
 body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family:'Inter',sans-serif;}
@@ -20,27 +21,41 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
 main{max-width:1200px; margin:0 auto; padding:32px;}
 
 .company{margin-bottom:40px;}
-.company h2{font-family:'Poppins'; font-weight:600; font-size:19px; margin:0 0 16px; padding-bottom:10px; border-bottom:1px solid var(--border); color:var(--orange);}
+.company-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid var(--border);}
+.company-head h2{font-family:'Poppins'; font-weight:600; font-size:19px; margin:0; color:var(--orange);}
+.new-btn{background:var(--bg-card); border:1px solid var(--orange-dim); color:var(--orange); font-size:12.5px; font-weight:600; padding:6px 14px; border-radius:6px; cursor:pointer; font-family:'Inter';}
+.new-btn:hover{background:var(--orange-dim); color:#1c1108;}
 
 .member-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px;}
-.member-card{background:var(--bg-panel); border:1px solid var(--border); border-radius:12px; padding:14px;}
+.member-card{position:relative; background:var(--bg-panel); border:1px solid var(--border); border-radius:12px; padding:14px;}
+
+.remove-btn{
+  position:absolute; top:8px; right:8px; width:22px; height:22px; border-radius:50%;
+  background:rgba(20,22,28,.85); border:1px solid var(--border); color:var(--text-secondary);
+  font-size:13px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  z-index:2;
+}
+.remove-btn:hover{background:var(--red); color:#fff; border-color:var(--red);}
 
 .jacket-mini{position:relative; width:100%; aspect-ratio:5747/3902; background:url('jacket-template.svg') center/cover no-repeat; border-radius:8px; overflow:hidden;}
 .ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35);}
 .name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px; padding:0 4%; overflow:hidden;}
-.name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; white-space:nowrap; display:inline-block; max-width:100%;}
+.name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; white-space:nowrap; display:inline-block;}
 
 .mcaption{margin-top:10px; text-align:center;}
 .mcaption .mname{font-family:'Poppins'; font-weight:600; font-size:14.5px;}
 .mcaption .mrank{color:var(--text-secondary); font-size:12px; margin-top:2px;}
 
 .loading{color:var(--text-muted); padding:40px; text-align:center; font-size:13px;}
+.empty-note{color:var(--text-muted); font-size:12.5px; padding:10px 2px;}
 </style>
 </head>
 <body>
 
 <div class="subnav">
   <a href="index.html" class="active">Jackets</a>
+  <a href="ranks.html">Ranks</a>
+  <a href="ribbons.html">Ribbons</a>
   <a href="admin.html">Admin</a>
 </div>
 
@@ -49,56 +64,70 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
 </main>
 
 <script>
-const RIBBONS = {
-  combat_readiness:  "repeating-linear-gradient(90deg,#8a3630 0 8px,#1c1e15 8px 10px,#8a3630 10px 18px)",
-  national_defense:  "linear-gradient(90deg,#3a4a7a 0 30%,#e8e1cc 30% 40%,#8a3630 40% 60%,#e8e1cc 60% 70%,#3a4a7a 70% 100%)",
-  marksmanship:      "repeating-linear-gradient(45deg,#4f6b34 0 6px,#c9a84c 6px 9px)",
-  meritorious:       "linear-gradient(90deg,#5a3a6b 0 50%,#c9a84c 50% 100%)",
-  good_conduct:      "repeating-linear-gradient(90deg,#c9a84c 0 5px,#3a4a2c 5px 10px)",
-  bct_completion:    "#8f7a3a",
-  valor_purple:      "#5b2a86",
-  overseas_service:  "#6fa8d6",
-  campaign_service:  "repeating-linear-gradient(90deg,#e35f2e 0 6px,#1c1e15 6px 8px)",
-  longevity:         "repeating-linear-gradient(90deg,#2f5233 0 10px,#c9a84c 10px 12px)",
-  achievement:       "#1b2a4a",
-  unit_citation:     "repeating-linear-gradient(90deg,#7a1f1f 0 4px,#f2f1ee 4px 8px)"
-};
+const UNIT_OPTIONS = ["Battalion","Bravo","Charlie","Delta"];
+const DEFAULT_RANKS = ["LTC","MAJ","2LT","1LT","CSM","SFC","SSG","SGT","CPL","SPC","PFC","PV2","PVT","RT"];
 
-const SECTION_ORDER = ["Battalion Staff","Bravo Company","Charlie Company","Delta Company"];
-
-const DEFAULT_MEMBERS = [
-  { id:"dentalmav", name:"LTC.DentalMav", rank:"LTC", unit:"Battalion Commander", section:"Battalion Staff", ribbons:["national_defense","valor_purple","combat_readiness","meritorious","marksmanship","achievement","overseas_service","campaign_service","unit_citation","good_conduct","longevity","bct_completion"] },
-  { id:"ironsight", name:"MAJ.IronSight", rank:"MAJ", unit:"Battalion XO", section:"Battalion Staff", ribbons:["national_defense","meritorious","achievement","overseas_service","longevity"] },
-  { id:"falconer", name:"1LT.Falconer", rank:"1LT", unit:"Bravo Company Commander", section:"Bravo Company", ribbons:["national_defense","combat_readiness","marksmanship","achievement"] },
-  { id:"hollowpoint", name:"SGT.Hollowpoint", rank:"SGT", unit:"Bravo Company", section:"Bravo Company", ribbons:["combat_readiness","good_conduct","marksmanship"] },
-  { id:"civoen", name:"2LT.Civoen", rank:"2LT", unit:"Charlie Company", section:"Charlie Company", ribbons:["national_defense","marksmanship","good_conduct","achievement","bct_completion"] },
-  { id:"vincentvanghost", name:"VincentVanGhost", rank:"SPC", unit:"2nd Platoon, Charlie Co.", section:"Charlie Company", ribbons:["combat_readiness","national_defense","marksmanship"] },
-  { id:"semperfi1371", name:"SemperFi1371", rank:"SPC", unit:"1st Platoon, Charlie Co.", section:"Charlie Company", ribbons:["combat_readiness","meritorious"] },
-  { id:"tekk", name:"PFC.Tekk", rank:"PFC", unit:"Delta Company", section:"Delta Company", ribbons:["national_defense","bct_completion"] },
-  { id:"bluebunny", name:"SPC.BlueBunny", rank:"SPC", unit:"Delta Company", section:"Delta Company", ribbons:["combat_readiness","marksmanship","good_conduct"] }
+const DEFAULT_RIBBONS = [
+  { key:"combat_readiness",  label:"Combat Readiness Medal",     pattern:"stripes",  color1:"#8a3630", color2:"#1c1e15" },
+  { key:"national_defense",  label:"National Defense Service",   pattern:"triband",  color1:"#3a4a7a", color2:"#e8e1cc" },
+  { key:"marksmanship",      label:"Marksmanship Ribbon",        pattern:"diagonal", color1:"#4f6b34", color2:"#c9a84c" },
+  { key:"meritorious",       label:"Meritorious Service Medal",  pattern:"split",    color1:"#5a3a6b", color2:"#c9a84c" },
+  { key:"good_conduct",      label:"Good Conduct Ribbon",        pattern:"stripes",  color1:"#c9a84c", color2:"#3a4a2c" },
+  { key:"bct_completion",    label:"BCT Completion Ribbon",      pattern:"solid",    color1:"#8f7a3a", color2:"#8f7a3a" },
+  { key:"valor_purple",      label:"Valor Commendation",         pattern:"solid",    color1:"#5b2a86", color2:"#5b2a86" },
+  { key:"overseas_service",  label:"Overseas Service Ribbon",    pattern:"solid",    color1:"#6fa8d6", color2:"#6fa8d6" },
+  { key:"campaign_service",  label:"Campaign Service Medal",     pattern:"stripes",  color1:"#e35f2e", color2:"#1c1e15" },
+  { key:"longevity",         label:"Longevity Service Ribbon",   pattern:"stripes",  color1:"#2f5233", color2:"#c9a84c" },
+  { key:"achievement",       label:"Achievement Medal",          pattern:"solid",    color1:"#1b2a4a", color2:"#1b2a4a" },
+  { key:"unit_citation",     label:"Unit Citation Ribbon",       pattern:"stripes",  color1:"#7a1f1f", color2:"#f2f1ee" }
 ];
 
-let MEMBERS = [];
+const DEFAULT_MEMBERS = [
+  { id:"dentalmav", name:"LTC.DentalMav", rank:"LTC", unit:"Battalion", position:"CO", ribbons:["national_defense","valor_purple","combat_readiness","meritorious","marksmanship","achievement","overseas_service","campaign_service","unit_citation","good_conduct","longevity","bct_completion"] },
+  { id:"ironsight", name:"MAJ.IronSight", rank:"MAJ", unit:"Battalion", position:"XO", ribbons:["national_defense","meritorious","achievement","overseas_service","longevity"] },
+  { id:"falconer", name:"1LT.Falconer", rank:"1LT", unit:"Bravo", position:"CO", ribbons:["national_defense","combat_readiness","marksmanship","achievement"] },
+  { id:"hollowpoint", name:"SGT.Hollowpoint", rank:"SGT", unit:"Bravo", position:"SL", ribbons:["combat_readiness","good_conduct","marksmanship"] },
+  { id:"civoen", name:"2LT.Civoen", rank:"2LT", unit:"Charlie", position:"CO", ribbons:["national_defense","marksmanship","good_conduct","achievement","bct_completion"] },
+  { id:"vincentvanghost", name:"VincentVanGhost", rank:"SPC", unit:"Charlie", position:"Member", ribbons:["combat_readiness","national_defense","marksmanship"] },
+  { id:"semperfi1371", name:"SemperFi1371", rank:"SPC", unit:"Charlie", position:"Member", ribbons:["combat_readiness","meritorious"] },
+  { id:"tekk", name:"PFC.Tekk", rank:"PFC", unit:"Delta", position:"Member", ribbons:["national_defense","bct_completion"] },
+  { id:"bluebunny", name:"SPC.BlueBunny", rank:"SPC", unit:"Delta", position:"Member", ribbons:["combat_readiness","marksmanship","good_conduct"] }
+];
 
-async function loadMembers(){
+async function loadJSON(key, defaults){
   try{
     if(window.storage){
-      const result = await window.storage.get('unkso-members', true);
+      const result = await window.storage.get(key, true);
       if(result && result.value) return JSON.parse(result.value);
     }
-  }catch(err){ console.log('No saved roster yet, using defaults', err); }
+  }catch(err){ console.log('No stored value for '+key+', using defaults', err); }
   try{
-    if(window.storage){
-      await window.storage.set('unkso-members', JSON.stringify(DEFAULT_MEMBERS), true);
-    }
-  }catch(err){ console.log('Could not seed storage', err); }
-  return DEFAULT_MEMBERS;
+    if(window.storage){ await window.storage.set(key, JSON.stringify(defaults), true); }
+  }catch(err){ console.log('Could not seed '+key, err); }
+  return defaults;
+}
+async function saveJSON(key, value){
+  try{
+    if(window.storage){ const r = await window.storage.set(key, JSON.stringify(value), true); return !!r; }
+  }catch(err){ console.log('Save failed for '+key, err); return false; }
+  return false;
+}
+
+function ribbonCSS(r){
+  switch(r.pattern){
+    case 'solid': return r.color1;
+    case 'stripes': return `repeating-linear-gradient(90deg, ${r.color1} 0 8px, ${r.color2} 8px 10px)`;
+    case 'diagonal': return `repeating-linear-gradient(45deg, ${r.color1} 0 6px, ${r.color2} 6px 9px)`;
+    case 'split': return `linear-gradient(90deg, ${r.color1} 0 50%, ${r.color2} 50% 100%)`;
+    case 'triband': return `linear-gradient(90deg, ${r.color1} 0 30%, ${r.color2} 30% 70%, ${r.color1} 70% 100%)`;
+    default: return r.color1;
+  }
 }
 
 function chunk(arr,n){ const out=[]; for(let i=0;i<arr.length;i+=n) out.push(arr.slice(i,i+n)); return out; }
 
-function ribbonHTML(ribbons){
-  const rows = chunk(ribbons,4);
+function ribbonHTML(ribbonKeys, ribbonMap){
+  const rows = chunk(ribbonKeys,4);
   const cellW=4.6, cellH=2.9, colGap=0.35, rowGap=0.35;
   const rackLeft=62.5, rackBottom=58.5;
   const R = rows.length;
@@ -108,54 +137,89 @@ function ribbonHTML(ribbons){
     const top = rackBottom - (rowsFromBottom+1)*(cellH+rowGap);
     row.forEach((key,ci)=>{
       const left = rackLeft + ci*(cellW+colGap);
-      html += `<div class="ribbon" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background:${RIBBONS[key]};"></div>`;
+      const def = ribbonMap[key];
+      if(!def) return;
+      html += `<div class="ribbon" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background:${ribbonCSS(def)};"></div>`;
     });
   });
   return html;
 }
 
-function jacketHTML(member){
-  return `
-    <div class="name-tape" style="left:24%; top:58.5%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
-    ${ribbonHTML(member.ribbons)}
-  `;
-}
-
 function fitNameTape(tapeEl){
   const span = tapeEl.querySelector('span');
   if(!span) return;
-  const maxWidth = tapeEl.clientWidth - (tapeEl.clientWidth * 0.08); // account for padding
-  let size = tapeEl.clientHeight * 0.55;
-  const minSize = tapeEl.clientHeight * 0.18;
+  const maxWidth = tapeEl.clientWidth * 0.92;
+  let size = tapeEl.clientHeight * 0.6;
   span.style.fontSize = size + 'px';
   let guard = 0;
-  while(span.scrollWidth > maxWidth && size > minSize && guard < 60){
-    size -= size * 0.06;
+  while(span.scrollWidth > maxWidth && size > 3 && guard < 120){
+    size -= 0.4;
     span.style.fontSize = size + 'px';
     guard++;
   }
 }
 
+function jacketHTML(member, ribbonMap){
+  return `
+    <div class="name-tape" style="left:24%; top:58.5%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
+    ${ribbonHTML(member.ribbons, ribbonMap)}
+  `;
+}
+
+let MEMBERS = [];
+let RANKS = [];
+let RIBBONS = [];
+
+function ribbonMapOf(){ const m={}; RIBBONS.forEach(r=>m[r.key]=r); return m; }
+
+function newId(){ return 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+async function addMember(unit){
+  const member = { id:newId(), name:"New Member", rank: RANKS[0] || "PVT", unit: unit, position:"Member", ribbons:[] };
+  MEMBERS.push(member);
+  await saveJSON('unkso-members', MEMBERS);
+  renderRoster();
+}
+
+async function removeMember(id){
+  if(!confirm('Remove this jacket from the roster?')) return;
+  MEMBERS = MEMBERS.filter(m=>m.id!==id);
+  await saveJSON('unkso-members', MEMBERS);
+  renderRoster();
+}
+
 function renderRoster(){
   const main = document.getElementById('main');
   main.innerHTML = '';
-  SECTION_ORDER.forEach(sectionName=>{
-    const members = MEMBERS.filter(m=>m.section===sectionName);
-    if(members.length === 0) return;
+  const ribbonMap = ribbonMapOf();
+  UNIT_OPTIONS.forEach(unit=>{
+    const members = MEMBERS.filter(m=>m.unit===unit);
     const section = document.createElement('section');
     section.className = 'company';
-    section.innerHTML = `<h2>${sectionName}</h2><div class="member-grid"></div>`;
+    section.innerHTML = `
+      <div class="company-head">
+        <h2>${unit}</h2>
+        <button class="new-btn" data-unit="${unit}">+ New</button>
+      </div>
+      <div class="member-grid"></div>
+    `;
+    section.querySelector('.new-btn').addEventListener('click', ()=>addMember(unit));
     const grid = section.querySelector('.member-grid');
+    if(members.length === 0){
+      grid.innerHTML = `<div class="empty-note">No members yet in ${unit}.</div>`;
+    }
     members.forEach(m=>{
       const card = document.createElement('div');
       card.className = 'member-card';
       card.innerHTML = `
-        <div class="jacket-mini">${jacketHTML(m)}</div>
+        <button class="remove-btn" title="Remove">&times;</button>
+        <div class="jacket-mini">${jacketHTML(m, ribbonMap)}</div>
         <div class="mcaption">
           <div class="mname">${m.name}</div>
-          <div class="mrank">${m.rank} &middot; ${m.unit}</div>
+          <div class="mrank">${m.rank} &middot; ${m.position}</div>
         </div>
       `;
+      card.querySelector('.remove-btn').addEventListener('click', ()=>removeMember(m.id));
       grid.appendChild(card);
     });
     main.appendChild(section);
@@ -168,7 +232,9 @@ window.addEventListener('resize', () => {
 });
 
 async function init(){
-  MEMBERS = await loadMembers();
+  MEMBERS = await loadJSON('unkso-members', DEFAULT_MEMBERS);
+  RANKS = await loadJSON('unkso-ranks', DEFAULT_RANKS);
+  RIBBONS = await loadJSON('unkso-ribbons', DEFAULT_RIBBONS);
   renderRoster();
 }
 init();

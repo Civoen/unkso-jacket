@@ -9,6 +9,7 @@
   --bg-page:#14161c; --bg-panel:#1b1e26; --bg-card:#20232c;
   --border:#2c303a; --orange:#e35f2e; --orange-dim:#b8481f;
   --text-primary:#f2f1ee; --text-secondary:#9aa0ab; --text-muted:#6b7280;
+  --red:#c0392b;
 }
 *{box-sizing:border-box;}
 body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family:'Inter',sans-serif;}
@@ -28,7 +29,16 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .jacket-mini{position:relative; width:100%; aspect-ratio:5747/3902; background:url('jacket-template.svg') center/cover no-repeat; border-radius:8px; overflow:hidden;}
 .ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35);}
 .name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px; padding:0 4%; overflow:hidden;}
-.name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; white-space:nowrap; display:inline-block; max-width:100%;}
+.name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; white-space:nowrap; display:inline-block;}
+
+.member-row{display:flex; gap:10px; margin-bottom:18px;}
+.member-row select{flex:1;}
+.icon-btn{
+  flex-shrink:0; width:40px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary);
+  border-radius:8px; font-size:16px; cursor:pointer; font-family:'Inter';
+}
+.icon-btn:hover{border-color:var(--orange-dim); color:var(--orange);}
+.icon-btn.danger:hover{border-color:var(--red); color:var(--red);}
 
 .field{margin-bottom:18px;}
 .field label{display:block; font-size:12px; color:var(--text-secondary); margin-bottom:6px; letter-spacing:.03em; text-transform:uppercase;}
@@ -36,6 +46,8 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   width:100%; background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
   padding:9px 12px; border-radius:8px; font-size:14px; font-family:'Inter';
 }
+.field-row{display:flex; gap:12px;}
+.field-row .field{flex:1;}
 
 .ribbon-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
 .ribbon-check{display:flex; align-items:center; gap:8px; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:12.5px; cursor:pointer;}
@@ -53,6 +65,8 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 <div class="subnav">
   <a href="index.html">Jackets</a>
+  <a href="ranks.html">Ranks</a>
+  <a href="ribbons.html">Ribbons</a>
   <a href="admin.html" class="active">Admin</a>
 </div>
 
@@ -64,19 +78,29 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
     <div class="panel">
       <div class="field">
         <label>Member</label>
-        <select id="memberSelect"></select>
+        <div class="member-row">
+          <select id="memberSelect"></select>
+          <button class="icon-btn" id="newBtn" title="New member">+</button>
+          <button class="icon-btn danger" id="removeBtn" title="Remove member">&times;</button>
+        </div>
       </div>
       <div class="field">
         <label>Display name</label>
         <input id="nameInput" type="text">
       </div>
-      <div class="field">
-        <label>Rank</label>
-        <select id="rankSelect">
-          <option>PVT</option><option>PFC</option><option>SPC</option><option>SGT</option>
-          <option>SSG</option><option>2LT</option><option>1LT</option><option>CPT</option>
-          <option>MAJ</option><option>LTC</option><option>COL</option>
-        </select>
+      <div class="field-row">
+        <div class="field">
+          <label>Rank</label>
+          <select id="rankSelect"></select>
+        </div>
+        <div class="field">
+          <label>Unit</label>
+          <select id="unitSelect"></select>
+        </div>
+        <div class="field">
+          <label>Position</label>
+          <select id="positionSelect"></select>
+        </div>
       </div>
       <div class="field">
         <label>Ribbons &amp; decorations</label>
@@ -92,72 +116,71 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 </main>
 
 <script>
-const RIBBONS = {
-  combat_readiness:  "repeating-linear-gradient(90deg,#8a3630 0 8px,#1c1e15 8px 10px,#8a3630 10px 18px)",
-  national_defense:  "linear-gradient(90deg,#3a4a7a 0 30%,#e8e1cc 30% 40%,#8a3630 40% 60%,#e8e1cc 60% 70%,#3a4a7a 70% 100%)",
-  marksmanship:      "repeating-linear-gradient(45deg,#4f6b34 0 6px,#c9a84c 6px 9px)",
-  meritorious:       "linear-gradient(90deg,#5a3a6b 0 50%,#c9a84c 50% 100%)",
-  good_conduct:      "repeating-linear-gradient(90deg,#c9a84c 0 5px,#3a4a2c 5px 10px)",
-  bct_completion:    "#8f7a3a",
-  valor_purple:      "#5b2a86",
-  overseas_service:  "#6fa8d6",
-  campaign_service:  "repeating-linear-gradient(90deg,#e35f2e 0 6px,#1c1e15 6px 8px)",
-  longevity:         "repeating-linear-gradient(90deg,#2f5233 0 10px,#c9a84c 10px 12px)",
-  achievement:       "#1b2a4a",
-  unit_citation:     "repeating-linear-gradient(90deg,#7a1f1f 0 4px,#f2f1ee 4px 8px)"
-};
-const RIBBON_LABELS = {
-  combat_readiness:"Combat readiness medal", national_defense:"National defense service",
-  marksmanship:"Marksmanship ribbon", meritorious:"Meritorious service medal",
-  good_conduct:"Good conduct ribbon", bct_completion:"BCT completion ribbon",
-  valor_purple:"Valor commendation", overseas_service:"Overseas service ribbon",
-  campaign_service:"Campaign service medal", longevity:"Longevity service ribbon",
-  achievement:"Achievement medal", unit_citation:"Unit citation ribbon"
-};
+const UNIT_OPTIONS = ["Battalion","Bravo","Charlie","Delta"];
+const POSITION_OPTIONS = ["Member","SL","PS","1SG","XO","CO"];
+const DEFAULT_RANKS = ["LTC","MAJ","2LT","1LT","CSM","SFC","SSG","SGT","CPL","SPC","PFC","PV2","PVT","RT"];
 
-const DEFAULT_MEMBERS = [
-  { id:"dentalmav", name:"LTC.DentalMav", rank:"LTC", unit:"Battalion Commander", section:"Battalion Staff", ribbons:["national_defense","valor_purple","combat_readiness","meritorious","marksmanship","achievement","overseas_service","campaign_service","unit_citation","good_conduct","longevity","bct_completion"] },
-  { id:"ironsight", name:"MAJ.IronSight", rank:"MAJ", unit:"Battalion XO", section:"Battalion Staff", ribbons:["national_defense","meritorious","achievement","overseas_service","longevity"] },
-  { id:"falconer", name:"1LT.Falconer", rank:"1LT", unit:"Bravo Company Commander", section:"Bravo Company", ribbons:["national_defense","combat_readiness","marksmanship","achievement"] },
-  { id:"hollowpoint", name:"SGT.Hollowpoint", rank:"SGT", unit:"Bravo Company", section:"Bravo Company", ribbons:["combat_readiness","good_conduct","marksmanship"] },
-  { id:"civoen", name:"2LT.Civoen", rank:"2LT", unit:"Charlie Company", section:"Charlie Company", ribbons:["national_defense","marksmanship","good_conduct","achievement","bct_completion"] },
-  { id:"vincentvanghost", name:"VincentVanGhost", rank:"SPC", unit:"2nd Platoon, Charlie Co.", section:"Charlie Company", ribbons:["combat_readiness","national_defense","marksmanship"] },
-  { id:"semperfi1371", name:"SemperFi1371", rank:"SPC", unit:"1st Platoon, Charlie Co.", section:"Charlie Company", ribbons:["combat_readiness","meritorious"] },
-  { id:"tekk", name:"PFC.Tekk", rank:"PFC", unit:"Delta Company", section:"Delta Company", ribbons:["national_defense","bct_completion"] },
-  { id:"bluebunny", name:"SPC.BlueBunny", rank:"SPC", unit:"Delta Company", section:"Delta Company", ribbons:["combat_readiness","marksmanship","good_conduct"] }
+const DEFAULT_RIBBONS = [
+  { key:"combat_readiness",  label:"Combat Readiness Medal",     pattern:"stripes",  color1:"#8a3630", color2:"#1c1e15" },
+  { key:"national_defense",  label:"National Defense Service",   pattern:"triband",  color1:"#3a4a7a", color2:"#e8e1cc" },
+  { key:"marksmanship",      label:"Marksmanship Ribbon",        pattern:"diagonal", color1:"#4f6b34", color2:"#c9a84c" },
+  { key:"meritorious",       label:"Meritorious Service Medal",  pattern:"split",    color1:"#5a3a6b", color2:"#c9a84c" },
+  { key:"good_conduct",      label:"Good Conduct Ribbon",        pattern:"stripes",  color1:"#c9a84c", color2:"#3a4a2c" },
+  { key:"bct_completion",    label:"BCT Completion Ribbon",      pattern:"solid",    color1:"#8f7a3a", color2:"#8f7a3a" },
+  { key:"valor_purple",      label:"Valor Commendation",         pattern:"solid",    color1:"#5b2a86", color2:"#5b2a86" },
+  { key:"overseas_service",  label:"Overseas Service Ribbon",    pattern:"solid",    color1:"#6fa8d6", color2:"#6fa8d6" },
+  { key:"campaign_service",  label:"Campaign Service Medal",     pattern:"stripes",  color1:"#e35f2e", color2:"#1c1e15" },
+  { key:"longevity",         label:"Longevity Service Ribbon",   pattern:"stripes",  color1:"#2f5233", color2:"#c9a84c" },
+  { key:"achievement",       label:"Achievement Medal",          pattern:"solid",    color1:"#1b2a4a", color2:"#1b2a4a" },
+  { key:"unit_citation",     label:"Unit Citation Ribbon",       pattern:"stripes",  color1:"#7a1f1f", color2:"#f2f1ee" }
 ];
 
-let MEMBERS = [];
+const DEFAULT_MEMBERS = [
+  { id:"dentalmav", name:"LTC.DentalMav", rank:"LTC", unit:"Battalion", position:"CO", ribbons:["national_defense","valor_purple","combat_readiness","meritorious","marksmanship","achievement","overseas_service","campaign_service","unit_citation","good_conduct","longevity","bct_completion"] },
+  { id:"ironsight", name:"MAJ.IronSight", rank:"MAJ", unit:"Battalion", position:"XO", ribbons:["national_defense","meritorious","achievement","overseas_service","longevity"] },
+  { id:"falconer", name:"1LT.Falconer", rank:"1LT", unit:"Bravo", position:"CO", ribbons:["national_defense","combat_readiness","marksmanship","achievement"] },
+  { id:"hollowpoint", name:"SGT.Hollowpoint", rank:"SGT", unit:"Bravo", position:"SL", ribbons:["combat_readiness","good_conduct","marksmanship"] },
+  { id:"civoen", name:"2LT.Civoen", rank:"2LT", unit:"Charlie", position:"CO", ribbons:["national_defense","marksmanship","good_conduct","achievement","bct_completion"] },
+  { id:"vincentvanghost", name:"VincentVanGhost", rank:"SPC", unit:"Charlie", position:"Member", ribbons:["combat_readiness","national_defense","marksmanship"] },
+  { id:"semperfi1371", name:"SemperFi1371", rank:"SPC", unit:"Charlie", position:"Member", ribbons:["combat_readiness","meritorious"] },
+  { id:"tekk", name:"PFC.Tekk", rank:"PFC", unit:"Delta", position:"Member", ribbons:["national_defense","bct_completion"] },
+  { id:"bluebunny", name:"SPC.BlueBunny", rank:"SPC", unit:"Delta", position:"Member", ribbons:["combat_readiness","marksmanship","good_conduct"] }
+];
 
-async function loadMembers(){
+async function loadJSON(key, defaults){
   try{
     if(window.storage){
-      const result = await window.storage.get('unkso-members', true);
+      const result = await window.storage.get(key, true);
       if(result && result.value) return JSON.parse(result.value);
     }
-  }catch(err){ console.log('No saved roster yet, using defaults', err); }
+  }catch(err){ console.log('No stored value for '+key+', using defaults', err); }
   try{
-    if(window.storage){
-      await window.storage.set('unkso-members', JSON.stringify(DEFAULT_MEMBERS), true);
-    }
-  }catch(err){ console.log('Could not seed storage', err); }
-  return DEFAULT_MEMBERS;
+    if(window.storage){ await window.storage.set(key, JSON.stringify(defaults), true); }
+  }catch(err){ console.log('Could not seed '+key, err); }
+  return defaults;
+}
+async function saveJSON(key, value){
+  try{
+    if(window.storage){ const r = await window.storage.set(key, JSON.stringify(value), true); return !!r; }
+  }catch(err){ console.log('Save failed for '+key, err); return false; }
+  return false;
 }
 
-async function saveMembers(){
-  try{
-    if(window.storage){
-      const result = await window.storage.set('unkso-members', JSON.stringify(MEMBERS), true);
-      return !!result;
-    }
-  }catch(err){ console.log('Save failed', err); return false; }
-  return false;
+function ribbonCSS(r){
+  switch(r.pattern){
+    case 'solid': return r.color1;
+    case 'stripes': return `repeating-linear-gradient(90deg, ${r.color1} 0 8px, ${r.color2} 8px 10px)`;
+    case 'diagonal': return `repeating-linear-gradient(45deg, ${r.color1} 0 6px, ${r.color2} 6px 9px)`;
+    case 'split': return `linear-gradient(90deg, ${r.color1} 0 50%, ${r.color2} 50% 100%)`;
+    case 'triband': return `linear-gradient(90deg, ${r.color1} 0 30%, ${r.color2} 30% 70%, ${r.color1} 70% 100%)`;
+    default: return r.color1;
+  }
 }
 
 function chunk(arr,n){ const out=[]; for(let i=0;i<arr.length;i+=n) out.push(arr.slice(i,i+n)); return out; }
 
-function ribbonHTML(ribbons){
-  const rows = chunk(ribbons,4);
+function ribbonHTML(ribbonKeys, ribbonMap){
+  const rows = chunk(ribbonKeys,4);
   const cellW=4.6, cellH=2.9, colGap=0.35, rowGap=0.35;
   const rackLeft=62.5, rackBottom=58.5;
   const R = rows.length;
@@ -167,7 +190,9 @@ function ribbonHTML(ribbons){
     const top = rackBottom - (rowsFromBottom+1)*(cellH+rowGap);
     row.forEach((key,ci)=>{
       const left = rackLeft + ci*(cellW+colGap);
-      html += `<div class="ribbon" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background:${RIBBONS[key]};"></div>`;
+      const def = ribbonMap[key];
+      if(!def) return;
+      html += `<div class="ribbon" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background:${ribbonCSS(def)};"></div>`;
     });
   });
   return html;
@@ -176,22 +201,29 @@ function ribbonHTML(ribbons){
 function fitNameTape(tapeEl){
   const span = tapeEl.querySelector('span');
   if(!span) return;
-  const maxWidth = tapeEl.clientWidth - (tapeEl.clientWidth * 0.08);
-  let size = tapeEl.clientHeight * 0.55;
-  const minSize = tapeEl.clientHeight * 0.18;
+  const maxWidth = tapeEl.clientWidth * 0.92;
+  let size = tapeEl.clientHeight * 0.6;
   span.style.fontSize = size + 'px';
   let guard = 0;
-  while(span.scrollWidth > maxWidth && size > minSize && guard < 60){
-    size -= size * 0.06;
+  while(span.scrollWidth > maxWidth && size > 3 && guard < 120){
+    size -= 0.4;
     span.style.fontSize = size + 'px';
     guard++;
   }
 }
 
+let MEMBERS = [];
+let RANKS = [];
+let RIBBONS = [];
+
+function ribbonMapOf(){ const m={}; RIBBONS.forEach(r=>m[r.key]=r); return m; }
+function newId(){ return 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
 function renderJacket(stage, member){
+  const ribbonMap = ribbonMapOf();
   stage.innerHTML = `
     <div class="name-tape" style="left:24%; top:58.5%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
-    ${ribbonHTML(member.ribbons)}
+    ${ribbonHTML(member.ribbons, ribbonMap)}
   `;
   const tape = stage.querySelector('.name-tape');
   if(tape) fitNameTape(tape);
@@ -200,20 +232,42 @@ function renderJacket(stage, member){
 const memberSelect = document.getElementById('memberSelect');
 const nameInput = document.getElementById('nameInput');
 const rankSelect = document.getElementById('rankSelect');
+const unitSelect = document.getElementById('unitSelect');
+const positionSelect = document.getElementById('positionSelect');
 const ribbonGrid = document.getElementById('ribbonGrid');
 const stage = document.getElementById('stage');
 
-Object.keys(RIBBONS).forEach(key=>{
-  const wrap = document.createElement('label');
-  wrap.className = 'ribbon-check';
-  wrap.innerHTML = `<input type="checkbox" data-key="${key}"><span class="swatch" style="background:${RIBBONS[key]}"></span>${RIBBON_LABELS[key]}`;
-  ribbonGrid.appendChild(wrap);
-});
+function populateStaticSelects(){
+  unitSelect.innerHTML = UNIT_OPTIONS.map(u=>`<option>${u}</option>`).join('');
+  positionSelect.innerHTML = POSITION_OPTIONS.map(p=>`<option>${p}</option>`).join('');
+}
+
+function populateRankSelect(){
+  rankSelect.innerHTML = RANKS.map(r=>`<option>${r}</option>`).join('');
+}
+
+function populateRibbonGrid(){
+  ribbonGrid.innerHTML = '';
+  RIBBONS.forEach(r=>{
+    const wrap = document.createElement('label');
+    wrap.className = 'ribbon-check';
+    wrap.innerHTML = `<input type="checkbox" data-key="${r.key}"><span class="swatch" style="background:${ribbonCSS(r)}"></span>${r.label}`;
+    ribbonGrid.appendChild(wrap);
+  });
+}
+
+function populateMemberSelect(selectedId){
+  memberSelect.innerHTML = MEMBERS.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  if(selectedId) memberSelect.value = selectedId;
+}
 
 function loadMember(id){
   const m = MEMBERS.find(x=>x.id===id);
+  if(!m) return;
   nameInput.value = m.name;
   rankSelect.value = m.rank;
+  unitSelect.value = m.unit;
+  positionSelect.value = m.position;
   ribbonGrid.querySelectorAll('input[type=checkbox]').forEach(cb=>{
     cb.checked = m.ribbons.includes(cb.dataset.key);
   });
@@ -223,7 +277,7 @@ function loadMember(id){
 function currentEdits(){
   const m = MEMBERS.find(x=>x.id===memberSelect.value);
   const ribbons = Array.from(ribbonGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key);
-  return { id:m.id, name:nameInput.value, rank:rankSelect.value, unit:m.unit, section:m.section, ribbons };
+  return { id:m.id, name:nameInput.value, rank:rankSelect.value, unit:unitSelect.value, position:positionSelect.value, ribbons };
 }
 
 function refreshPreview(){ renderJacket(stage, currentEdits()); }
@@ -231,6 +285,8 @@ function refreshPreview(){ renderJacket(stage, currentEdits()); }
 memberSelect.addEventListener('change', e=>loadMember(e.target.value));
 nameInput.addEventListener('input', refreshPreview);
 rankSelect.addEventListener('change', refreshPreview);
+unitSelect.addEventListener('change', refreshPreview);
+positionSelect.addEventListener('change', refreshPreview);
 ribbonGrid.addEventListener('change', refreshPreview);
 
 document.getElementById('saveBtn').addEventListener('click', async ()=>{
@@ -239,25 +295,44 @@ document.getElementById('saveBtn').addEventListener('click', async ()=>{
   const btn = document.getElementById('saveBtn');
   const original = btn.textContent;
   btn.textContent = 'Saving…';
-  const ok = await saveMembers();
+  const ok = await saveJSON('unkso-members', MEMBERS);
   btn.textContent = ok ? 'Saved' : 'Save failed — retry';
   setTimeout(()=>{ btn.textContent = original; }, 1400);
 });
 
-async function init(){
-  MEMBERS = await loadMembers();
-  MEMBERS.forEach(m=>{
-    const opt = document.createElement('option');
-    opt.value = m.id; opt.textContent = m.name;
-    memberSelect.appendChild(opt);
-  });
+document.getElementById('newBtn').addEventListener('click', async ()=>{
+  const member = { id:newId(), name:"New Member", rank: RANKS[0] || "PVT", unit: UNIT_OPTIONS[0], position:"Member", ribbons:[] };
+  MEMBERS.push(member);
+  await saveJSON('unkso-members', MEMBERS);
+  populateMemberSelect(member.id);
+  loadMember(member.id);
+});
+
+document.getElementById('removeBtn').addEventListener('click', async ()=>{
+  if(MEMBERS.length <= 1){ alert("Can't remove the last member."); return; }
+  if(!confirm('Remove this member from the roster?')) return;
+  const id = memberSelect.value;
+  MEMBERS = MEMBERS.filter(m=>m.id!==id);
+  await saveJSON('unkso-members', MEMBERS);
+  populateMemberSelect(MEMBERS[0].id);
   loadMember(MEMBERS[0].id);
-}
+});
 
 window.addEventListener('resize', () => {
   const tape = stage.querySelector('.name-tape');
   if(tape) fitNameTape(tape);
 });
+
+async function init(){
+  MEMBERS = await loadJSON('unkso-members', DEFAULT_MEMBERS);
+  RANKS = await loadJSON('unkso-ranks', DEFAULT_RANKS);
+  RIBBONS = await loadJSON('unkso-ribbons', DEFAULT_RIBBONS);
+  populateStaticSelects();
+  populateRankSelect();
+  populateRibbonGrid();
+  populateMemberSelect();
+  loadMember(MEMBERS[0].id);
+}
 
 init();
 </script>
