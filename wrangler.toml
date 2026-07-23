@@ -6,4 +6,4 @@ compatibility_date = "2026-07-01"
 # Find it with: wrangler kv namespace list
 [[kv_namespaces]]
 binding = "UNKSO_KV"
-id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+id = "b1fc208de382466ba85269cc65734d4e"
