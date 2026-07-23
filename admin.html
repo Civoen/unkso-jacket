@@ -35,6 +35,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .jacket-mini{position:relative; width:100%; aspect-ratio:5747/3902; background:url('jacket-template.svg') center/cover no-repeat; border-radius:8px; overflow:hidden;}
 .ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35); background-size:cover; background-position:center; background-color:#2a2d22;}
 .badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3);}
+.insignia{position:absolute; background-size:cover; background-position:center; background-repeat:no-repeat;}
 .name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px; padding:0 4%; overflow:hidden;}
 .name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; white-space:nowrap; display:inline-block;}
 
@@ -135,7 +136,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 <script>
 const UNIT_OPTIONS = ["Battalion","Bravo","Charlie","Delta"];
 const POSITION_OPTIONS = ["Member","SL","PS","1SG","XO","CO"];
-const DEFAULT_RANKS = ["LTC","MAJ","2LT","1LT","CSM","SFC","SSG","SGT","CPL","SPC","PFC","PV2","PVT","RT"];
+const DEFAULT_RANKS = ["LTC","MAJ","2LT","1LT","CSM","SFC","SSG","SGT","CPL","SPC","PFC","PV2","PVT","RT"].map(name=>({name, insignia:null}));
 
 const DEFAULT_RIBBONS = [
   { key:"combat_readiness",  label:"Combat Readiness Medal",     image:null },
@@ -209,17 +210,38 @@ function ribbonBackground(r){
 
 function chunk(arr,n){ const out=[]; for(let i=0;i<arr.length;i+=n) out.push(arr.slice(i,i+n)); return out; }
 
+function distributeBottomHeavy(items, maxPerRow){
+  const n = items.length;
+  if(n === 0) return [];
+  const numRows = Math.ceil(n / maxPerRow);
+  const base = Math.floor(n / numRows);
+  let rem = n - base*numRows;
+  const sizes = new Array(numRows).fill(base);
+  for(let i = numRows-1; i >= 0 && rem > 0; i--, rem--){
+    sizes[i] += 1;
+  }
+  const rows = [];
+  let idx = 0;
+  for(const size of sizes){
+    rows.push(items.slice(idx, idx+size));
+    idx += size;
+  }
+  return rows;
+}
+
 function ribbonHTML(ribbonKeys, ribbonMap){
-  const rows = chunk(ribbonKeys,4);
+  const rows = distributeBottomHeavy(ribbonKeys, 4);
   const cellW=4.6, cellH=2.9, colGap=0.35, rowGap=0.35;
-  const rackLeft=59.5, rackBottom=54;
+  const centerX=69.2, rackBottom=54;
   const R = rows.length;
   let html='';
   rows.forEach((row,ri)=>{
     const rowsFromBottom = R-1-ri;
     const top = rackBottom - (rowsFromBottom+1)*(cellH+rowGap);
+    const totalW = row.length*cellW + (row.length-1)*colGap;
+    const left0 = centerX - totalW/2;
     row.forEach((key,ci)=>{
-      const left = rackLeft + ci*(cellW+colGap);
+      const left = left0 + ci*(cellW+colGap);
       const def = ribbonMap[key];
       if(!def) return;
       html += `<div class="ribbon" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background-image:${ribbonBackground(def)};"></div>`;
@@ -229,7 +251,7 @@ function ribbonHTML(ribbonKeys, ribbonMap){
 }
 
 function badgeHTML(badgeKeys, badgeMap){
-  const cellSize=2.2, gap=0.3, rowBottom=63, centerX=68.8;
+  const cellSize=2.2, gap=0.3, rowBottom=61.5, centerX=67.5;
   const rows = chunk(badgeKeys,5);
   const R = rows.length;
   let html='';
@@ -248,6 +270,19 @@ function badgeHTML(badgeKeys, badgeMap){
     });
   });
   return html;
+}
+
+function insigniaHTML(rankName, rankMap){
+  const def = rankMap[rankName];
+  if(!def || !def.insignia) return '';
+  const w=7, h=4.2;
+  const leftCenterX=31, leftCenterY=12.2;
+  const rightCenterX=69, rightCenterY=12.2;
+  const left = `
+    <div class="insignia" style="left:${leftCenterX-w/2}%; top:${leftCenterY-h/2}%; width:${w}%; height:${h}%; background-image:url(${def.insignia}); transform:rotate(-22deg) skewX(-10deg);"></div>`;
+  const right = `
+    <div class="insignia" style="left:${rightCenterX-w/2}%; top:${rightCenterY-h/2}%; width:${w}%; height:${h}%; background-image:url(${def.insignia}); transform:rotate(22deg) skewX(10deg);"></div>`;
+  return left + right;
 }
 
 function fitNameTape(tapeEl){
@@ -271,12 +306,16 @@ let BADGES = [];
 
 function ribbonMapOf(){ const m={}; RIBBONS.forEach(r=>m[r.key]=r); return m; }
 function badgeMapOf(){ const m={}; BADGES.forEach(b=>m[b.key]=b); return m; }
+function rankMapOf(){ const m={}; RANKS.forEach(r=>m[r.name]=r); return m; }
+function rankIndex(name){ return RANKS.findIndex(r=>r.name===name); }
 function newId(){ return 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
 function renderJacket(stage, member){
   const ribbonMap = ribbonMapOf();
   const badgeMap = badgeMapOf();
+  const rankMap = rankMapOf();
   stage.innerHTML = `
+    ${insigniaHTML(member.rank, rankMap)}
     <div class="name-tape" style="left:24%; top:58.5%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
     ${ribbonHTML(member.ribbons, ribbonMap)}
     ${badgeHTML(member.badges||[], badgeMap)}
@@ -300,7 +339,7 @@ function populateStaticSelects(){
 }
 
 function populateRankSelect(){
-  rankSelect.innerHTML = RANKS.map(r=>`<option>${r}</option>`).join('');
+  rankSelect.innerHTML = RANKS.map(r=>`<option>${r.name}</option>`).join('');
 }
 
 function populateRibbonGrid(){
@@ -327,7 +366,7 @@ function populateBadgeGrid(){
 
 function sortMembersBySeniority(){
   MEMBERS.sort((a,b)=>{
-    const ai = RANKS.indexOf(a.rank); const bi = RANKS.indexOf(b.rank);
+    const ai = rankIndex(a.rank); const bi = rankIndex(b.rank);
     const aRank = ai === -1 ? RANKS.length : ai;
     const bRank = bi === -1 ? RANKS.length : bi;
     if(aRank !== bRank) return aRank - bRank;
@@ -387,7 +426,7 @@ document.getElementById('saveBtn').addEventListener('click', async ()=>{
 });
 
 document.getElementById('newBtn').addEventListener('click', async ()=>{
-  const member = { id:newId(), name:"New Member", rank: RANKS[0] || "PVT", unit: UNIT_OPTIONS[0], position:"Member", ribbons:[], badges:[] };
+  const member = { id:newId(), name:"New Member", rank: (RANKS[0] && RANKS[0].name) || "PVT", unit: UNIT_OPTIONS[0], position:"Member", ribbons:[], badges:[] };
   MEMBERS.push(member);
   await saveJSON('members', MEMBERS);
   sortMembersBySeniority();
