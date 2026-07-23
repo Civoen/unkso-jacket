@@ -276,8 +276,8 @@ function insigniaHTML(rankName, rankMap){
   const def = rankMap[rankName];
   if(!def || !def.insignia) return '';
   const w=4.2, h=2.5;
-  const leftAnchorX=20, leftAnchorY=26;
-  const rightAnchorX=80, rightAnchorY=26;
+  const leftAnchorX=20, leftAnchorY=22;
+  const rightAnchorX=80, rightAnchorY=22;
   const left = `
     <div class="insignia" style="left:${leftAnchorX-w/2}%; top:${leftAnchorY-h/2}%; width:${w}%; height:${h}%; background-image:url(${def.insignia}); transform:rotate(-24deg) skewX(-5deg);"></div>`;
   const right = `
