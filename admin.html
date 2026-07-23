@@ -33,7 +33,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .preview-panel{display:flex; flex-direction:column; align-items:center;}
 
 .jacket-mini{position:relative; width:100%; aspect-ratio:5747/3902; background:url('jacket-template.svg') center/cover no-repeat; border-radius:8px; overflow:hidden;}
-.ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35);}
+.ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35); background-size:cover; background-position:center; background-color:#2a2d22;}
 .badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3);}
 .name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px; padding:0 4%; overflow:hidden;}
 .name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; white-space:nowrap; display:inline-block;}
@@ -59,7 +59,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .ribbon-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
 .ribbon-check{display:flex; align-items:center; gap:8px; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:12.5px; cursor:pointer;}
 .ribbon-check input{margin:0;}
-.ribbon-check .swatch{width:26px; height:10px; border-radius:1.5px; border:1px solid rgba(0,0,0,.35); flex-shrink:0;}
+.ribbon-check .swatch{width:26px; height:10px; border-radius:1.5px; border:1px solid rgba(0,0,0,.35); flex-shrink:0; background-size:cover; background-position:center; background-color:#2a2d22;}
 
 .badge-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
 .badge-check{display:flex; align-items:center; gap:8px; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:12.5px; cursor:pointer;}
@@ -138,18 +138,18 @@ const POSITION_OPTIONS = ["Member","SL","PS","1SG","XO","CO"];
 const DEFAULT_RANKS = ["LTC","MAJ","2LT","1LT","CSM","SFC","SSG","SGT","CPL","SPC","PFC","PV2","PVT","RT"];
 
 const DEFAULT_RIBBONS = [
-  { key:"combat_readiness",  label:"Combat Readiness Medal",     pattern:"stripes",  color1:"#8a3630", color2:"#1c1e15" },
-  { key:"national_defense",  label:"National Defense Service",   pattern:"triband",  color1:"#3a4a7a", color2:"#e8e1cc" },
-  { key:"marksmanship",      label:"Marksmanship Ribbon",        pattern:"diagonal", color1:"#4f6b34", color2:"#c9a84c" },
-  { key:"meritorious",       label:"Meritorious Service Medal",  pattern:"split",    color1:"#5a3a6b", color2:"#c9a84c" },
-  { key:"good_conduct",      label:"Good Conduct Ribbon",        pattern:"stripes",  color1:"#c9a84c", color2:"#3a4a2c" },
-  { key:"bct_completion",    label:"BCT Completion Ribbon",      pattern:"solid",    color1:"#8f7a3a", color2:"#8f7a3a" },
-  { key:"valor_purple",      label:"Valor Commendation",         pattern:"solid",    color1:"#5b2a86", color2:"#5b2a86" },
-  { key:"overseas_service",  label:"Overseas Service Ribbon",    pattern:"solid",    color1:"#6fa8d6", color2:"#6fa8d6" },
-  { key:"campaign_service",  label:"Campaign Service Medal",     pattern:"stripes",  color1:"#e35f2e", color2:"#1c1e15" },
-  { key:"longevity",         label:"Longevity Service Ribbon",   pattern:"stripes",  color1:"#2f5233", color2:"#c9a84c" },
-  { key:"achievement",       label:"Achievement Medal",          pattern:"solid",    color1:"#1b2a4a", color2:"#1b2a4a" },
-  { key:"unit_citation",     label:"Unit Citation Ribbon",       pattern:"stripes",  color1:"#7a1f1f", color2:"#f2f1ee" }
+  { key:"combat_readiness",  label:"Combat Readiness Medal",     image:null },
+  { key:"national_defense",  label:"National Defense Service",   image:null },
+  { key:"marksmanship",      label:"Marksmanship Ribbon",        image:null },
+  { key:"meritorious",       label:"Meritorious Service Medal",  image:null },
+  { key:"good_conduct",      label:"Good Conduct Ribbon",        image:null },
+  { key:"bct_completion",    label:"BCT Completion Ribbon",      image:null },
+  { key:"valor_purple",      label:"Valor Commendation",         image:null },
+  { key:"overseas_service",  label:"Overseas Service Ribbon",    image:null },
+  { key:"campaign_service",  label:"Campaign Service Medal",     image:null },
+  { key:"longevity",         label:"Longevity Service Ribbon",   image:null },
+  { key:"achievement",       label:"Achievement Medal",          image:null },
+  { key:"unit_citation",     label:"Unit Citation Ribbon",       image:null }
 ];
 
 const DEFAULT_BADGES = [
@@ -203,15 +203,8 @@ async function saveJSON(key, value){
   }catch(err){ console.log('Save failed for '+key, err); return false; }
 }
 
-function ribbonCSS(r){
-  switch(r.pattern){
-    case 'solid': return r.color1;
-    case 'stripes': return `repeating-linear-gradient(90deg, ${r.color1} 0 8px, ${r.color2} 8px 10px)`;
-    case 'diagonal': return `repeating-linear-gradient(45deg, ${r.color1} 0 6px, ${r.color2} 6px 9px)`;
-    case 'split': return `linear-gradient(90deg, ${r.color1} 0 50%, ${r.color2} 50% 100%)`;
-    case 'triband': return `linear-gradient(90deg, ${r.color1} 0 30%, ${r.color2} 30% 70%, ${r.color1} 70% 100%)`;
-    default: return r.color1;
-  }
+function ribbonBackground(r){
+  return r.image ? `url(${r.image})` : `repeating-linear-gradient(45deg,#33362a 0 6px,#25271e 6px 12px)`;
 }
 
 function chunk(arr,n){ const out=[]; for(let i=0;i<arr.length;i+=n) out.push(arr.slice(i,i+n)); return out; }
@@ -229,15 +222,15 @@ function ribbonHTML(ribbonKeys, ribbonMap){
       const left = rackLeft + ci*(cellW+colGap);
       const def = ribbonMap[key];
       if(!def) return;
-      html += `<div class="ribbon" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background:${ribbonCSS(def)};"></div>`;
+      html += `<div class="ribbon" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background-image:${ribbonBackground(def)};"></div>`;
     });
   });
   return html;
 }
 
 function badgeHTML(badgeKeys, badgeMap){
-  const cellSize=3.4, gap=0.4, rowBottom=63, centerX=68.8;
-  const rows = chunk(badgeKeys,3);
+  const cellSize=2.2, gap=0.3, rowBottom=63, centerX=68.8;
+  const rows = chunk(badgeKeys,5);
   const R = rows.length;
   let html='';
   rows.forEach((row,ri)=>{
@@ -315,7 +308,7 @@ function populateRibbonGrid(){
   RIBBONS.forEach(r=>{
     const wrap = document.createElement('label');
     wrap.className = 'ribbon-check';
-    wrap.innerHTML = `<input type="checkbox" data-key="${r.key}"><span class="swatch" style="background:${ribbonCSS(r)}"></span>${r.label}`;
+    wrap.innerHTML = `<input type="checkbox" data-key="${r.key}"><span class="swatch" style="${r.image ? `background-image:url(${r.image})` : ''}"></span>${r.label}`;
     ribbonGrid.appendChild(wrap);
   });
 }
