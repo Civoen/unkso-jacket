@@ -55,6 +55,30 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
 }
 .zoom-btn:hover{background:var(--orange); color:#1c1108; border-color:var(--orange);}
 
+.download-btn{
+  position:absolute; top:64px; right:8px; width:22px; height:22px; border-radius:50%;
+  background:rgba(20,22,28,.85); border:1px solid var(--border); color:var(--text-secondary);
+  font-size:11px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  z-index:2;
+}
+.download-btn:hover{background:var(--orange); color:#1c1108; border-color:var(--orange);}
+.download-btn.busy{pointer-events:none; opacity:.6;}
+
+.unit-download-btn{
+  background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary); font-size:12.5px; font-weight:500;
+  padding:6px 14px; border-radius:6px; cursor:pointer; font-family:'Inter';
+}
+.unit-download-btn:hover{border-color:var(--orange-dim); color:var(--orange);}
+.unit-download-btn:disabled{opacity:.6; cursor:default;}
+
+.subnav a.nav-secondary{
+  margin-left:auto;
+  color:var(--text-secondary); background:var(--bg-card); border:1px solid var(--border);
+  padding:6px 16px; border-radius:7px; font-weight:600; text-decoration:none; font-size:13px; cursor:pointer;
+}
+.subnav a.nav-secondary:hover{border-color:var(--orange-dim); color:var(--orange);}
+.subnav a.nav-secondary:disabled, .subnav a.nav-secondary.busy{opacity:.6; pointer-events:none;}
+
 .insignia{position:absolute; background-size:cover; background-position:center; background-repeat:no-repeat; transform-origin:50% 50%;}
 
 .zoom-overlay{
@@ -100,6 +124,7 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
   <a href="badges.html">Badges</a>
+  <a href="#" id="downloadAllBtn" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta">Admin</a>
 </div>
 
@@ -255,9 +280,16 @@ function badgeHTML(badgeKeys, badgeMap){
       const def = badgeMap[key];
       if(!def) return;
       const left = left0 + ci*(cellSize+gap);
-      const radius = def.shape === 'circle' ? '50%' : '0';
-      const clip = def.shape === 'diamond' ? 'clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);' : '';
-      html += `<div class="badge" style="left:${left}%; top:${top}%; width:${cellSize}%; height:${cellSize}%; background:${def.color}; border-radius:${radius}; ${clip}"></div>`;
+      if(def.shape === 'diamond'){
+        // A rotated square, not clip-path: clip-path isn't captured by the PNG
+        // export step (html2canvas doesn't support it), but a plain rotate does.
+        const side = cellSize*0.72;
+        const offset = (cellSize-side)/2;
+        html += `<div class="badge" style="left:${left+offset}%; top:${top+offset}%; width:${side}%; height:${side}%; background:${def.color}; transform:rotate(45deg);"></div>`;
+      } else {
+        const radius = def.shape === 'circle' ? '50%' : '0';
+        html += `<div class="badge" style="left:${left}%; top:${top}%; width:${cellSize}%; height:${cellSize}%; background:${def.color}; border-radius:${radius};"></div>`;
+      }
     });
   });
   return html;
@@ -372,6 +404,7 @@ function renderRoster(){
         <h2>${unit}</h2>
         <div class="head-actions">
           <button class="collapse-btn" title="${isCollapsed ? 'Expand' : 'Collapse'}">${isCollapsed ? '▸ Expand' : '▾ Collapse'}</button>
+          <button class="unit-download-btn" title="Download all ${unit} jackets as a zip">Download All</button>
           <button class="new-btn" data-unit="${unit}">+ New</button>
         </div>
       </div>
@@ -382,6 +415,9 @@ function renderRoster(){
       if(collapsedUnits.has(unit)) collapsedUnits.delete(unit);
       else collapsedUnits.add(unit);
       renderRoster();
+    });
+    section.querySelector('.unit-download-btn').addEventListener('click', (e)=>{
+      downloadMembersZip(members, ribbonMap, badgeMap, rankMap, safeFilename(unit) + '-jackets.zip', e.currentTarget, false);
     });
     const grid = section.querySelector('.member-grid');
     if(members.length === 0){
@@ -395,6 +431,7 @@ function renderRoster(){
       card.innerHTML = `
         <button class="remove-btn" title="Remove">&times;</button>
         <button class="zoom-btn" title="Zoom">&#128269;</button>
+        <button class="download-btn" title="Download PNG">&#11015;</button>
         <div class="jacket-mini">${jacketHTML(m, ribbonMap, badgeMap, rankMap)}</div>
         <div class="mcaption">
           <div class="mname">${m.rank}.${m.name}</div>
@@ -409,6 +446,10 @@ function renderRoster(){
         e.stopPropagation();
         openZoom(m, ribbonMap, badgeMap, rankMap);
       });
+      card.querySelector('.download-btn').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        downloadMemberPNG(m, ribbonMap, badgeMap, rankMap, e.currentTarget);
+      });
       card.addEventListener('click', ()=>{
         window.location.href = 'admin.html?member=' + encodeURIComponent(m.id);
       });
@@ -417,6 +458,105 @@ function renderRoster(){
     main.appendChild(section);
   });
   document.querySelectorAll('.name-tape').forEach(fitNameTape);
+}
+
+// ---- PNG / ZIP export ----
+// Rendered at 1600px wide (jacket art's own proportions give ~1600x1087) which
+// keeps ribbon text, badges, and the name tape legible while keeping file size
+// reasonable (~150-350KB per jacket depending on how many ribbons/badges).
+const DOWNLOAD_WIDTH = 1600;
+
+function loadScriptOnce(src){
+  return new Promise((resolve, reject)=>{
+    if(document.querySelector(`script[src="${src}"]`)){ resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('Could not load ' + src));
+    document.head.appendChild(s);
+  });
+}
+async function ensureHtml2Canvas(){
+  if(!window.html2canvas) await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+}
+async function ensureJSZip(){
+  if(!window.JSZip) await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+}
+
+function safeFilename(s){
+  return s.replace(/[^a-z0-9.\-_]+/gi, '_');
+}
+
+async function renderJacketCanvas(member, ribbonMap, badgeMap, rankMap){
+  await ensureHtml2Canvas();
+  const holder = document.createElement('div');
+  holder.className = 'jacket-mini';
+  holder.style.cssText = `position:fixed; left:-99999px; top:0; width:${DOWNLOAD_WIDTH}px; border-radius:0;`;
+  holder.innerHTML = jacketHTML(member, ribbonMap, badgeMap, rankMap);
+  document.body.appendChild(holder);
+  const tape = holder.querySelector('.name-tape');
+  if(tape) fitNameTape(tape);
+  const canvas = await html2canvas(holder, { backgroundColor: null, scale: 1, useCORS: true });
+  document.body.removeChild(holder);
+  return canvas;
+}
+
+function canvasToPngBlob(canvas){
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+function triggerBlobDownload(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+}
+
+async function downloadMemberPNG(member, ribbonMap, badgeMap, rankMap, btn){
+  const original = btn.innerHTML;
+  btn.classList.add('busy');
+  try{
+    const canvas = await renderJacketCanvas(member, ribbonMap, badgeMap, rankMap);
+    const blob = await canvasToPngBlob(canvas);
+    triggerBlobDownload(blob, safeFilename(`${member.rank}.${member.name}`) + '.png');
+  }catch(err){
+    console.log('Download failed', err);
+    alert('Could not generate that PNG. Try again.');
+  }finally{
+    btn.classList.remove('busy');
+    btn.innerHTML = original;
+  }
+}
+
+async function downloadMembersZip(members, ribbonMap, badgeMap, rankMap, zipFilename, btn, groupByUnit){
+  if(members.length === 0){ alert('Nothing to download.'); return; }
+  const original = btn.textContent;
+  btn.setAttribute('disabled','');
+  btn.classList.add('busy');
+  try{
+    await ensureJSZip();
+    const zip = new JSZip();
+    for(let i=0;i<members.length;i++){
+      btn.textContent = `Rendering ${i+1}/${members.length}…`;
+      const m = members[i];
+      const canvas = await renderJacketCanvas(m, ribbonMap, badgeMap, rankMap);
+      const blob = await canvasToPngBlob(canvas);
+      const name = safeFilename(`${m.rank}.${m.name}`) + '.png';
+      const path = groupByUnit ? `${safeFilename(m.unit)}/${name}` : name;
+      zip.file(path, blob);
+    }
+    btn.textContent = 'Zipping…';
+    const zipBlob = await zip.generateAsync({type:'blob'});
+    triggerBlobDownload(zipBlob, zipFilename);
+  }catch(err){
+    console.log('Zip download failed', err);
+    alert('Could not build the zip. Try again.');
+  }finally{
+    btn.removeAttribute('disabled');
+    btn.classList.remove('busy');
+    btn.textContent = original;
+  }
 }
 
 function openZoom(member, ribbonMap, badgeMap, rankMap){
@@ -439,6 +579,11 @@ document.getElementById('zoomOverlay').addEventListener('click', (e)=>{
 });
 document.addEventListener('keydown', (e)=>{
   if(e.key === 'Escape') closeZoom();
+});
+
+document.getElementById('downloadAllBtn').addEventListener('click', (e)=>{
+  e.preventDefault();
+  downloadMembersZip(MEMBERS, ribbonMapOf(), badgeMapOf(), rankMapOf(), 'unkso-all-jackets.zip', e.currentTarget, true);
 });
 
 document.getElementById('searchInput').addEventListener('input', (e)=>{

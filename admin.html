@@ -23,6 +23,12 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
 }
 .subnav a.nav-cta:hover{background:#f06c37;}
 .subnav a.nav-cta.active{background:#f06c37; box-shadow:0 0 0 2px rgba(227,95,46,.4);}
+.subnav a.nav-secondary{
+  color:var(--text-secondary); background:var(--bg-card); border:1px solid var(--border);
+  padding:6px 16px; border-radius:7px; font-weight:600; text-decoration:none; font-size:13px; cursor:pointer;
+}
+.subnav a.nav-secondary:hover{border-color:var(--orange-dim); color:var(--orange);}
+.subnav a.nav-secondary.busy{opacity:.6; pointer-events:none;}
 
 main{max-width:1100px; margin:0 auto; padding:32px; display:grid; grid-template-columns:1fr 380px; gap:24px;}
 
@@ -81,6 +87,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
   <a href="badges.html">Badges</a>
+  <a href="#" id="downloadAllBtn" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta active">Admin</a>
 </div>
 
@@ -264,9 +271,14 @@ function badgeHTML(badgeKeys, badgeMap){
       const def = badgeMap[key];
       if(!def) return;
       const left = left0 + ci*(cellSize+gap);
-      const radius = def.shape === 'circle' ? '50%' : '0';
-      const clip = def.shape === 'diamond' ? 'clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);' : '';
-      html += `<div class="badge" style="left:${left}%; top:${top}%; width:${cellSize}%; height:${cellSize}%; background:${def.color}; border-radius:${radius}; ${clip}"></div>`;
+      if(def.shape === 'diamond'){
+        const side = cellSize*0.72;
+        const offset = (cellSize-side)/2;
+        html += `<div class="badge" style="left:${left+offset}%; top:${top+offset}%; width:${side}%; height:${side}%; background:${def.color}; transform:rotate(45deg);"></div>`;
+      } else {
+        const radius = def.shape === 'circle' ? '50%' : '0';
+        html += `<div class="badge" style="left:${left}%; top:${top}%; width:${cellSize}%; height:${cellSize}%; background:${def.color}; border-radius:${radius};"></div>`;
+      }
     });
   });
   return html;
