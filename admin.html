@@ -275,9 +275,9 @@ function badgeHTML(badgeKeys, badgeMap){
 function insigniaHTML(rankName, rankMap){
   const def = rankMap[rankName];
   if(!def || !def.insignia) return '';
-  const w=6.2, h=3.7;
-  const leftAnchorX=18, leftAnchorY=21.7;
-  const rightAnchorX=82, rightAnchorY=21.7;
+  const w=4.2, h=2.5;
+  const leftAnchorX=20, leftAnchorY=26;
+  const rightAnchorX=80, rightAnchorY=26;
   const left = `
     <div class="insignia" style="left:${leftAnchorX-w/2}%; top:${leftAnchorY-h}%; width:${w}%; height:${h}%; background-image:url(${def.insignia}); transform:rotate(-31deg) skewX(-6deg);"></div>`;
   const right = `
