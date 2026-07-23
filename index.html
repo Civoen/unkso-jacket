@@ -273,9 +273,9 @@ function insigniaHTML(rankName, rankMap){
   const leftAnchorX=20, leftAnchorY=22;
   const rightAnchorX=80, rightAnchorY=22;
   const left = `
-    <div class="insignia" style="left:${leftAnchorX-w/2}%; top:${leftAnchorY-h/2}%; width:${w}%; height:${h}%; background-image:url(${def.insignia}); transform:rotate(-24deg) skewX(-5deg);"></div>`;
+    <div class="insignia" style="left:${leftAnchorX-w/2}%; top:${leftAnchorY-h/2}%; width:${w}%; height:${h}%; background-image:url(${def.insignia}); transform:rotate(-24deg);"></div>`;
   const right = `
-    <div class="insignia" style="left:${rightAnchorX-w/2}%; top:${rightAnchorY-h/2}%; width:${w}%; height:${h}%; background-image:url(${def.insignia}); transform:rotate(24deg) skewX(5deg);"></div>`;
+    <div class="insignia" style="left:${rightAnchorX-w/2}%; top:${rightAnchorY-h/2}%; width:${w}%; height:${h}%; background-image:url(${def.insignia}); transform:rotate(24deg);"></div>`;
   return left + right;
 }
 
