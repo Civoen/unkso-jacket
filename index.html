@@ -266,13 +266,13 @@ function badgeHTML(badgeKeys, badgeMap){
 function insigniaHTML(rankName, rankMap){
   const def = rankMap[rankName];
   if(!def || !def.insignia) return '';
-  const w=7, h=4.2;
-  const leftCenterX=31, leftCenterY=12.2;
-  const rightCenterX=69, rightCenterY=12.2;
+  const w=6.2, h=3.7;
+  const leftCenterX=27, leftCenterY=15.5;
+  const rightCenterX=73, rightCenterY=15.5;
   const left = `
-    <div class="insignia" style="left:${leftCenterX-w/2}%; top:${leftCenterY-h/2}%; width:${w}%; height:${h}%; background-image:url(${def.insignia}); transform:rotate(-22deg) skewX(-10deg);"></div>`;
+    <div class="insignia" style="left:${leftCenterX-w/2}%; top:${leftCenterY-h/2}%; width:${w}%; height:${h}%; background-image:url(${def.insignia}); transform:rotate(-27deg) skewX(-9deg);"></div>`;
   const right = `
-    <div class="insignia" style="left:${rightCenterX-w/2}%; top:${rightCenterY-h/2}%; width:${w}%; height:${h}%; background-image:url(${def.insignia}); transform:rotate(22deg) skewX(10deg);"></div>`;
+    <div class="insignia" style="left:${rightCenterX-w/2}%; top:${rightCenterY-h/2}%; width:${w}%; height:${h}%; background-image:url(${def.insignia}); transform:rotate(27deg) skewX(9deg);"></div>`;
   return left + right;
 }
 
