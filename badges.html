@@ -163,6 +163,12 @@ async function saveJSON(key, value){
   }catch(err){ console.log('Save failed for '+key, err); return false; }
 }
 
+async function saveBadgesChecked(){
+  const ok = await saveJSON('badges', BADGES);
+  if(!ok) alert('Could not save that change. Check your connection to the API — see the browser console for details.');
+  return ok;
+}
+
 function resizeToBadgeSize(file){
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
@@ -225,7 +231,7 @@ function renderBadges(){
     `;
     row.querySelector('[data-field="label"]').addEventListener('change', async (e)=>{
       BADGES[idx].label = e.target.value;
-      await saveJSON('badges', BADGES);
+      await saveBadgesChecked();
     });
     row.querySelector('[data-field="image"]').addEventListener('change', async (e)=>{
       const file = e.target.files[0];
@@ -233,7 +239,7 @@ function renderBadges(){
       try{
         const dataUrl = await resizeToBadgeSize(file);
         BADGES[idx].image = dataUrl;
-        await saveJSON('badges', BADGES);
+        await saveBadgesChecked();
         row.querySelector('.swatch').style.backgroundImage = `url(${dataUrl})`;
         row.querySelector('.upload-btn').firstChild.textContent = 'Replace image';
       }catch(err){
@@ -244,7 +250,7 @@ function renderBadges(){
       if(!confirm(`Remove "${b.label}"? This will unassign it from any jackets that have it.`)) return;
       await pruneFromMembers(b.key);
       BADGES.splice(idx,1);
-      await saveJSON('badges', BADGES);
+      await saveBadgesChecked();
       renderBadges();
     });
     row.addEventListener('dragstart', ()=>{
@@ -261,7 +267,7 @@ function renderBadges(){
       const newTargetIdx = BADGES.findIndex(x=>x.key===targetKey);
       BADGES.splice(newTargetIdx, 0, moved);
       dragSrcIdx = null;
-      await saveJSON('badges', BADGES);
+      await saveBadgesChecked();
       renderBadges();
     });
     list.appendChild(row);
@@ -282,6 +288,11 @@ function refreshAddButton(){
 
 document.getElementById('newLabel').addEventListener('input', refreshAddButton);
 
+function filenameToLabel(filename){
+  const base = filename.replace(/\.[^.]+$/, '');
+  return base.replace(/[_\-]+/g, ' ').trim();
+}
+
 document.getElementById('newUpload').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
@@ -289,6 +300,7 @@ document.getElementById('newUpload').addEventListener('change', async (e)=>{
     pendingImage = await resizeToBadgeSize(file);
     document.getElementById('newPreview').style.backgroundImage = `url(${pendingImage})`;
     document.getElementById('newUploadLabel').firstChild.textContent = 'Change image';
+    document.getElementById('newLabel').value = filenameToLabel(file.name);
     refreshAddButton();
   }catch(err){
     alert('Could not process that image. Try a different file.');
@@ -305,7 +317,7 @@ document.getElementById('addBtn').addEventListener('click', async ()=>{
   document.getElementById('newUploadLabel').firstChild.textContent = 'Choose image';
   pendingImage = null;
   refreshAddButton();
-  await saveJSON('badges', BADGES);
+  await saveBadgesChecked();
   renderBadges();
 });
 

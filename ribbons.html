@@ -299,6 +299,11 @@ function refreshAddButton(){
 
 document.getElementById('newLabel').addEventListener('input', refreshAddButton);
 
+function filenameToLabel(filename){
+  const base = filename.replace(/\.[^.]+$/, '');
+  return base.replace(/[_\-]+/g, ' ').trim();
+}
+
 document.getElementById('newUpload').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
@@ -306,6 +311,7 @@ document.getElementById('newUpload').addEventListener('change', async (e)=>{
     pendingImage = await resizeToRibbonSize(file);
     document.getElementById('newPreview').style.backgroundImage = `url(${pendingImage})`;
     document.getElementById('newUploadLabel').firstChild.textContent = 'Change image';
+    document.getElementById('newLabel').value = filenameToLabel(file.name);
     refreshAddButton();
   }catch(err){
     alert('Could not process that image. Try a different file.');
