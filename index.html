@@ -242,7 +242,7 @@ function ribbonHTML(ribbonKeys, ribbonMap){
 }
 
 function badgeHTML(badgeKeys, badgeMap){
-  const cellSize=2.2, gap=0.3, rowBottom=61.5, centerX=67.5;
+  const cellSize=2.2, gap=0.3, rowBottom=61.5, centerX=68.8;
   const rows = chunk(badgeKeys,5);
   const R = rows.length;
   let html='';
@@ -447,9 +447,16 @@ window.addEventListener('resize', () => {
   document.querySelectorAll('.name-tape').forEach(fitNameTape);
 });
 
+function normalizeRanks(ranks){
+  return ranks.map(r => typeof r === 'string' ? { name:r, insignia:null } : r);
+}
+
 async function init(){
   MEMBERS = await loadJSON('members', DEFAULT_MEMBERS);
-  RANKS = await loadJSON('ranks', DEFAULT_RANKS);
+  const rawRanks = await loadJSON('ranks', DEFAULT_RANKS);
+  const ranksNeedMigration = rawRanks.some(r => typeof r === 'string');
+  RANKS = normalizeRanks(rawRanks);
+  if(ranksNeedMigration) await saveJSON('ranks', RANKS);
   RIBBONS = await loadJSON('ribbons', DEFAULT_RIBBONS);
   BADGES = await loadJSON('badges', DEFAULT_BADGES);
   renderRoster();

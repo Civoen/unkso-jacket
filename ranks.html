@@ -285,8 +285,17 @@ document.getElementById('newRankInput').addEventListener('keydown', (e)=>{
   if(e.key === 'Enter') document.getElementById('addBtn').click();
 });
 
+// Older saved data may still be a plain array of strings (from before ranks carried
+// insignia images) — convert those into the object shape so edits actually persist.
+function normalizeRanks(ranks){
+  return ranks.map(r => typeof r === 'string' ? { name:r, insignia:null } : r);
+}
+
 async function init(){
-  RANKS = await loadJSON('ranks', DEFAULT_RANKS);
+  const raw = await loadJSON('ranks', DEFAULT_RANKS);
+  const needsMigration = raw.some(r => typeof r === 'string');
+  RANKS = normalizeRanks(raw);
+  if(needsMigration) await saveJSON('ranks', RANKS);
   renderRanks();
 }
 init();
