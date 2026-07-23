@@ -18,7 +18,7 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
 .subnav a{color:var(--text-secondary); text-decoration:none; font-size:14px; font-weight:500; padding-bottom:4px; border-bottom:2px solid transparent;}
 .subnav a.active{color:var(--orange); border-color:var(--orange);}
 .subnav a.nav-cta{
-  margin-left:auto; color:#1c1108; background:var(--orange); padding:7px 18px; border-radius:7px;
+  color:#1c1108; background:var(--orange); padding:7px 18px; border-radius:7px;
   font-weight:700; border-bottom:none; box-shadow:0 1px 0 rgba(0,0,0,.2);
 }
 .subnav a.nav-cta:hover{background:#f06c37;}
@@ -98,7 +98,7 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
 .zoom-close:hover{border-color:var(--orange-dim); color:var(--orange);}
 
 .jacket-mini{position:relative; width:100%; aspect-ratio:3023/2052; background:url('jacket-template.svg') center/cover no-repeat; border-radius:8px; overflow:hidden;}
-.fold-patch{position:absolute; background:#4c4636; border:1px solid rgba(0,0,0,.15);}
+.jacket-overlay{position:absolute; inset:0; background:url('jacket-overlay.svg') center/cover no-repeat; pointer-events:none;}
 .ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35); background-size:cover; background-position:center; background-color:#2a2d22;}
 .badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3); border-radius:4px; background-size:cover; background-position:center; background-color:#2a2d22;}
 .name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px; padding:0 4%; overflow:hidden;}
@@ -253,8 +253,7 @@ function ribbonHTML(ribbonKeys, ribbonMap){
   const centerX=69.2, rackBottom=54;
   const R = rows.length;
 
-  const placed = [];
-  let minLeft = Infinity, minTop = Infinity;
+  let html = '';
   rows.forEach((row,ri)=>{
     const rowsFromBottom = R-1-ri;
     const top = rackBottom - (rowsFromBottom+1)*(cellH+rowGap);
@@ -264,28 +263,9 @@ function ribbonHTML(ribbonKeys, ribbonMap){
       const left = left0 + ci*(cellW+colGap);
       const def = ribbonMap[key];
       if(!def) return;
-      placed.push({left, top, def});
-      minLeft = Math.min(minLeft, left);
-      minTop = Math.min(minTop, top);
+      html += `<div class="ribbon" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background-image:${ribbonBackground(def)};"></div>`;
     });
   });
-  if(placed.length === 0) return '';
-
-  let html = '';
-  placed.forEach(({left, top, def})=>{
-    html += `<div class="ribbon" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background-image:${ribbonBackground(def)};"></div>`;
-  });
-
-  // A solid rotated patch standing in for the jacket's lapel fold, drawn on top
-  // of the rack's top-left corner — a real fold would sit in front of ribbons
-  // pinned underneath it there. Rotation (not clip-path) so it survives the
-  // html2canvas PNG export, same trick already used for diamond badges. Sized
-  // in the fabric's own solid color, measured off a reference photo.
-  const patchW = 5.5, patchH = 8;
-  const patchLeft = minLeft - patchW/2;
-  const patchTop = minTop - patchH/2;
-  html += `<div class="fold-patch" style="left:${patchLeft}%; top:${patchTop}%; width:${patchW}%; height:${patchH}%; transform:rotate(45deg);"></div>`;
-
   return html;
 }
 
@@ -343,9 +323,10 @@ function fitNameTape(tapeEl){
 function jacketHTML(member, ribbonMap, badgeMap, rankMap){
   return `
     ${insigniaHTML(member.rank, rankMap)}
-    <div class="name-tape" style="left:22.5%; top:57%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
+    <div class="name-tape" style="left:23.25%; top:57%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
     ${ribbonHTML(member.ribbons, ribbonMap)}
     ${badgeHTML(member.badges||[], badgeMap)}
+    <div class="jacket-overlay"></div>
   `;
 }
 
