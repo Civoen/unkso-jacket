@@ -41,6 +41,11 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 .jacket-mini{position:relative; width:100%; aspect-ratio:3023/2052; background:url('jacket-template.svg') center/cover no-repeat; border-radius:8px; overflow:hidden;}
 .jacket-overlay{position:absolute; inset:0; background:url('jacket-overlay.svg') center/cover no-repeat; pointer-events:none;}
+.neck-medal{
+  position:absolute; inset:0;
+  background-size:cover; background-position:center; background-repeat:no-repeat;
+  pointer-events:none;
+}
 .ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35); background-size:cover; background-position:center; background-color:#2a2d22;}
 .badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3); border-radius:4px; background-size:cover; background-position:center; background-color:#2a2d22;}
 .insignia{position:absolute; background-size:cover; background-position:center; background-repeat:no-repeat; transform-origin:50% 50%;}
@@ -148,18 +153,18 @@ const POSITION_OPTIONS = ["Member","SL","PS","1SG","XO","CO"];
 const DEFAULT_RANKS = ["LTC","MAJ","2LT","1LT","CSM","SFC","SSG","SGT","CPL","SPC","PFC","PV2","PVT","RT"].map(name=>({name, insignia:null}));
 
 const DEFAULT_RIBBONS = [
-  { key:"combat_readiness",  label:"Combat Readiness Medal",     image:null },
-  { key:"national_defense",  label:"National Defense Service",   image:null },
-  { key:"marksmanship",      label:"Marksmanship Ribbon",        image:null },
-  { key:"meritorious",       label:"Meritorious Service Medal",  image:null },
-  { key:"good_conduct",      label:"Good Conduct Ribbon",        image:null },
-  { key:"bct_completion",    label:"BCT Completion Ribbon",      image:null },
-  { key:"valor_purple",      label:"Valor Commendation",         image:null },
-  { key:"overseas_service",  label:"Overseas Service Ribbon",    image:null },
-  { key:"campaign_service",  label:"Campaign Service Medal",     image:null },
-  { key:"longevity",         label:"Longevity Service Ribbon",   image:null },
-  { key:"achievement",       label:"Achievement Medal",          image:null },
-  { key:"unit_citation",     label:"Unit Citation Ribbon",       image:null }
+  { key:"combat_readiness",  label:"Combat Readiness Medal",     image:null, neckImage:null },
+  { key:"national_defense",  label:"National Defense Service",   image:null, neckImage:null },
+  { key:"marksmanship",      label:"Marksmanship Ribbon",        image:null, neckImage:null },
+  { key:"meritorious",       label:"Meritorious Service Medal",  image:null, neckImage:null },
+  { key:"good_conduct",      label:"Good Conduct Ribbon",        image:null, neckImage:null },
+  { key:"bct_completion",    label:"BCT Completion Ribbon",      image:null, neckImage:null },
+  { key:"valor_purple",      label:"Valor Commendation",         image:null, neckImage:null },
+  { key:"overseas_service",  label:"Overseas Service Ribbon",    image:null, neckImage:null },
+  { key:"campaign_service",  label:"Campaign Service Medal",     image:null, neckImage:null },
+  { key:"longevity",         label:"Longevity Service Ribbon",   image:null, neckImage:null },
+  { key:"achievement",       label:"Achievement Medal",          image:null, neckImage:null },
+  { key:"unit_citation",     label:"Unit Citation Ribbon",       image:null, neckImage:null }
 ];
 
 const DEFAULT_BADGES = [
@@ -320,6 +325,13 @@ function rankMapOf(){ const m={}; RANKS.forEach(r=>m[r.name]=r); return m; }
 function rankIndex(name){ return RANKS.findIndex(r=>r.name===name); }
 function newId(){ return 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
+function neckMedalHTML(memberRibbonKeys, ribbonMap){
+  const key = (memberRibbonKeys||[]).find(k => ribbonMap[k] && ribbonMap[k].neckImage);
+  if(!key) return '';
+  const def = ribbonMap[key];
+  return `<div class="neck-medal" style="background-image:url(${def.neckImage});"></div>`;
+}
+
 function renderJacket(stage, member){
   const ribbonMap = ribbonMapOf();
   const badgeMap = badgeMapOf();
@@ -330,6 +342,7 @@ function renderJacket(stage, member){
     ${ribbonHTML(member.ribbons, ribbonMap)}
     ${badgeHTML(member.badges||[], badgeMap)}
     <div class="jacket-overlay"></div>
+    ${neckMedalHTML(member.ribbons, ribbonMap)}
   `;
   const tape = stage.querySelector('.name-tape');
   if(tape) fitNameTape(tape);

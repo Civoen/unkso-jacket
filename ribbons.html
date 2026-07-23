@@ -42,8 +42,8 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   padding:10px 14px; border-radius:8px; font-size:14px; font-family:'Inter';
 }
 
-.col-labels{display:grid; grid-template-columns:22px 60px 1fr 110px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
-.ribbon-row{display:grid; grid-template-columns:22px 60px 1fr 110px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
+.col-labels{display:grid; grid-template-columns:22px 60px 1fr 100px 100px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
+.ribbon-row{display:grid; grid-template-columns:22px 60px 1fr 100px 100px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
 .ribbon-row:last-child{border-bottom:none;}
 .ribbon-row.dragging{opacity:.4;}
 .drag-handle{color:var(--text-muted); font-size:15px; text-align:center; cursor:grab; user-select:none;}
@@ -65,6 +65,8 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 }
 .upload-btn:hover{border-color:var(--orange-dim); color:var(--orange);}
 .upload-btn input{display:none;}
+.upload-btn.set{border-color:var(--orange-dim); color:var(--orange);}
+.upload-btn.small{font-size:11px; padding:8px 6px;}
 
 .icon-btn{
   width:36px; height:34px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary);
@@ -107,12 +109,12 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
   <div class="panel">
     <div class="search-row"><input id="searchInput" type="text" placeholder="Search ribbons…"></div>
-    <div class="col-labels"><span></span><span>Preview</span><span>Name</span><span>Image</span><span></span></div>
+    <div class="col-labels"><span></span><span>Preview</span><span>Name</span><span>Image</span><span>Neck art</span><span></span></div>
     <div id="ribbonList"></div>
 
     <div class="add-panel">
       <h3>Add a new ribbon</h3>
-      <div class="dims-note">Upload any image — it'll be auto-cropped and resized to 350×95.</div>
+      <div class="dims-note">Upload any image — it'll be auto-cropped and resized to 350×95. Neck art (for decorations worn around the neck, like the Medal of Honor) can be added afterward from the list above — it should be a full jacket-canvas image (same dimensions as the jacket art itself) with the medal already positioned correctly and everything else transparent.</div>
       <div class="add-grid">
         <div class="swatch" id="newPreview"></div>
         <input id="newLabel" type="text" placeholder="Ribbon name">
@@ -121,25 +123,25 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
       </div>
     </div>
   </div>
-  <div class="note">Removing a ribbon here also removes it from any jacket it's currently assigned to.</div>
+  <div class="note">Removing a ribbon here also removes it from any jacket it's currently assigned to. A ribbon with neck art set will show around the member's neck on their jacket, in addition to appearing in their ribbon rack as normal.</div>
 </main>
 
 <script>
 const RIBBON_W = 350, RIBBON_H = 95;
 
 const DEFAULT_RIBBONS = [
-  { key:"combat_readiness",  label:"Combat Readiness Medal",     image:null },
-  { key:"national_defense",  label:"National Defense Service",   image:null },
-  { key:"marksmanship",      label:"Marksmanship Ribbon",        image:null },
-  { key:"meritorious",       label:"Meritorious Service Medal",  image:null },
-  { key:"good_conduct",      label:"Good Conduct Ribbon",        image:null },
-  { key:"bct_completion",    label:"BCT Completion Ribbon",      image:null },
-  { key:"valor_purple",      label:"Valor Commendation",         image:null },
-  { key:"overseas_service",  label:"Overseas Service Ribbon",    image:null },
-  { key:"campaign_service",  label:"Campaign Service Medal",     image:null },
-  { key:"longevity",         label:"Longevity Service Ribbon",   image:null },
-  { key:"achievement",       label:"Achievement Medal",          image:null },
-  { key:"unit_citation",     label:"Unit Citation Ribbon",       image:null }
+  { key:"combat_readiness",  label:"Combat Readiness Medal",     image:null, neckImage:null },
+  { key:"national_defense",  label:"National Defense Service",   image:null, neckImage:null },
+  { key:"marksmanship",      label:"Marksmanship Ribbon",        image:null, neckImage:null },
+  { key:"meritorious",       label:"Meritorious Service Medal",  image:null, neckImage:null },
+  { key:"good_conduct",      label:"Good Conduct Ribbon",        image:null, neckImage:null },
+  { key:"bct_completion",    label:"BCT Completion Ribbon",      image:null, neckImage:null },
+  { key:"valor_purple",      label:"Valor Commendation",         image:null, neckImage:null },
+  { key:"overseas_service",  label:"Overseas Service Ribbon",    image:null, neckImage:null },
+  { key:"campaign_service",  label:"Campaign Service Medal",     image:null, neckImage:null },
+  { key:"longevity",         label:"Longevity Service Ribbon",   image:null, neckImage:null },
+  { key:"achievement",       label:"Achievement Medal",          image:null, neckImage:null },
+  { key:"unit_citation",     label:"Unit Citation Ribbon",       image:null, neckImage:null }
 ];
 
 const API_BASE = 'https://unkso-api.adambramfitt.workers.dev';
@@ -202,6 +204,37 @@ function resizeToRibbonSize(file){
   });
 }
 
+// Neck art (medals worn around the neck, like the Medal of Honor) keeps its own
+// natural aspect ratio rather than being force-cropped like a ribbon bar — it's
+// rendered with background-size:contain on the jacket, not cover.
+// Neck art (medals worn around the neck, like the Medal of Honor) isn't a small
+// icon — it's expected to be a full jacket-canvas-sized image (same dimensions
+// as jacket-template.svg / jacket-overlay.svg) with the medal already
+// positioned correctly within it and transparent everywhere else. It's applied
+// as a full cover layer, same treatment as the fold overlay, so it needs more
+// resolution than a ribbon thumbnail to stay sharp when zoomed or exported.
+function resizeNeckArt(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const MAX = 1600;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const w = Math.round(img.width*scale), h = Math.round(img.height*scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => reject(new Error('Could not read that image'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('Could not read that file'));
+    reader.readAsDataURL(file);
+  });
+}
+
 function newKey(label){
   return 'r_' + label.toLowerCase().replace(/[^a-z0-9]+/g,'_').slice(0,24) + '_' + Math.random().toString(36).slice(2,5);
 }
@@ -237,7 +270,8 @@ function renderRibbons(){
       <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
       <div class="swatch" style="${r.image ? `background-image:url(${r.image})` : ''}"></div>
       <input type="text" value="${r.label}" data-field="label">
-      <label class="upload-btn">${r.image ? 'Replace image' : 'Upload image'}<input type="file" accept="image/*" data-field="image"></label>
+      <label class="upload-btn small">${r.image ? 'Replace' : 'Upload'}<input type="file" accept="image/*" data-field="image"></label>
+      <label class="upload-btn small ${r.neckImage ? 'set' : ''}">${r.neckImage ? '✓ Set' : 'Add neck art'}<input type="file" accept="image/*" data-field="neckImage"></label>
       <button class="icon-btn" title="Remove">&times;</button>
     `;
     row.querySelector('[data-field="label"]').addEventListener('change', async (e)=>{
@@ -252,7 +286,21 @@ function renderRibbons(){
         RIBBONS[idx].image = dataUrl;
         await saveJSON('ribbons', RIBBONS);
         row.querySelector('.swatch').style.backgroundImage = `url(${dataUrl})`;
-        row.querySelector('.upload-btn').firstChild.textContent = 'Replace image';
+        row.querySelectorAll('.upload-btn')[0].firstChild.textContent = 'Replace';
+      }catch(err){
+        alert('Could not process that image. Try a different file.');
+      }
+    });
+    row.querySelector('[data-field="neckImage"]').addEventListener('change', async (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      try{
+        const dataUrl = await resizeNeckArt(file);
+        RIBBONS[idx].neckImage = dataUrl;
+        await saveJSON('ribbons', RIBBONS);
+        const btn = row.querySelectorAll('.upload-btn')[1];
+        btn.classList.add('set');
+        btn.firstChild.textContent = '✓ Set';
       }catch(err){
         alert('Could not process that image. Try a different file.');
       }
@@ -321,7 +369,7 @@ document.getElementById('newUpload').addEventListener('change', async (e)=>{
 document.getElementById('addBtn').addEventListener('click', async ()=>{
   const label = document.getElementById('newLabel').value.trim();
   if(!label || !pendingImage) return;
-  RIBBONS.push({ key: newKey(label), label, image: pendingImage });
+  RIBBONS.push({ key: newKey(label), label, image: pendingImage, neckImage: null });
   document.getElementById('newLabel').value = '';
   document.getElementById('newUpload').value = '';
   document.getElementById('newPreview').style.backgroundImage = '';
