@@ -97,7 +97,7 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
 }
 .zoom-close:hover{border-color:var(--orange-dim); color:var(--orange);}
 
-.jacket-mini{position:relative; width:100%; aspect-ratio:5747/3902; background:url('jacket-template.svg') center/cover no-repeat; border-radius:8px; overflow:hidden;}
+.jacket-mini{position:relative; width:100%; aspect-ratio:3023/2052; background:url('jacket-template.svg') center/cover no-repeat; border-radius:8px; overflow:hidden;}
 .ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35); background-size:cover; background-position:center; background-color:#2a2d22;}
 .badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3);}
 .name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px; padding:0 4%; overflow:hidden;}
@@ -267,7 +267,7 @@ function ribbonHTML(ribbonKeys, ribbonMap){
 }
 
 function badgeHTML(badgeKeys, badgeMap){
-  const cellSize=2.2, gap=0.3, rowBottom=61.5, centerX=68.8;
+  const cellSize=3.2, gap=0.35, rowBottom=61.5, centerX=68.8;
   const rows = chunk(badgeKeys,5);
   const R = rows.length;
   let html='';
@@ -328,7 +328,7 @@ function fitNameTape(tapeEl){
 function jacketHTML(member, ribbonMap, badgeMap, rankMap){
   return `
     ${insigniaHTML(member.rank, rankMap)}
-    <div class="name-tape" style="left:24%; top:58.5%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
+    <div class="name-tape" style="left:24%; top:56%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
     ${ribbonHTML(member.ribbons, ribbonMap)}
     ${badgeHTML(member.badges||[], badgeMap)}
   `;

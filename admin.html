@@ -38,7 +38,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .panel{background:var(--bg-panel); border:1px solid var(--border); border-radius:14px; padding:24px;}
 .preview-panel{display:flex; flex-direction:column; align-items:center;}
 
-.jacket-mini{position:relative; width:100%; aspect-ratio:5747/3902; background:url('jacket-template.svg') center/cover no-repeat; border-radius:8px; overflow:hidden;}
+.jacket-mini{position:relative; width:100%; aspect-ratio:3023/2052; background:url('jacket-template.svg') center/cover no-repeat; border-radius:8px; overflow:hidden;}
 .ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35); background-size:cover; background-position:center; background-color:#2a2d22;}
 .badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3);}
 .insignia{position:absolute; background-size:cover; background-position:center; background-repeat:no-repeat; transform-origin:50% 50%;}
@@ -258,7 +258,7 @@ function ribbonHTML(ribbonKeys, ribbonMap){
 }
 
 function badgeHTML(badgeKeys, badgeMap){
-  const cellSize=2.2, gap=0.3, rowBottom=61.5, centerX=68.8;
+  const cellSize=3.2, gap=0.35, rowBottom=61.5, centerX=68.8;
   const rows = chunk(badgeKeys,5);
   const R = rows.length;
   let html='';
@@ -328,7 +328,7 @@ function renderJacket(stage, member){
   const rankMap = rankMapOf();
   stage.innerHTML = `
     ${insigniaHTML(member.rank, rankMap)}
-    <div class="name-tape" style="left:24%; top:58.5%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
+    <div class="name-tape" style="left:24%; top:56%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
     ${ribbonHTML(member.ribbons, ribbonMap)}
     ${badgeHTML(member.badges||[], badgeMap)}
   `;
