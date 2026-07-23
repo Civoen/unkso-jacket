@@ -86,7 +86,7 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
   align-items:center; justify-content:center; padding:40px;
 }
 .zoom-overlay.open{display:flex;}
-.zoom-box{background:var(--bg-panel); border:1px solid var(--border); border-radius:14px; padding:28px; max-width:640px; width:100%;}
+.zoom-box{background:var(--bg-panel); border:1px solid var(--border); border-radius:14px; padding:28px; max-width:1100px; width:100%;}
 .zoom-box .jacket-mini{width:100%;}
 .zoom-caption{margin-top:16px; text-align:center;}
 .zoom-caption .zname{font-family:'Poppins'; font-weight:600; font-size:18px;}
@@ -98,8 +98,9 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
 .zoom-close:hover{border-color:var(--orange-dim); color:var(--orange);}
 
 .jacket-mini{position:relative; width:100%; aspect-ratio:3023/2052; background:url('jacket-template.svg') center/cover no-repeat; border-radius:8px; overflow:hidden;}
+.ribbon-rack{position:absolute;}
 .ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35); background-size:cover; background-position:center; background-color:#2a2d22;}
-.badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3);}
+.badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3); border-radius:4px; background-size:cover; background-position:center; background-color:#2a2d22;}
 .name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px; padding:0 4%; overflow:hidden;}
 .name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; white-space:nowrap; display:inline-block;}
 
@@ -179,10 +180,10 @@ const DEFAULT_MEMBERS = [
 ];
 
 const DEFAULT_BADGES = [
-  { key:"expert_marksman", label:"Expert Marksmanship Badge", shape:"circle",  color:"#c9a84c" },
-  { key:"airborne_wings",  label:"Airborne Wings",             shape:"diamond", color:"#8a9bb0" },
-  { key:"combat_infantry", label:"Combat Infantryman Badge",   shape:"square",  color:"#3a4a2c" },
-  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       shape:"circle",  color:"#7a1f1f" }
+  { key:"expert_marksman", label:"Expert Marksmanship Badge", image:null },
+  { key:"airborne_wings",  label:"Airborne Wings",             image:null },
+  { key:"combat_infantry", label:"Combat Infantryman Badge",   image:null },
+  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       image:null }
 ];
 
 // Set this to your deployed Worker URL (no trailing slash), e.g. 'https://unkso-api.yoursubdomain.workers.dev'
@@ -246,11 +247,16 @@ function distributeBottomHeavy(items, maxPerRow){
 }
 
 function ribbonHTML(ribbonKeys, ribbonMap){
+  if(ribbonKeys.length === 0) return '';
   const rows = distributeBottomHeavy(ribbonKeys, 4);
   const cellW=4.6, cellH=2.9, colGap=0.35, rowGap=0.35;
   const centerX=69.2, rackBottom=54;
   const R = rows.length;
-  let html='';
+
+  // First pass: compute each ribbon's absolute position, and the rack's overall
+  // bounding box (rows are individually centered, so width varies row to row).
+  const placed = [];
+  let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity;
   rows.forEach((row,ri)=>{
     const rowsFromBottom = R-1-ri;
     const top = rackBottom - (rowsFromBottom+1)*(cellH+rowGap);
@@ -260,10 +266,32 @@ function ribbonHTML(ribbonKeys, ribbonMap){
       const left = left0 + ci*(cellW+colGap);
       const def = ribbonMap[key];
       if(!def) return;
-      html += `<div class="ribbon" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background-image:${ribbonBackground(def)};"></div>`;
+      placed.push({left, top, def});
+      minLeft = Math.min(minLeft, left);
+      maxRight = Math.max(maxRight, left+cellW);
+      minTop = Math.min(minTop, top);
     });
   });
-  return html;
+  if(placed.length === 0) return '';
+  const maxBottom = rackBottom;
+  const boxW = maxRight - minLeft, boxH = maxBottom - minTop;
+
+  // Clip the rack's own bounding box so its top-left corner is cut away by a
+  // diagonal, echoing how a real lapel fold sits in front of ribbons pinned
+  // underneath it. Proportions (14% across, 37% down) are measured off a real
+  // reference photo of a ribbon rack partly hidden by the jacket's fold.
+  const clip = `clip-path:polygon(14% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 37%);`;
+
+  let inner = '';
+  placed.forEach(({left, top, def})=>{
+    const relLeft = (left-minLeft)/boxW*100;
+    const relTop = (top-minTop)/boxH*100;
+    const relW = cellW/boxW*100;
+    const relH = cellH/boxH*100;
+    inner += `<div class="ribbon" style="left:${relLeft}%; top:${relTop}%; width:${relW}%; height:${relH}%; background-image:${ribbonBackground(def)};"></div>`;
+  });
+
+  return `<div class="ribbon-rack" style="left:${minLeft}%; top:${minTop}%; width:${boxW}%; height:${boxH}%; ${clip}">${inner}</div>`;
 }
 
 function badgeHTML(badgeKeys, badgeMap){
@@ -280,16 +308,8 @@ function badgeHTML(badgeKeys, badgeMap){
       const def = badgeMap[key];
       if(!def) return;
       const left = left0 + ci*(cellSize+gap);
-      if(def.shape === 'diamond'){
-        // A rotated square, not clip-path: clip-path isn't captured by the PNG
-        // export step (html2canvas doesn't support it), but a plain rotate does.
-        const side = cellSize*0.72;
-        const offset = (cellSize-side)/2;
-        html += `<div class="badge" style="left:${left+offset}%; top:${top+offset}%; width:${side}%; height:${side}%; background:${def.color}; transform:rotate(45deg);"></div>`;
-      } else {
-        const radius = def.shape === 'circle' ? '50%' : '0';
-        html += `<div class="badge" style="left:${left}%; top:${top}%; width:${cellSize}%; height:${cellSize}%; background:${def.color}; border-radius:${radius};"></div>`;
-      }
+      const bg = def.image ? `url(${def.image})` : `repeating-linear-gradient(45deg,#33362a 0 4px,#25271e 4px 8px)`;
+      html += `<div class="badge" style="left:${left}%; top:${top}%; width:${cellSize}%; height:${cellSize}%; background-image:${bg};"></div>`;
     });
   });
   return html;
@@ -328,7 +348,7 @@ function fitNameTape(tapeEl){
 function jacketHTML(member, ribbonMap, badgeMap, rankMap){
   return `
     ${insigniaHTML(member.rank, rankMap)}
-    <div class="name-tape" style="left:24%; top:56%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
+    <div class="name-tape" style="left:24%; top:57%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
     ${ribbonHTML(member.ribbons, ribbonMap)}
     ${badgeHTML(member.badges||[], badgeMap)}
   `;
@@ -608,6 +628,14 @@ async function init(){
   RIBBONS = await loadJSON('ribbons', DEFAULT_RIBBONS);
   BADGES = await loadJSON('badges', DEFAULT_BADGES);
   renderRoster();
+
+  // Reached via the "Download All" link on another page — kick off the same
+  // all-jackets zip the in-page button triggers, then clean the URL.
+  if(new URLSearchParams(window.location.search).get('autodownload') === '1'){
+    const btn = document.getElementById('downloadAllBtn');
+    downloadMembersZip(MEMBERS, ribbonMapOf(), badgeMapOf(), rankMapOf(), 'unkso-all-jackets.zip', btn, true);
+    history.replaceState(null, '', window.location.pathname);
+  }
 }
 init();
 </script>

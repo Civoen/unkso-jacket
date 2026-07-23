@@ -17,8 +17,14 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
 .subnav{display:flex; align-items:center; gap:30px; padding:16px 32px; background:var(--bg-panel); border-bottom:1px solid var(--border);}
 .subnav a{color:var(--text-secondary); text-decoration:none; font-size:14px; font-weight:500; padding-bottom:4px; border-bottom:2px solid transparent;}
 .subnav a.active{color:var(--orange); border-color:var(--orange);}
+.subnav a.nav-secondary{
+  margin-left:auto;
+  color:var(--text-secondary); background:var(--bg-card); border:1px solid var(--border);
+  padding:6px 16px; border-radius:7px; font-weight:600; text-decoration:none; font-size:13px; cursor:pointer;
+}
+.subnav a.nav-secondary:hover{border-color:var(--orange-dim); color:var(--orange);}
 .subnav a.nav-cta{
-  margin-left:auto; color:#1c1108; background:var(--orange); padding:7px 18px; border-radius:7px;
+  color:#1c1108; background:var(--orange); padding:7px 18px; border-radius:7px;
   font-weight:700; border-bottom:none; box-shadow:0 1px 0 rgba(0,0,0,.2);
 }
 .subnav a.nav-cta:hover{background:#f06c37;}
@@ -91,6 +97,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html" class="active">Ribbons</a>
   <a href="badges.html">Badges</a>
+  <a href="index.html?autodownload=1" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta">Admin</a>
 </div>
 

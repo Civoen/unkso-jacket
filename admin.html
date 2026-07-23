@@ -30,7 +30,7 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
 .subnav a.nav-secondary:hover{border-color:var(--orange-dim); color:var(--orange);}
 .subnav a.nav-secondary.busy{opacity:.6; pointer-events:none;}
 
-main{max-width:1100px; margin:0 auto; padding:32px; display:grid; grid-template-columns:1fr 380px; gap:24px;}
+main{max-width:1360px; margin:0 auto; padding:32px; display:grid; grid-template-columns:1fr 640px; gap:24px;}
 
 h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .sub{color:var(--text-muted); font-size:12.5px; margin-bottom:22px; letter-spacing:.03em;}
@@ -39,8 +39,9 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .preview-panel{display:flex; flex-direction:column; align-items:center;}
 
 .jacket-mini{position:relative; width:100%; aspect-ratio:3023/2052; background:url('jacket-template.svg') center/cover no-repeat; border-radius:8px; overflow:hidden;}
+.ribbon-rack{position:absolute;}
 .ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35); background-size:cover; background-position:center; background-color:#2a2d22;}
-.badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3);}
+.badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3); border-radius:4px; background-size:cover; background-position:center; background-color:#2a2d22;}
 .insignia{position:absolute; background-size:cover; background-position:center; background-repeat:no-repeat; transform-origin:50% 50%;}
 .name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px; padding:0 4%; overflow:hidden;}
 .name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; white-space:nowrap; display:inline-block;}
@@ -71,7 +72,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .badge-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
 .badge-check{display:flex; align-items:center; gap:8px; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:12.5px; cursor:pointer;}
 .badge-check input{margin:0;}
-.badge-check .swatch{width:16px; height:16px; border:1px solid rgba(0,0,0,.35); flex-shrink:0;}
+.badge-check .swatch{width:16px; height:16px; border-radius:3px; border:1px solid rgba(0,0,0,.35); flex-shrink:0; background-size:cover; background-position:center; background-color:#2a2d22;}
 
 .save-btn{
   margin-top:6px; width:100%; background:var(--orange); color:#1c1108; border:none; border-radius:8px;
@@ -87,7 +88,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
   <a href="badges.html">Badges</a>
-  <a href="#" id="downloadAllBtn" class="nav-secondary">Download All</a>
+  <a href="index.html?autodownload=1" id="downloadAllBtn" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta active">Admin</a>
 </div>
 
@@ -161,10 +162,10 @@ const DEFAULT_RIBBONS = [
 ];
 
 const DEFAULT_BADGES = [
-  { key:"expert_marksman", label:"Expert Marksmanship Badge", shape:"circle",  color:"#c9a84c" },
-  { key:"airborne_wings",  label:"Airborne Wings",             shape:"diamond", color:"#8a9bb0" },
-  { key:"combat_infantry", label:"Combat Infantryman Badge",   shape:"square",  color:"#3a4a2c" },
-  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       shape:"circle",  color:"#7a1f1f" }
+  { key:"expert_marksman", label:"Expert Marksmanship Badge", image:null },
+  { key:"airborne_wings",  label:"Airborne Wings",             image:null },
+  { key:"combat_infantry", label:"Combat Infantryman Badge",   image:null },
+  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       image:null }
 ];
 
 const DEFAULT_MEMBERS = [
@@ -237,11 +238,14 @@ function distributeBottomHeavy(items, maxPerRow){
 }
 
 function ribbonHTML(ribbonKeys, ribbonMap){
+  if(ribbonKeys.length === 0) return '';
   const rows = distributeBottomHeavy(ribbonKeys, 4);
   const cellW=4.6, cellH=2.9, colGap=0.35, rowGap=0.35;
   const centerX=69.2, rackBottom=54;
   const R = rows.length;
-  let html='';
+
+  const placed = [];
+  let minLeft = Infinity, maxRight = -Infinity, minTop = Infinity;
   rows.forEach((row,ri)=>{
     const rowsFromBottom = R-1-ri;
     const top = rackBottom - (rowsFromBottom+1)*(cellH+rowGap);
@@ -251,10 +255,28 @@ function ribbonHTML(ribbonKeys, ribbonMap){
       const left = left0 + ci*(cellW+colGap);
       const def = ribbonMap[key];
       if(!def) return;
-      html += `<div class="ribbon" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background-image:${ribbonBackground(def)};"></div>`;
+      placed.push({left, top, def});
+      minLeft = Math.min(minLeft, left);
+      maxRight = Math.max(maxRight, left+cellW);
+      minTop = Math.min(minTop, top);
     });
   });
-  return html;
+  if(placed.length === 0) return '';
+  const maxBottom = rackBottom;
+  const boxW = maxRight - minLeft, boxH = maxBottom - minTop;
+
+  const clip = `clip-path:polygon(14% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 37%);`;
+
+  let inner = '';
+  placed.forEach(({left, top, def})=>{
+    const relLeft = (left-minLeft)/boxW*100;
+    const relTop = (top-minTop)/boxH*100;
+    const relW = cellW/boxW*100;
+    const relH = cellH/boxH*100;
+    inner += `<div class="ribbon" style="left:${relLeft}%; top:${relTop}%; width:${relW}%; height:${relH}%; background-image:${ribbonBackground(def)};"></div>`;
+  });
+
+  return `<div class="ribbon-rack" style="left:${minLeft}%; top:${minTop}%; width:${boxW}%; height:${boxH}%; ${clip}">${inner}</div>`;
 }
 
 function badgeHTML(badgeKeys, badgeMap){
@@ -271,14 +293,8 @@ function badgeHTML(badgeKeys, badgeMap){
       const def = badgeMap[key];
       if(!def) return;
       const left = left0 + ci*(cellSize+gap);
-      if(def.shape === 'diamond'){
-        const side = cellSize*0.72;
-        const offset = (cellSize-side)/2;
-        html += `<div class="badge" style="left:${left+offset}%; top:${top+offset}%; width:${side}%; height:${side}%; background:${def.color}; transform:rotate(45deg);"></div>`;
-      } else {
-        const radius = def.shape === 'circle' ? '50%' : '0';
-        html += `<div class="badge" style="left:${left}%; top:${top}%; width:${cellSize}%; height:${cellSize}%; background:${def.color}; border-radius:${radius};"></div>`;
-      }
+      const bg = def.image ? `url(${def.image})` : `repeating-linear-gradient(45deg,#33362a 0 4px,#25271e 4px 8px)`;
+      html += `<div class="badge" style="left:${left}%; top:${top}%; width:${cellSize}%; height:${cellSize}%; background-image:${bg};"></div>`;
     });
   });
   return html;
@@ -328,7 +344,7 @@ function renderJacket(stage, member){
   const rankMap = rankMapOf();
   stage.innerHTML = `
     ${insigniaHTML(member.rank, rankMap)}
-    <div class="name-tape" style="left:24%; top:56%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
+    <div class="name-tape" style="left:24%; top:57%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
     ${ribbonHTML(member.ribbons, ribbonMap)}
     ${badgeHTML(member.badges||[], badgeMap)}
   `;
@@ -369,9 +385,7 @@ function populateBadgeGrid(){
   BADGES.forEach(b=>{
     const wrap = document.createElement('label');
     wrap.className = 'badge-check';
-    const radius = b.shape === 'circle' ? '50%' : (b.shape === 'diamond' ? '0' : '3px');
-    const clip = b.shape === 'diamond' ? 'clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);' : '';
-    wrap.innerHTML = `<input type="checkbox" data-key="${b.key}"><span class="swatch" style="background:${b.color}; border-radius:${radius}; ${clip}"></span>${b.label}`;
+    wrap.innerHTML = `<input type="checkbox" data-key="${b.key}"><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span>${b.label}`;
     badgeGrid.appendChild(wrap);
   });
 }
