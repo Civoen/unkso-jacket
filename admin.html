@@ -48,6 +48,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 }
 .ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35); background-size:cover; background-position:center; background-color:#2a2d22;}
 .badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3); border-radius:4px; background-size:contain; background-position:center; background-repeat:no-repeat;}
+.pin{position:absolute; background-size:contain; background-position:center; background-repeat:no-repeat;}
 .insignia{position:absolute; background-size:cover; background-position:center; background-repeat:no-repeat; transform-origin:50% 50%;}
 .name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px; padding:0 4%; overflow:hidden;}
 .name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; white-space:nowrap; display:inline-block;}
@@ -98,6 +99,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
   <a href="badges.html">Badges</a>
+  <a href="pins.html">Pins</a>
   <a href="index.html?autodownload=1" id="downloadAllBtn" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta active">Admin</a>
 </div>
@@ -142,6 +144,10 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
         <label>Badges</label>
         <div class="badge-grid" id="badgeGrid"></div>
         <div id="badgeLimitNote" class="badge-limit-note" style="display:none;">Maximum amount of Badges reached (6)</div>
+      </div>
+      <div class="field">
+        <label>Pin</label>
+        <select id="pinSelect"></select>
       </div>
       <button class="save-btn" id="saveBtn">Save changes</button>
     </div>
@@ -304,7 +310,7 @@ function badgeHTML(badgeKeys, badgeMap){
     return html;
   }
 
-  return renderRow(rightKeys, 68.8, 5.5, 61.5) + renderRow(leftKeys, 31.2, 5.5, 54);
+  return renderRow(rightKeys, 68.8, 5.5, 63) + renderRow(leftKeys, 31.2, 5.5, 54);
 }
 
 function insigniaHTML(rankName, rankMap){
@@ -338,9 +344,11 @@ let MEMBERS = [];
 let RANKS = [];
 let RIBBONS = [];
 let BADGES = [];
+let PINS = [];
 
 function ribbonMapOf(){ const m={}; RIBBONS.forEach(r=>m[r.key]=r); return m; }
 function badgeMapOf(){ const m={}; BADGES.forEach(b=>m[b.key]=b); return m; }
+function pinMapOf(){ const m={}; PINS.forEach(p=>m[p.key]=p); return m; }
 function rankMapOf(){ const m={}; RANKS.forEach(r=>m[r.name]=r); return m; }
 function rankIndex(name){ return RANKS.findIndex(r=>r.name===name); }
 function newId(){ return 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
@@ -352,12 +360,28 @@ function neckMedalHTML(memberRibbonKeys, ribbonMap){
   return `<div class="neck-medal" style="background-image:url(${def.neckImage});"></div>`;
 }
 
+function pinHTML(pinKey, pinMap){
+  if(!pinKey) return '';
+  const def = pinMap[pinKey];
+  if(!def || !def.image) return '';
+  const cellH = 5.5;
+  const jacketHtoW = 2052/3023;
+  const aspect = (def.width && def.height) ? def.width/def.height : 1;
+  const w = cellH * aspect * jacketHtoW;
+  const leftCenterX = 36.0, rightCenterX = 64.0, centerY = 21.9;
+  const left = `<div class="pin" style="left:${leftCenterX-w/2}%; top:${centerY-cellH/2}%; width:${w}%; height:${cellH}%; background-image:url(${def.image}); transform:rotate(-3deg);"></div>`;
+  const right = `<div class="pin" style="left:${rightCenterX-w/2}%; top:${centerY-cellH/2}%; width:${w}%; height:${cellH}%; background-image:url(${def.image}); transform:rotate(3deg);"></div>`;
+  return left + right;
+}
+
 function renderJacket(stage, member){
   const ribbonMap = ribbonMapOf();
   const badgeMap = badgeMapOf();
   const rankMap = rankMapOf();
+  const pinMap = pinMapOf();
   stage.innerHTML = `
     ${insigniaHTML(member.rank, rankMap)}
+    ${pinHTML(member.pin, pinMap)}
     <div class="name-tape" style="left:23.25%; top:57%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
     ${ribbonHTML(member.ribbons, ribbonMap)}
     ${badgeHTML(member.badges||[], badgeMap)}
@@ -375,6 +399,7 @@ const unitSelect = document.getElementById('unitSelect');
 const positionSelect = document.getElementById('positionSelect');
 const ribbonGrid = document.getElementById('ribbonGrid');
 const badgeGrid = document.getElementById('badgeGrid');
+const pinSelect = document.getElementById('pinSelect');
 const stage = document.getElementById('stage');
 
 function populateStaticSelects(){
@@ -404,6 +429,10 @@ function populateBadgeGrid(){
     wrap.innerHTML = `<input type="checkbox" data-key="${b.key}"><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span>${b.label}`;
     badgeGrid.appendChild(wrap);
   });
+}
+
+function populatePinSelect(){
+  pinSelect.innerHTML = '<option value="">None</option>' + PINS.map(p=>`<option value="${p.key}">${p.label}</option>`).join('');
 }
 
 function enforceBadgeLimit(){
@@ -445,6 +474,7 @@ function loadMember(id){
   rankSelect.value = m.rank;
   unitSelect.value = m.unit;
   positionSelect.value = m.position;
+  pinSelect.value = m.pin || '';
   ribbonGrid.querySelectorAll('input[type=checkbox]').forEach(cb=>{
     cb.checked = m.ribbons.includes(cb.dataset.key);
   });
@@ -459,13 +489,15 @@ function currentEdits(){
   const m = MEMBERS.find(x=>x.id===memberSelect.value);
   const ribbons = Array.from(ribbonGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key);
   const badges = Array.from(badgeGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key).slice(0, MAX_BADGES);
-  return { id:m.id, name:nameInput.value, rank:rankSelect.value, unit:unitSelect.value, position:positionSelect.value, ribbons, badges };
+  const pin = pinSelect.value || null;
+  return { id:m.id, name:nameInput.value, rank:rankSelect.value, unit:unitSelect.value, position:positionSelect.value, ribbons, badges, pin };
 }
 
 function refreshPreview(){ renderJacket(stage, currentEdits()); }
 
 memberSelect.addEventListener('change', e=>loadMember(e.target.value));
 nameInput.addEventListener('input', refreshPreview);
+pinSelect.addEventListener('change', refreshPreview);
 rankSelect.addEventListener('change', refreshPreview);
 unitSelect.addEventListener('change', refreshPreview);
 positionSelect.addEventListener('change', refreshPreview);
@@ -489,7 +521,7 @@ document.getElementById('saveBtn').addEventListener('click', async ()=>{
 });
 
 document.getElementById('newBtn').addEventListener('click', async ()=>{
-  const member = { id:newId(), name:"New Member", rank: (RANKS[0] && RANKS[0].name) || "PVT", unit: UNIT_OPTIONS[0], position:"Member", ribbons:[], badges:[] };
+  const member = { id:newId(), name:"New Member", rank: (RANKS[0] && RANKS[0].name) || "PVT", unit: UNIT_OPTIONS[0], position:"Member", ribbons:[], badges:[], pin:null };
   MEMBERS.push(member);
   await saveJSON('members', MEMBERS);
   sortMembersBySeniority();
@@ -525,11 +557,13 @@ async function init(){
   if(ranksNeedMigration) await saveJSON('ranks', RANKS);
   RIBBONS = await loadJSON('ribbons', DEFAULT_RIBBONS);
   BADGES = await loadJSON('badges', DEFAULT_BADGES);
+  PINS = await loadJSON('pins', []);
   sortMembersBySeniority();
   populateStaticSelects();
   populateRankSelect();
   populateRibbonGrid();
   populateBadgeGrid();
+  populatePinSelect();
 
   const requestedId = new URLSearchParams(window.location.search).get('member');
   const initialId = (requestedId && MEMBERS.some(m=>m.id===requestedId)) ? requestedId : MEMBERS[0].id;
@@ -541,7 +575,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.018</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.019</div>
 
 </body>
 </html>

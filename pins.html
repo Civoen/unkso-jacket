@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>UNKSO — Ranks</title>
+<title>UNKSO — Pins</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
 :root{
@@ -30,7 +30,7 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
 .subnav a.nav-cta:hover{background:#f06c37;}
 .subnav a.nav-cta.active{background:#f06c37; box-shadow:0 0 0 2px rgba(227,95,46,.4);}
 
-main{max-width:680px; margin:0 auto; padding:32px;}
+main{max-width:760px; margin:0 auto; padding:32px;}
 h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .sub{color:var(--text-muted); font-size:12.5px; margin-bottom:22px; letter-spacing:.03em;}
 
@@ -42,24 +42,25 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   padding:10px 14px; border-radius:8px; font-size:14px; font-family:'Inter';
 }
 
-.rank-row{display:grid; grid-template-columns:20px 40px 1fr 120px 36px; align-items:center; gap:10px; padding:9px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
-.rank-row:last-child{border-bottom:none;}
-.rank-row.dragging{opacity:.4;}
-.handle{color:var(--text-muted); font-size:15px; text-align:center; cursor:grab; user-select:none;}
+.col-labels{display:grid; grid-template-columns:22px 44px 1fr 100px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
+.pin-row{display:grid; grid-template-columns:22px 44px 1fr 100px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
+.pin-row:last-child{border-bottom:none;}
+.pin-row.dragging{opacity:.4;}
+.drag-handle{color:var(--text-muted); font-size:15px; text-align:center; cursor:grab; user-select:none;}
 
-.insignia-swatch{
-  width:40px; height:24px; border-radius:4px; border:1px solid rgba(0,0,0,.35);
-  background-size:contain; background-repeat:no-repeat; background-position:center;
-  background-color:#20232c;
+.swatch{
+  width:40px; height:40px; border-radius:6px; border:1px solid rgba(0,0,0,.35);
+  background-size:contain; background-position:center; background-repeat:no-repeat;
+  background-image:repeating-linear-gradient(45deg,#33362a 0 6px,#25271e 6px 12px);
 }
 
-.rank-row input[type=text]{
+.pin-row input[type=text]{
   background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
-  padding:8px 12px; border-radius:6px; font-size:14px; font-family:'JetBrains Mono'; font-weight:600; letter-spacing:.03em;
+  padding:8px 10px; border-radius:6px; font-size:13.5px; font-family:'Inter';
 }
 .upload-btn{
   background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary);
-  padding:8px 10px; border-radius:6px; font-size:11.5px; cursor:pointer; text-align:center; font-family:'Inter';
+  padding:8px 10px; border-radius:6px; font-size:12px; cursor:pointer; text-align:center; font-family:'Inter';
 }
 .upload-btn:hover{border-color:var(--orange-dim); color:var(--orange);}
 .upload-btn input{display:none;}
@@ -70,22 +71,22 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 }
 .icon-btn:hover{border-color:var(--red); color:var(--red);}
 
-.add-panel{margin-top:18px; padding-top:16px; border-top:1px solid var(--border);}
+.add-panel{margin-top:20px; padding-top:18px; border-top:1px solid var(--border);}
 .add-panel h3{font-family:'Poppins'; font-size:14px; font-weight:600; margin:0 0 4px; color:var(--orange);}
 .add-panel .dims-note{font-size:11.5px; color:var(--text-muted); margin-bottom:12px;}
-.add-grid{display:grid; grid-template-columns:40px 1fr 130px auto; align-items:center; gap:10px;}
+.add-grid{display:grid; grid-template-columns:1fr 130px auto; align-items:center; gap:10px;}
 .add-grid input[type=text]{
   background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
-  padding:9px 12px; border-radius:6px; font-size:14px; font-family:'JetBrains Mono';
+  padding:9px 12px; border-radius:6px; font-size:13.5px; font-family:'Inter';
 }
 .add-btn{
-  background:var(--orange); color:#1c1108; border:none; border-radius:6px; padding:0 18px; height:36px;
-  font-family:'Poppins'; font-weight:600; font-size:13.5px; cursor:pointer;
+  background:var(--orange); color:#1c1108; border:none; border-radius:6px; padding:0 16px; height:36px;
+  font-family:'Poppins'; font-weight:600; font-size:13px; cursor:pointer;
 }
-.add-btn:hover{background:#f06c37;}
+.add-btn:disabled{background:var(--bg-card); color:var(--text-muted); cursor:not-allowed;}
+.add-btn:not(:disabled):hover{background:#f06c37;}
 
 .note{color:var(--text-muted); font-size:12px; margin-top:14px; line-height:1.5;}
-
 .site-footer{border-top:1px solid var(--border); padding:18px 20px; text-align:center; color:var(--text-muted); font-size:11.5px; letter-spacing:.02em;}
 </style>
 </head>
@@ -93,38 +94,39 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 <div class="subnav">
   <a href="index.html">Jackets</a>
-  <a href="ranks.html" class="active">Ranks</a>
+  <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
   <a href="badges.html">Badges</a>
-  <a href="pins.html">Pins</a>
+  <a href="pins.html" class="active">Pins</a>
   <a href="index.html?autodownload=1" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta">Admin</a>
 </div>
 
 <main>
-  <h1>Ranks</h1>
-  <div class="sub">CONTROLS THE RANK DROPDOWN ON ADMIN, AND THE SHOULDER INSIGNIA ON EACH JACKET</div>
+  <h1>Pins</h1>
+  <div class="sub">CONTROLS THE PIN DROPDOWN ON THE ADMIN PAGE — A MEMBER'S PIN SHOWS ON BOTH COLLAR TIPS</div>
 
   <div class="panel">
-    <div class="search-row"><input id="searchInput" type="text" placeholder="Search ranks…"></div>
-    <div id="rankList"></div>
+    <div class="search-row"><input id="searchInput" type="text" placeholder="Search pins…"></div>
+    <div class="col-labels"><span></span><span>Preview</span><span>Name</span><span>Image</span><span></span></div>
+    <div id="pinList"></div>
 
     <div class="add-panel">
-      <h3>Add a new rank</h3>
-      <div class="dims-note">Insignia is optional at first — you can upload it any time from the list above.</div>
+      <h3>Add a new pin</h3>
+      <div class="dims-note">Upload any image — square or rectangular both work. It's scaled down only if taller than 180px; nothing gets cropped.</div>
       <div class="add-grid">
-        <div class="insignia-swatch" id="newPreview"></div>
-        <input id="newRankInput" type="text" placeholder="e.g. WO1" maxlength="6">
-        <label class="upload-btn" id="newUploadLabel">Choose insignia<input type="file" id="newUpload" accept="image/*"></label>
-        <button class="add-btn" id="addBtn">Add rank</button>
+        <input id="newLabel" type="text" placeholder="Pin name">
+        <label class="upload-btn" id="newUploadLabel">Choose image<input type="file" id="newUpload" accept="image/*"></label>
+        <button class="add-btn" id="addBtn" disabled>Add pin</button>
       </div>
     </div>
   </div>
-  <div class="note">Order here is the order ranks appear in the Admin dropdown and defines seniority across the site. Editing a rank's text updates it everywhere it's already assigned to a member.</div>
+  <div class="note">A member can have one pin at a time (picked from a dropdown on the Admin page, unlike the ribbon/badge checklists). It appears on both collar tips at once — the same image, mirrored either side. Removing a pin here also unassigns it from any member currently wearing it.</div>
 </main>
 
 <script>
-const DEFAULT_RANKS = ["LTC","MAJ","2LT","1LT","CSM","SFC","SSG","SGT","CPL","SPC","PFC","PV2","PVT","RT"].map(name=>({name, insignia:null}));
+const MAX_PIN_HEIGHT = 180;
+const DEFAULT_PINS = [];
 
 const API_BASE = 'https://unkso-api.adambramfitt.workers.dev';
 
@@ -157,22 +159,18 @@ async function saveJSON(key, value){
   }catch(err){ console.log('Save failed for '+key, err); return false; }
 }
 
-// Reads an uploaded insignia file and returns a data URL. Insignia are small and
-// mostly transparent/flat-color, so we just cap the max dimension rather than
-// forcing a fixed crop like ribbons — the jacket rendering scales it to fit.
-function readInsigniaFile(file){
+function resizePinImage(file){
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
     reader.onload = (e)=>{
       const img = new Image();
       img.onload = ()=>{
-        const MAX = 300;
-        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const scale = Math.min(1, MAX_PIN_HEIGHT / img.height);
         const w = Math.round(img.width*scale), h = Math.round(img.height*scale);
         const canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/png'));
+        resolve({ dataUrl: canvas.toDataURL('image/png'), width: w, height: h });
       };
       img.onerror = () => reject(new Error('Could not read that image'));
       img.src = e.target.result;
@@ -182,59 +180,74 @@ function readInsigniaFile(file){
   });
 }
 
-let RANKS = [];
+function newKey(label){
+  return 'p_' + label.toLowerCase().replace(/[^a-z0-9]+/g,'_').slice(0,24) + '_' + Math.random().toString(36).slice(2,5);
+}
+
+function filenameToLabel(filename){
+  const base = filename.replace(/\.[^.]+$/, '');
+  return base.replace(/[_\-]+/g, ' ').trim();
+}
+
+let PINS = [];
+let MEMBERS = [];
 let searchTerm = '';
 let dragSrcIdx = null;
 
-function renderRanks(){
-  const list = document.getElementById('rankList');
+async function pruneFromMembers(key){
+  MEMBERS = MEMBERS.map(m => m.pin === key ? {...m, pin: null} : m);
+  await saveJSON('members', MEMBERS);
+}
+
+function renderPins(){
+  const list = document.getElementById('pinList');
   list.innerHTML = '';
   const q = searchTerm.trim().toLowerCase();
-  const visibleIdx = RANKS.map((_,i)=>i).filter(i => !q || RANKS[i].name.toLowerCase().includes(q));
+  const visibleIdx = PINS.map((_,i)=>i).filter(i => !q || PINS[i].label.toLowerCase().includes(q));
 
   if(visibleIdx.length === 0){
-    list.innerHTML = '<div class="note" style="margin-top:6px;">No ranks match your search.</div>';
+    list.innerHTML = '<div class="note" style="margin-top:6px;">No pins match your search.</div>';
     return;
   }
 
   visibleIdx.forEach(idx=>{
-    const rank = RANKS[idx];
+    const p = PINS[idx];
     const row = document.createElement('div');
-    row.className = 'rank-row';
+    row.className = 'pin-row';
     row.draggable = true;
     row.dataset.idx = idx;
     row.innerHTML = `
-      <span class="handle" title="Drag to reorder">&#8942;&#8942;</span>
-      <div class="insignia-swatch" style="${rank.insignia ? `background-image:url(${rank.insignia})` : ''}"></div>
-      <input type="text" value="${rank.name}" maxlength="6" data-field="name">
-      <label class="upload-btn">${rank.insignia ? 'Replace insignia' : 'Upload insignia'}<input type="file" accept="image/*" data-field="insignia"></label>
+      <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
+      <div class="swatch" style="${p.image ? `background-image:url(${p.image})` : ''}"></div>
+      <input type="text" value="${p.label}" data-field="label">
+      <label class="upload-btn">${p.image ? 'Replace' : 'Upload'}<input type="file" accept="image/*" data-field="image"></label>
       <button class="icon-btn" title="Remove">&times;</button>
     `;
-    row.querySelector('[data-field="name"]').addEventListener('change', async (e)=>{
-      const val = e.target.value.trim().toUpperCase();
-      if(!val) { e.target.value = RANKS[idx].name; return; }
-      RANKS[idx].name = val;
-      await saveJSON('ranks', RANKS);
+    row.querySelector('[data-field="label"]').addEventListener('change', async (e)=>{
+      PINS[idx].label = e.target.value;
+      await saveJSON('pins', PINS);
     });
-    row.querySelector('[data-field="insignia"]').addEventListener('change', async (e)=>{
+    row.querySelector('[data-field="image"]').addEventListener('change', async (e)=>{
       const file = e.target.files[0];
       if(!file) return;
       try{
-        const dataUrl = await readInsigniaFile(file);
-        RANKS[idx].insignia = dataUrl;
-        await saveJSON('ranks', RANKS);
-        row.querySelector('.insignia-swatch').style.backgroundImage = `url(${dataUrl})`;
-        row.querySelector('.upload-btn').firstChild.textContent = 'Replace insignia';
+        const result = await resizePinImage(file);
+        PINS[idx].image = result.dataUrl;
+        PINS[idx].width = result.width;
+        PINS[idx].height = result.height;
+        await saveJSON('pins', PINS);
+        row.querySelector('.swatch').style.backgroundImage = `url(${result.dataUrl})`;
+        row.querySelector('[data-field="image"]').closest('label').firstChild.textContent = 'Replace';
       }catch(err){
         alert('Could not process that image. Try a different file.');
       }
     });
     row.querySelector('.icon-btn').addEventListener('click', async ()=>{
-      if(RANKS.length <= 1){ alert("You need at least one rank."); return; }
-      if(!confirm(`Remove rank "${rank.name}"?`)) return;
-      RANKS.splice(idx,1);
-      await saveJSON('ranks', RANKS);
-      renderRanks();
+      if(!confirm(`Remove "${p.label}"? This will unassign it from any member wearing it.`)) return;
+      await pruneFromMembers(p.key);
+      PINS.splice(idx,1);
+      await saveJSON('pins', PINS);
+      renderPins();
     });
     row.addEventListener('dragstart', ()=>{
       dragSrcIdx = idx;
@@ -245,13 +258,13 @@ function renderRanks(){
     row.addEventListener('drop', async (e)=>{
       e.preventDefault();
       if(dragSrcIdx === null || dragSrcIdx === idx) return;
-      const targetRef = RANKS[idx];
-      const [moved] = RANKS.splice(dragSrcIdx, 1);
-      const newTargetIdx = RANKS.indexOf(targetRef);
-      RANKS.splice(newTargetIdx, 0, moved);
+      const targetKey = PINS[idx].key;
+      const [moved] = PINS.splice(dragSrcIdx, 1);
+      const newTargetIdx = PINS.findIndex(x=>x.key===targetKey);
+      PINS.splice(newTargetIdx, 0, moved);
       dragSrcIdx = null;
-      await saveJSON('ranks', RANKS);
-      renderRanks();
+      await saveJSON('pins', PINS);
+      renderPins();
     });
     list.appendChild(row);
   });
@@ -259,54 +272,48 @@ function renderRanks(){
 
 document.getElementById('searchInput').addEventListener('input', (e)=>{
   searchTerm = e.target.value;
-  renderRanks();
+  renderPins();
 });
 
-let pendingInsignia = null;
+let pendingImage = null;
+
+function refreshAddButton(){
+  const label = document.getElementById('newLabel').value.trim();
+  document.getElementById('addBtn').disabled = !(label && pendingImage);
+}
+
+document.getElementById('newLabel').addEventListener('input', refreshAddButton);
 
 document.getElementById('newUpload').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
   try{
-    pendingInsignia = await readInsigniaFile(file);
-    document.getElementById('newPreview').style.backgroundImage = `url(${pendingInsignia})`;
-    document.getElementById('newUploadLabel').firstChild.textContent = 'Change insignia';
+    pendingImage = await resizePinImage(file);
+    document.getElementById('newUploadLabel').firstChild.textContent = 'Change image';
+    document.getElementById('newLabel').value = filenameToLabel(file.name);
+    refreshAddButton();
   }catch(err){
     alert('Could not process that image. Try a different file.');
   }
 });
 
 document.getElementById('addBtn').addEventListener('click', async ()=>{
-  const input = document.getElementById('newRankInput');
-  const val = input.value.trim().toUpperCase();
-  if(!val) return;
-  if(RANKS.some(r=>r.name === val)){ alert('That rank already exists.'); return; }
-  RANKS.push({ name: val, insignia: pendingInsignia });
-  input.value = '';
-  pendingInsignia = null;
+  const label = document.getElementById('newLabel').value.trim();
+  if(!label || !pendingImage) return;
+  PINS.push({ key: newKey(label), label, image: pendingImage.dataUrl, width: pendingImage.width, height: pendingImage.height });
+  document.getElementById('newLabel').value = '';
   document.getElementById('newUpload').value = '';
-  document.getElementById('newPreview').style.backgroundImage = '';
-  document.getElementById('newUploadLabel').firstChild.textContent = 'Choose insignia';
-  await saveJSON('ranks', RANKS);
-  renderRanks();
+  document.getElementById('newUploadLabel').firstChild.textContent = 'Choose image';
+  pendingImage = null;
+  refreshAddButton();
+  await saveJSON('pins', PINS);
+  renderPins();
 });
-
-document.getElementById('newRankInput').addEventListener('keydown', (e)=>{
-  if(e.key === 'Enter') document.getElementById('addBtn').click();
-});
-
-// Older saved data may still be a plain array of strings (from before ranks carried
-// insignia images) — convert those into the object shape so edits actually persist.
-function normalizeRanks(ranks){
-  return ranks.map(r => typeof r === 'string' ? { name:r, insignia:null } : r);
-}
 
 async function init(){
-  const raw = await loadJSON('ranks', DEFAULT_RANKS);
-  const needsMigration = raw.some(r => typeof r === 'string');
-  RANKS = normalizeRanks(raw);
-  if(needsMigration) await saveJSON('ranks', RANKS);
-  renderRanks();
+  PINS = await loadJSON('pins', DEFAULT_PINS);
+  MEMBERS = await loadJSON('members', []);
+  renderPins();
 }
 init();
 </script>

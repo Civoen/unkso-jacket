@@ -106,6 +106,7 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
 }
 .ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35); background-size:cover; background-position:center; background-color:#2a2d22;}
 .badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3); border-radius:4px; background-size:contain; background-position:center; background-repeat:no-repeat;}
+.pin{position:absolute; background-size:contain; background-position:center; background-repeat:no-repeat;}
 .name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px; padding:0 4%; overflow:hidden;}
 .name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; white-space:nowrap; display:inline-block;}
 
@@ -132,6 +133,7 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
   <a href="badges.html">Badges</a>
+  <a href="pins.html">Pins</a>
   <a href="#" id="downloadAllBtn" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta">Admin</a>
 </div>
@@ -312,7 +314,7 @@ function badgeHTML(badgeKeys, badgeMap){
     return html;
   }
 
-  return renderRow(rightKeys, 68.8, 5.5, 61.5) + renderRow(leftKeys, 31.2, 5.5, 54);
+  return renderRow(rightKeys, 68.8, 5.5, 63) + renderRow(leftKeys, 31.2, 5.5, 54);
 }
 
 function insigniaHTML(rankName, rankMap){
@@ -357,9 +359,27 @@ function neckMedalHTML(memberRibbonKeys, ribbonMap){
   return `<div class="neck-medal" style="background-image:url(${def.neckImage});"></div>`;
 }
 
-function jacketHTML(member, ribbonMap, badgeMap, rankMap){
+function pinHTML(pinKey, pinMap){
+  if(!pinKey) return '';
+  const def = pinMap[pinKey];
+  if(!def || !def.image) return '';
+  // Same box size as badges (5.5% height), positioned at both collar tips —
+  // measured directly off a reference photo of the collar. Same image shown
+  // on both sides, each tilted slightly per the reference (-3deg / +3deg).
+  const cellH = 5.5;
+  const jacketHtoW = 2052/3023;
+  const aspect = (def.width && def.height) ? def.width/def.height : 1;
+  const w = cellH * aspect * jacketHtoW;
+  const leftCenterX = 36.0, rightCenterX = 64.0, centerY = 21.9;
+  const left = `<div class="pin" style="left:${leftCenterX-w/2}%; top:${centerY-cellH/2}%; width:${w}%; height:${cellH}%; background-image:url(${def.image}); transform:rotate(-3deg);"></div>`;
+  const right = `<div class="pin" style="left:${rightCenterX-w/2}%; top:${centerY-cellH/2}%; width:${w}%; height:${cellH}%; background-image:url(${def.image}); transform:rotate(3deg);"></div>`;
+  return left + right;
+}
+
+function jacketHTML(member, ribbonMap, badgeMap, rankMap, pinMap){
   return `
     ${insigniaHTML(member.rank, rankMap)}
+    ${pinHTML(member.pin, pinMap)}
     <div class="name-tape" style="left:23.25%; top:57%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
     ${ribbonHTML(member.ribbons, ribbonMap)}
     ${badgeHTML(member.badges||[], badgeMap)}
@@ -372,16 +392,18 @@ let MEMBERS = [];
 let RANKS = [];
 let RIBBONS = [];
 let BADGES = [];
+let PINS = [];
 
 function ribbonMapOf(){ const m={}; RIBBONS.forEach(r=>m[r.key]=r); return m; }
 function badgeMapOf(){ const m={}; BADGES.forEach(b=>m[b.key]=b); return m; }
+function pinMapOf(){ const m={}; PINS.forEach(p=>m[p.key]=p); return m; }
 function rankMapOf(){ const m={}; RANKS.forEach(r=>m[r.name]=r); return m; }
 function rankIndex(name){ return RANKS.findIndex(r=>r.name===name); }
 
 function newId(){ return 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
 async function addMember(unit){
-  const member = { id:newId(), name:"New Member", rank: (RANKS[0] && RANKS[0].name) || "PVT", unit: unit, position:"Member", ribbons:[], badges:[] };
+  const member = { id:newId(), name:"New Member", rank: (RANKS[0] && RANKS[0].name) || "PVT", unit: unit, position:"Member", ribbons:[], badges:[], pin:null };
   MEMBERS.push(member);
   await saveJSON('members', MEMBERS);
   renderRoster();
@@ -427,6 +449,7 @@ function renderRoster(){
   const ribbonMap = ribbonMapOf();
   const badgeMap = badgeMapOf();
   const rankMap = rankMapOf();
+  const pinMap = pinMapOf();
   UNIT_OPTIONS.forEach(unit=>{
     const allInUnit = MEMBERS.filter(m=>m.unit===unit);
     const members = sortBySeniority(allInUnit.filter(matchesSearch));
@@ -451,7 +474,7 @@ function renderRoster(){
       renderRoster();
     });
     section.querySelector('.unit-download-btn').addEventListener('click', (e)=>{
-      downloadMembersZip(members, ribbonMap, badgeMap, rankMap, safeFilename(unit) + '-jackets.zip', e.currentTarget, false);
+      downloadMembersZip(members, ribbonMap, badgeMap, rankMap, pinMap, safeFilename(unit) + '-jackets.zip', e.currentTarget, false);
     });
     const grid = section.querySelector('.member-grid');
     if(members.length === 0){
@@ -466,7 +489,7 @@ function renderRoster(){
         <button class="remove-btn" title="Remove">&times;</button>
         <button class="zoom-btn" title="Zoom">&#128269;</button>
         <button class="download-btn" title="Download PNG">&#11015;</button>
-        <div class="jacket-mini">${jacketHTML(m, ribbonMap, badgeMap, rankMap)}</div>
+        <div class="jacket-mini">${jacketHTML(m, ribbonMap, badgeMap, rankMap, pinMap)}</div>
         <div class="mcaption">
           <div class="mname">${m.rank}.${m.name}</div>
           <div class="mrank">${m.position} - ${m.unit}</div>
@@ -478,11 +501,11 @@ function renderRoster(){
       });
       card.querySelector('.zoom-btn').addEventListener('click', (e)=>{
         e.stopPropagation();
-        openZoom(m, ribbonMap, badgeMap, rankMap);
+        openZoom(m, ribbonMap, badgeMap, rankMap, pinMap);
       });
       card.querySelector('.download-btn').addEventListener('click', (e)=>{
         e.stopPropagation();
-        downloadMemberPNG(m, ribbonMap, badgeMap, rankMap, e.currentTarget);
+        downloadMemberPNG(m, ribbonMap, badgeMap, rankMap, pinMap, e.currentTarget);
       });
       card.addEventListener('click', ()=>{
         window.location.href = 'admin.html?member=' + encodeURIComponent(m.id);
@@ -521,12 +544,12 @@ function safeFilename(s){
   return s.replace(/[^a-z0-9.\-_]+/gi, '_');
 }
 
-async function renderJacketCanvas(member, ribbonMap, badgeMap, rankMap){
+async function renderJacketCanvas(member, ribbonMap, badgeMap, rankMap, pinMap){
   await ensureHtml2Canvas();
   const holder = document.createElement('div');
   holder.className = 'jacket-mini';
   holder.style.cssText = `position:fixed; left:-99999px; top:0; width:${DOWNLOAD_WIDTH}px; border-radius:0;`;
-  holder.innerHTML = jacketHTML(member, ribbonMap, badgeMap, rankMap);
+  holder.innerHTML = jacketHTML(member, ribbonMap, badgeMap, rankMap, pinMap);
   document.body.appendChild(holder);
   const tape = holder.querySelector('.name-tape');
   if(tape) fitNameTape(tape);
@@ -547,11 +570,11 @@ function triggerBlobDownload(blob, filename){
   setTimeout(()=>URL.revokeObjectURL(url), 4000);
 }
 
-async function downloadMemberPNG(member, ribbonMap, badgeMap, rankMap, btn){
+async function downloadMemberPNG(member, ribbonMap, badgeMap, rankMap, pinMap, btn){
   const original = btn.innerHTML;
   btn.classList.add('busy');
   try{
-    const canvas = await renderJacketCanvas(member, ribbonMap, badgeMap, rankMap);
+    const canvas = await renderJacketCanvas(member, ribbonMap, badgeMap, rankMap, pinMap);
     const blob = await canvasToPngBlob(canvas);
     triggerBlobDownload(blob, safeFilename(`${member.rank}.${member.name}`) + '.png');
   }catch(err){
@@ -563,7 +586,7 @@ async function downloadMemberPNG(member, ribbonMap, badgeMap, rankMap, btn){
   }
 }
 
-async function downloadMembersZip(members, ribbonMap, badgeMap, rankMap, zipFilename, btn, groupByUnit){
+async function downloadMembersZip(members, ribbonMap, badgeMap, rankMap, pinMap, zipFilename, btn, groupByUnit){
   if(members.length === 0){ alert('Nothing to download.'); return; }
   const original = btn.textContent;
   btn.setAttribute('disabled','');
@@ -574,7 +597,7 @@ async function downloadMembersZip(members, ribbonMap, badgeMap, rankMap, zipFile
     for(let i=0;i<members.length;i++){
       btn.textContent = `Rendering ${i+1}/${members.length}…`;
       const m = members[i];
-      const canvas = await renderJacketCanvas(m, ribbonMap, badgeMap, rankMap);
+      const canvas = await renderJacketCanvas(m, ribbonMap, badgeMap, rankMap, pinMap);
       const blob = await canvasToPngBlob(canvas);
       const name = safeFilename(`${m.rank}.${m.name}`) + '.png';
       const path = groupByUnit ? `${safeFilename(m.unit)}/${name}` : name;
@@ -593,10 +616,10 @@ async function downloadMembersZip(members, ribbonMap, badgeMap, rankMap, zipFile
   }
 }
 
-function openZoom(member, ribbonMap, badgeMap, rankMap){
+function openZoom(member, ribbonMap, badgeMap, rankMap, pinMap){
   const overlay = document.getElementById('zoomOverlay');
   const stage = document.getElementById('zoomStage');
-  stage.innerHTML = jacketHTML(member, ribbonMap, badgeMap, rankMap);
+  stage.innerHTML = jacketHTML(member, ribbonMap, badgeMap, rankMap, pinMap);
   document.getElementById('zoomName').textContent = member.rank + '.' + member.name;
   document.getElementById('zoomRank').textContent = member.position + ' - ' + member.unit;
   overlay.classList.add('open');
@@ -617,7 +640,7 @@ document.addEventListener('keydown', (e)=>{
 
 document.getElementById('downloadAllBtn').addEventListener('click', (e)=>{
   e.preventDefault();
-  downloadMembersZip(MEMBERS, ribbonMapOf(), badgeMapOf(), rankMapOf(), 'unkso-all-jackets.zip', e.currentTarget, true);
+  downloadMembersZip(MEMBERS, ribbonMapOf(), badgeMapOf(), rankMapOf(), pinMapOf(), 'unkso-all-jackets.zip', e.currentTarget, true);
 });
 
 document.getElementById('searchInput').addEventListener('input', (e)=>{
@@ -641,20 +664,21 @@ async function init(){
   if(ranksNeedMigration) await saveJSON('ranks', RANKS);
   RIBBONS = await loadJSON('ribbons', DEFAULT_RIBBONS);
   BADGES = await loadJSON('badges', DEFAULT_BADGES);
+  PINS = await loadJSON('pins', []);
   renderRoster();
 
   // Reached via the "Download All" link on another page — kick off the same
   // all-jackets zip the in-page button triggers, then clean the URL.
   if(new URLSearchParams(window.location.search).get('autodownload') === '1'){
     const btn = document.getElementById('downloadAllBtn');
-    downloadMembersZip(MEMBERS, ribbonMapOf(), badgeMapOf(), rankMapOf(), 'unkso-all-jackets.zip', btn, true);
+    downloadMembersZip(MEMBERS, ribbonMapOf(), badgeMapOf(), rankMapOf(), pinMapOf(), 'unkso-all-jackets.zip', btn, true);
     history.replaceState(null, '', window.location.pathname);
   }
 }
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.018</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.019</div>
 
 </body>
 </html>
