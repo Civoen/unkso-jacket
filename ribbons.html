@@ -42,8 +42,8 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   padding:10px 14px; border-radius:8px; font-size:14px; font-family:'Inter';
 }
 
-.col-labels{display:grid; grid-template-columns:22px 60px 1fr 100px 100px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
-.ribbon-row{display:grid; grid-template-columns:22px 60px 1fr 100px 100px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
+.col-labels{display:grid; grid-template-columns:22px 60px 1fr 100px 36px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
+.ribbon-row{display:grid; grid-template-columns:22px 60px 1fr 100px 36px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
 .ribbon-row:last-child{border-bottom:none;}
 .ribbon-row.dragging{opacity:.4;}
 .drag-handle{color:var(--text-muted); font-size:15px; text-align:center; cursor:grab; user-select:none;}
@@ -71,8 +71,11 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .icon-btn{
   width:36px; height:34px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary);
   border-radius:6px; font-size:16px; cursor:pointer; font-family:'Inter';
+  display:flex; align-items:center; justify-content:center;
 }
 .icon-btn:hover{border-color:var(--red); color:var(--red);}
+.icon-btn.add-action:hover{border-color:var(--orange-dim); color:var(--orange);}
+.icon-btn input{display:none;}
 
 .add-panel{margin-top:20px; padding-top:18px; border-top:1px solid var(--border);}
 .add-panel h3{font-family:'Poppins'; font-size:14px; font-weight:600; margin:0 0 4px; color:var(--orange);}
@@ -111,7 +114,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
   <div class="panel">
     <div class="search-row"><input id="searchInput" type="text" placeholder="Search ribbons…"></div>
-    <div class="col-labels"><span></span><span>Preview</span><span>Name</span><span>Image</span><span>Neck art</span><span></span></div>
+    <div class="col-labels"><span></span><span>Preview</span><span>Name</span><span>Image</span><span>Neck</span><span></span></div>
     <div id="ribbonList"></div>
 
     <div class="add-panel">
@@ -125,15 +128,11 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
       </div>
     </div>
   </div>
-  <div class="note">Removing a ribbon here also removes it from any jacket it's currently assigned to. Only the Medal of Honor can have neck art — when set, it shows around the member's neck on their jacket, in addition to appearing in their ribbon rack as normal. Its neck art should be a full jacket-canvas image (same dimensions as the jacket art itself) with the medal already positioned correctly and everything else transparent.</div>
+  <div class="note">Removing a ribbon here also removes it from any jacket it's currently assigned to. The + button under Neck adds an image that shows around the member's neck on their jacket (in addition to the ribbon appearing in their rack as normal) — click the × that replaces it to remove it. Neck art should be a full jacket-canvas image (same dimensions as the jacket art itself) with the medal already positioned correctly and everything else transparent. If more than one of a member's ribbons has neck art set, only the first one is shown.</div>
 </main>
 
 <script>
 const RIBBON_W = 350, RIBBON_H = 95;
-
-function isMedalOfHonor(ribbon){
-  return ribbon.label.trim().toLowerCase() === "medal of honor";
-}
 
 const DEFAULT_RIBBONS = [
   { key:"medal_of_honor",    label:"Medal of Honor",             image:null, neckImage:null },
@@ -273,14 +272,16 @@ function renderRibbons(){
     row.className = 'ribbon-row';
     row.draggable = true;
     row.dataset.idx = idx;
-    const isMOH = isMedalOfHonor(r);
+    const neckBtnHTML = r.neckImage
+      ? `<button class="icon-btn" data-action="remove-neck" title="Remove neck art">&times;</button>`
+      : `<label class="icon-btn add-action" title="Add neck art">+<input type="file" accept="image/*" data-field="neckImage"></label>`;
     row.innerHTML = `
       <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
       <div class="swatch" style="${r.image ? `background-image:url(${r.image})` : ''}"></div>
       <input type="text" value="${r.label}" data-field="label">
       <label class="upload-btn small">${r.image ? 'Replace' : 'Upload'}<input type="file" accept="image/*" data-field="image"></label>
-      ${isMOH ? `<label class="upload-btn small ${r.neckImage ? 'set' : ''}">${r.neckImage ? '✓ Set' : 'Add neck art'}<input type="file" accept="image/*" data-field="neckImage"></label>` : `<span></span>`}
-      <button class="icon-btn" title="Remove">&times;</button>
+      ${neckBtnHTML}
+      <button class="icon-btn" data-action="remove-ribbon" title="Remove">&times;</button>
     `;
     row.querySelector('[data-field="label"]').addEventListener('change', async (e)=>{
       RIBBONS[idx].label = e.target.value;
@@ -295,28 +296,35 @@ function renderRibbons(){
         RIBBONS[idx].image = dataUrl;
         await saveJSON('ribbons', RIBBONS);
         row.querySelector('.swatch').style.backgroundImage = `url(${dataUrl})`;
-        row.querySelectorAll('.upload-btn')[0].firstChild.textContent = 'Replace';
+        row.querySelector('[data-field="image"]').closest('label').firstChild.textContent = 'Replace';
       }catch(err){
         alert('Could not process that image. Try a different file.');
       }
     });
-    if(isMOH){
-      row.querySelector('[data-field="neckImage"]').addEventListener('change', async (e)=>{
+    const neckFileInput = row.querySelector('[data-field="neckImage"]');
+    if(neckFileInput){
+      neckFileInput.addEventListener('change', async (e)=>{
         const file = e.target.files[0];
         if(!file) return;
         try{
           const dataUrl = await resizeNeckArt(file);
           RIBBONS[idx].neckImage = dataUrl;
           await saveJSON('ribbons', RIBBONS);
-          const btn = row.querySelectorAll('.upload-btn')[1];
-          btn.classList.add('set');
-          btn.firstChild.textContent = '✓ Set';
+          renderRibbons();
         }catch(err){
           alert('Could not process that image. Try a different file.');
         }
       });
     }
-    row.querySelector('.icon-btn').addEventListener('click', async ()=>{
+    const removeNeckBtn = row.querySelector('[data-action="remove-neck"]');
+    if(removeNeckBtn){
+      removeNeckBtn.addEventListener('click', async ()=>{
+        RIBBONS[idx].neckImage = null;
+        await saveJSON('ribbons', RIBBONS);
+        renderRibbons();
+      });
+    }
+    row.querySelector('[data-action="remove-ribbon"]').addEventListener('click', async ()=>{
       if(!confirm(`Remove "${r.label}"? This will unassign it from any jackets that have it.`)) return;
       await pruneFromMembers(r.key);
       RIBBONS.splice(idx,1);
@@ -399,7 +407,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.014</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.016</div>
 
 </body>
 </html>
