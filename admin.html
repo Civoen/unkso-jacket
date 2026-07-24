@@ -275,13 +275,13 @@ const MAX_BADGES = 6;
 const MAX_BADGES_PER_POCKET = 3;
 
 function badgeHTML(badgeKeys, badgeMap){
-  const cellH=3.2, gap=0.35, rowBottom=61.5;
+  const gap = 0.35;
   const jacketHtoW = 2052/3023;
   const keys = (badgeKeys||[]).slice(0, MAX_BADGES);
   const rightKeys = keys.slice(0, MAX_BADGES_PER_POCKET);
   const leftKeys = keys.slice(MAX_BADGES_PER_POCKET, MAX_BADGES);
 
-  function renderRow(rowKeys, centerX){
+  function renderRow(rowKeys, centerX, cellH, rowBottom){
     if(rowKeys.length === 0) return '';
     const widths = rowKeys.map(key=>{
       const def = badgeMap[key];
@@ -304,7 +304,7 @@ function badgeHTML(badgeKeys, badgeMap){
     return html;
   }
 
-  return renderRow(rightKeys, 68.8) + renderRow(leftKeys, 31.2);
+  return renderRow(rightKeys, 68.8, 5.5, 61.5) + renderRow(leftKeys, 31.2, 5.5, 54);
 }
 
 function insigniaHTML(rankName, rankMap){
@@ -541,7 +541,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.016</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.018</div>
 
 </body>
 </html>

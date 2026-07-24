@@ -280,16 +280,16 @@ const MAX_BADGES = 6;
 const MAX_BADGES_PER_POCKET = 3;
 
 function badgeHTML(badgeKeys, badgeMap){
-  const cellH=3.2, gap=0.35, rowBottom=61.5;
+  const gap = 0.35;
   // Converts a badge's own real-pixel aspect ratio into a jacket-mini WIDTH
   // percentage for a given HEIGHT percentage — % width and % height don't map
   // to equal real distances since the jacket art itself isn't square.
   const jacketHtoW = 2052/3023;
   const keys = (badgeKeys||[]).slice(0, MAX_BADGES);
-  const rightKeys = keys.slice(0, MAX_BADGES_PER_POCKET);       // right pocket (above the button)
-  const leftKeys = keys.slice(MAX_BADGES_PER_POCKET, MAX_BADGES); // left pocket (above the name tape), mirrored
+  const rightKeys = keys.slice(0, MAX_BADGES_PER_POCKET);          // right pocket, above the button
+  const leftKeys = keys.slice(MAX_BADGES_PER_POCKET, MAX_BADGES);  // left pocket, raised to sit level with the ribbon rack
 
-  function renderRow(rowKeys, centerX){
+  function renderRow(rowKeys, centerX, cellH, rowBottom){
     if(rowKeys.length === 0) return '';
     const widths = rowKeys.map(key=>{
       const def = badgeMap[key];
@@ -312,7 +312,7 @@ function badgeHTML(badgeKeys, badgeMap){
     return html;
   }
 
-  return renderRow(rightKeys, 68.8) + renderRow(leftKeys, 31.2);
+  return renderRow(rightKeys, 68.8, 5.5, 61.5) + renderRow(leftKeys, 31.2, 5.5, 54);
 }
 
 function insigniaHTML(rankName, rankMap){
@@ -654,7 +654,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.016</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.018</div>
 
 </body>
 </html>
