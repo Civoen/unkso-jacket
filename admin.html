@@ -47,7 +47,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   pointer-events:none;
 }
 .ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35); background-size:cover; background-position:center; background-color:#2a2d22;}
-.badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3); border-radius:4px; background-size:cover; background-position:center; background-color:#2a2d22;}
+.badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3); border-radius:4px; background-size:contain; background-position:center; background-repeat:no-repeat; background-color:#2a2d22;}
 .insignia{position:absolute; background-size:cover; background-position:center; background-repeat:no-repeat; transform-origin:50% 50%;}
 .name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px; padding:0 4%; overflow:hidden;}
 .name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; white-space:nowrap; display:inline-block;}
@@ -77,14 +77,18 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 .badge-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
 .badge-check{display:flex; align-items:center; gap:8px; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:12.5px; cursor:pointer;}
+.badge-check.disabled{opacity:.35; cursor:not-allowed;}
+.badge-limit-note{margin-top:8px; font-size:12px; color:var(--orange); font-weight:600;}
 .badge-check input{margin:0;}
-.badge-check .swatch{width:16px; height:16px; border-radius:3px; border:1px solid rgba(0,0,0,.35); flex-shrink:0; background-size:cover; background-position:center; background-color:#2a2d22;}
+.badge-check .swatch{width:16px; height:16px; border-radius:3px; border:1px solid rgba(0,0,0,.35); flex-shrink:0; background-size:contain; background-position:center; background-repeat:no-repeat; background-color:#2a2d22;}
 
 .save-btn{
   margin-top:6px; width:100%; background:var(--orange); color:#1c1108; border:none; border-radius:8px;
   padding:12px; font-family:'Poppins'; font-weight:600; font-size:14px; cursor:pointer;
 }
 .save-btn:hover{background:#f06c37;}
+
+.site-footer{border-top:1px solid var(--border); padding:18px 20px; text-align:center; color:var(--text-muted); font-size:11.5px; letter-spacing:.02em;}
 </style>
 </head>
 <body>
@@ -137,6 +141,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
       <div class="field">
         <label>Badges</label>
         <div class="badge-grid" id="badgeGrid"></div>
+        <div id="badgeLimitNote" class="badge-limit-note" style="display:none;">Maximum amount of Badges reached (6)</div>
       </div>
       <button class="save-btn" id="saveBtn">Save changes</button>
     </div>
@@ -153,6 +158,7 @@ const POSITION_OPTIONS = ["Member","SL","PS","1SG","XO","CO"];
 const DEFAULT_RANKS = ["LTC","MAJ","2LT","1LT","CSM","SFC","SSG","SGT","CPL","SPC","PFC","PV2","PVT","RT"].map(name=>({name, insignia:null}));
 
 const DEFAULT_RIBBONS = [
+  { key:"medal_of_honor",    label:"Medal of Honor",             image:null, neckImage:null },
   { key:"combat_readiness",  label:"Combat Readiness Medal",     image:null, neckImage:null },
   { key:"national_defense",  label:"National Defense Service",   image:null, neckImage:null },
   { key:"marksmanship",      label:"Marksmanship Ribbon",        image:null, neckImage:null },
@@ -168,10 +174,10 @@ const DEFAULT_RIBBONS = [
 ];
 
 const DEFAULT_BADGES = [
-  { key:"expert_marksman", label:"Expert Marksmanship Badge", image:null },
-  { key:"airborne_wings",  label:"Airborne Wings",             image:null },
-  { key:"combat_infantry", label:"Combat Infantryman Badge",   image:null },
-  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       image:null }
+  { key:"expert_marksman", label:"Expert Marksmanship Badge", image:null, width:1, height:1 },
+  { key:"airborne_wings",  label:"Airborne Wings",             image:null, width:1, height:1 },
+  { key:"combat_infantry", label:"Combat Infantryman Badge",   image:null, width:1, height:1 },
+  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       image:null, width:1, height:1 }
 ];
 
 const DEFAULT_MEMBERS = [
@@ -222,7 +228,6 @@ function ribbonBackground(r){
   return r.image ? `url(${r.image})` : `repeating-linear-gradient(45deg,#33362a 0 6px,#25271e 6px 12px)`;
 }
 
-function chunk(arr,n){ const out=[]; for(let i=0;i<arr.length;i+=n) out.push(arr.slice(i,i+n)); return out; }
 
 function distributeBottomHeavy(items, maxPerRow){
   const n = items.length;
@@ -266,25 +271,40 @@ function ribbonHTML(ribbonKeys, ribbonMap){
   return html;
 }
 
+const MAX_BADGES = 6;
+const MAX_BADGES_PER_POCKET = 3;
+
 function badgeHTML(badgeKeys, badgeMap){
-  const cellSize=3.2, gap=0.35, rowBottom=61.5, centerX=68.8;
-  const rows = chunk(badgeKeys,5);
-  const R = rows.length;
-  let html='';
-  rows.forEach((row,ri)=>{
-    const rowsFromBottom = R-1-ri;
-    const top = rowBottom - (rowsFromBottom+1)*(cellSize+gap);
-    const totalW = row.length*cellSize + (row.length-1)*gap;
-    const left0 = centerX - totalW/2;
-    row.forEach((key,ci)=>{
+  const cellH=3.2, gap=0.35, rowBottom=61.5;
+  const jacketHtoW = 2052/3023;
+  const keys = (badgeKeys||[]).slice(0, MAX_BADGES);
+  const rightKeys = keys.slice(0, MAX_BADGES_PER_POCKET);
+  const leftKeys = keys.slice(MAX_BADGES_PER_POCKET, MAX_BADGES);
+
+  function renderRow(rowKeys, centerX){
+    if(rowKeys.length === 0) return '';
+    const widths = rowKeys.map(key=>{
       const def = badgeMap[key];
-      if(!def) return;
-      const left = left0 + ci*(cellSize+gap);
-      const bg = def.image ? `url(${def.image})` : `repeating-linear-gradient(45deg,#33362a 0 4px,#25271e 4px 8px)`;
-      html += `<div class="badge" style="left:${left}%; top:${top}%; width:${cellSize}%; height:${cellSize}%; background-image:${bg};"></div>`;
+      const aspect = (def && def.width && def.height) ? def.width/def.height : 1;
+      return cellH * aspect * jacketHtoW;
     });
-  });
-  return html;
+    const totalW = widths.reduce((a,b)=>a+b,0) + gap*(rowKeys.length-1);
+    let left = centerX - totalW/2;
+    const top = rowBottom - cellH;
+    let html = '';
+    rowKeys.forEach((key,ci)=>{
+      const def = badgeMap[key];
+      const w = widths[ci];
+      if(def){
+        const bg = def.image ? `url(${def.image})` : `repeating-linear-gradient(45deg,#33362a 0 4px,#25271e 4px 8px)`;
+        html += `<div class="badge" style="left:${left}%; top:${top}%; width:${w}%; height:${cellH}%; background-image:${bg};"></div>`;
+      }
+      left += w + gap;
+    });
+    return html;
+  }
+
+  return renderRow(rightKeys, 68.8) + renderRow(leftKeys, 31.2);
 }
 
 function insigniaHTML(rankName, rankMap){
@@ -386,6 +406,23 @@ function populateBadgeGrid(){
   });
 }
 
+function enforceBadgeLimit(){
+  const boxes = Array.from(badgeGrid.querySelectorAll('input[type=checkbox]'));
+  const checkedCount = boxes.filter(cb=>cb.checked).length;
+  const atLimit = checkedCount >= MAX_BADGES;
+  boxes.forEach(cb=>{
+    const wrap = cb.closest('.badge-check');
+    if(!cb.checked && atLimit){
+      cb.disabled = true;
+      wrap.classList.add('disabled');
+    } else {
+      cb.disabled = false;
+      wrap.classList.remove('disabled');
+    }
+  });
+  document.getElementById('badgeLimitNote').style.display = atLimit ? 'block' : 'none';
+}
+
 function sortMembersBySeniority(){
   MEMBERS.sort((a,b)=>{
     const ai = rankIndex(a.rank); const bi = rankIndex(b.rank);
@@ -414,13 +451,14 @@ function loadMember(id){
   badgeGrid.querySelectorAll('input[type=checkbox]').forEach(cb=>{
     cb.checked = (m.badges||[]).includes(cb.dataset.key);
   });
+  enforceBadgeLimit();
   renderJacket(stage, m);
 }
 
 function currentEdits(){
   const m = MEMBERS.find(x=>x.id===memberSelect.value);
   const ribbons = Array.from(ribbonGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key);
-  const badges = Array.from(badgeGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key);
+  const badges = Array.from(badgeGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key).slice(0, MAX_BADGES);
   return { id:m.id, name:nameInput.value, rank:rankSelect.value, unit:unitSelect.value, position:positionSelect.value, ribbons, badges };
 }
 
@@ -432,7 +470,10 @@ rankSelect.addEventListener('change', refreshPreview);
 unitSelect.addEventListener('change', refreshPreview);
 positionSelect.addEventListener('change', refreshPreview);
 ribbonGrid.addEventListener('change', refreshPreview);
-badgeGrid.addEventListener('change', refreshPreview);
+badgeGrid.addEventListener('change', ()=>{
+  enforceBadgeLimit();
+  refreshPreview();
+});
 
 document.getElementById('saveBtn').addEventListener('click', async ()=>{
   const edits = currentEdits();
@@ -499,6 +540,8 @@ async function init(){
 
 init();
 </script>
+
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.013</div>
 
 </body>
 </html>

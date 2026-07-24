@@ -105,7 +105,7 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
   pointer-events:none;
 }
 .ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35); background-size:cover; background-position:center; background-color:#2a2d22;}
-.badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3); border-radius:4px; background-size:cover; background-position:center; background-color:#2a2d22;}
+.badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3); border-radius:4px; background-size:contain; background-position:center; background-repeat:no-repeat; background-color:#2a2d22;}
 .name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px; padding:0 4%; overflow:hidden;}
 .name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; white-space:nowrap; display:inline-block;}
 
@@ -121,6 +121,8 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
   width:100%; background:var(--bg-panel); border:1px solid var(--border); color:var(--text-primary);
   padding:11px 16px; border-radius:10px; font-size:14px; font-family:'Inter';
 }
+
+.site-footer{border-top:1px solid var(--border); padding:18px 20px; text-align:center; color:var(--text-muted); font-size:11.5px; letter-spacing:.02em;}
 </style>
 </head>
 <body>
@@ -158,6 +160,7 @@ const POSITION_SENIORITY = ["CO","XO","1SG","PS","SL","Member"];
 const DEFAULT_RANKS = ["LTC","MAJ","2LT","1LT","CSM","SFC","SSG","SGT","CPL","SPC","PFC","PV2","PVT","RT"].map(name=>({name, insignia:null}));
 
 const DEFAULT_RIBBONS = [
+  { key:"medal_of_honor",    label:"Medal of Honor",             image:null, neckImage:null },
   { key:"combat_readiness",  label:"Combat Readiness Medal",     image:null, neckImage:null },
   { key:"national_defense",  label:"National Defense Service",   image:null, neckImage:null },
   { key:"marksmanship",      label:"Marksmanship Ribbon",        image:null, neckImage:null },
@@ -185,10 +188,10 @@ const DEFAULT_MEMBERS = [
 ];
 
 const DEFAULT_BADGES = [
-  { key:"expert_marksman", label:"Expert Marksmanship Badge", image:null },
-  { key:"airborne_wings",  label:"Airborne Wings",             image:null },
-  { key:"combat_infantry", label:"Combat Infantryman Badge",   image:null },
-  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       image:null }
+  { key:"expert_marksman", label:"Expert Marksmanship Badge", image:null, width:1, height:1 },
+  { key:"airborne_wings",  label:"Airborne Wings",             image:null, width:1, height:1 },
+  { key:"combat_infantry", label:"Combat Infantryman Badge",   image:null, width:1, height:1 },
+  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       image:null, width:1, height:1 }
 ];
 
 // Set this to your deployed Worker URL (no trailing slash), e.g. 'https://unkso-api.yoursubdomain.workers.dev'
@@ -227,7 +230,6 @@ function ribbonBackground(r){
   return r.image ? `url(${r.image})` : `repeating-linear-gradient(45deg,#33362a 0 6px,#25271e 6px 12px)`;
 }
 
-function chunk(arr,n){ const out=[]; for(let i=0;i<arr.length;i+=n) out.push(arr.slice(i,i+n)); return out; }
 
 // Splits items into rows (top-to-bottom order) of at most maxPerRow, distributing
 // as evenly as possible across the minimum number of rows, and always giving any
@@ -274,25 +276,43 @@ function ribbonHTML(ribbonKeys, ribbonMap){
   return html;
 }
 
+const MAX_BADGES = 6;
+const MAX_BADGES_PER_POCKET = 3;
+
 function badgeHTML(badgeKeys, badgeMap){
-  const cellSize=3.2, gap=0.35, rowBottom=61.5, centerX=68.8;
-  const rows = chunk(badgeKeys,5);
-  const R = rows.length;
-  let html='';
-  rows.forEach((row,ri)=>{
-    const rowsFromBottom = R-1-ri;
-    const top = rowBottom - (rowsFromBottom+1)*(cellSize+gap);
-    const totalW = row.length*cellSize + (row.length-1)*gap;
-    const left0 = centerX - totalW/2;
-    row.forEach((key,ci)=>{
+  const cellH=3.2, gap=0.35, rowBottom=61.5;
+  // Converts a badge's own real-pixel aspect ratio into a jacket-mini WIDTH
+  // percentage for a given HEIGHT percentage — % width and % height don't map
+  // to equal real distances since the jacket art itself isn't square.
+  const jacketHtoW = 2052/3023;
+  const keys = (badgeKeys||[]).slice(0, MAX_BADGES);
+  const rightKeys = keys.slice(0, MAX_BADGES_PER_POCKET);       // right pocket (above the button)
+  const leftKeys = keys.slice(MAX_BADGES_PER_POCKET, MAX_BADGES); // left pocket (above the name tape), mirrored
+
+  function renderRow(rowKeys, centerX){
+    if(rowKeys.length === 0) return '';
+    const widths = rowKeys.map(key=>{
       const def = badgeMap[key];
-      if(!def) return;
-      const left = left0 + ci*(cellSize+gap);
-      const bg = def.image ? `url(${def.image})` : `repeating-linear-gradient(45deg,#33362a 0 4px,#25271e 4px 8px)`;
-      html += `<div class="badge" style="left:${left}%; top:${top}%; width:${cellSize}%; height:${cellSize}%; background-image:${bg};"></div>`;
+      const aspect = (def && def.width && def.height) ? def.width/def.height : 1;
+      return cellH * aspect * jacketHtoW;
     });
-  });
-  return html;
+    const totalW = widths.reduce((a,b)=>a+b,0) + gap*(rowKeys.length-1);
+    let left = centerX - totalW/2;
+    const top = rowBottom - cellH;
+    let html = '';
+    rowKeys.forEach((key,ci)=>{
+      const def = badgeMap[key];
+      const w = widths[ci];
+      if(def){
+        const bg = def.image ? `url(${def.image})` : `repeating-linear-gradient(45deg,#33362a 0 4px,#25271e 4px 8px)`;
+        html += `<div class="badge" style="left:${left}%; top:${top}%; width:${w}%; height:${cellH}%; background-image:${bg};"></div>`;
+      }
+      left += w + gap;
+    });
+    return html;
+  }
+
+  return renderRow(rightKeys, 68.8) + renderRow(leftKeys, 31.2);
 }
 
 function insigniaHTML(rankName, rankMap){
@@ -633,6 +653,8 @@ async function init(){
 }
 init();
 </script>
+
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.013</div>
 
 </body>
 </html>
