@@ -131,7 +131,9 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 <script>
 const RIBBON_W = 350, RIBBON_H = 95;
 
-const MEDAL_OF_HONOR_KEY = "medal_of_honor";
+function isMedalOfHonor(ribbon){
+  return ribbon.label.trim().toLowerCase() === "medal of honor";
+}
 
 const DEFAULT_RIBBONS = [
   { key:"medal_of_honor",    label:"Medal of Honor",             image:null, neckImage:null },
@@ -271,7 +273,7 @@ function renderRibbons(){
     row.className = 'ribbon-row';
     row.draggable = true;
     row.dataset.idx = idx;
-    const isMOH = r.key === MEDAL_OF_HONOR_KEY;
+    const isMOH = isMedalOfHonor(r);
     row.innerHTML = `
       <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
       <div class="swatch" style="${r.image ? `background-image:url(${r.image})` : ''}"></div>
@@ -283,6 +285,7 @@ function renderRibbons(){
     row.querySelector('[data-field="label"]').addEventListener('change', async (e)=>{
       RIBBONS[idx].label = e.target.value;
       await saveJSON('ribbons', RIBBONS);
+      renderRibbons();
     });
     row.querySelector('[data-field="image"]').addEventListener('change', async (e)=>{
       const file = e.target.files[0];
@@ -396,7 +399,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.013</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.014</div>
 
 </body>
 </html>
