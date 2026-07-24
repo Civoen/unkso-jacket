@@ -6,11 +6,12 @@
 //   GET  /api/ranks   PUT /api/ranks     -> same idea, for the ranks list
 //   GET  /api/ribbons PUT /api/ribbons   -> same idea, for the ribbons list
 //   GET  /api/badges  PUT /api/badges    -> same idea, for the badges list
+//   GET  /api/pins    PUT /api/pins      -> same idea, for the pins list
 //
 // Storage: each collection lives under its own KV key
-// ("unkso-members", "unkso-ranks", "unkso-ribbons", "unkso-badges") inside the bound namespace.
+// ("unkso-members", "unkso-ranks", "unkso-ribbons", "unkso-badges", "unkso-pins") inside the bound namespace.
 
-const ALLOWED_KEYS = ["members", "ranks", "ribbons", "badges"];
+const ALLOWED_KEYS = ["members", "ranks", "ribbons", "badges", "pins"];
 
 // Lock this down to your actual Pages domain once it's live, e.g.
 // "https://unkso.pages.dev" — using "*" for now so it works while you're testing.
