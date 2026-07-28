@@ -586,6 +586,21 @@ async function downloadMemberPNG(member, ribbonMap, badgeMap, rankMap, pinMap, b
   }
 }
 
+function buildAwardsJSON(member, ribbonMap, badgeMap, pinMap){
+  const ribbons = (member.ribbons||[]).map(k => ribbonMap[k]?.label).filter(Boolean);
+  const badges = (member.badges||[]).map(k => badgeMap[k]?.label).filter(Boolean);
+  const pin = member.pin ? (pinMap[member.pin]?.label || null) : null;
+  return JSON.stringify({
+    name: member.name,
+    rank: member.rank,
+    unit: member.unit,
+    position: member.position,
+    ribbons,
+    badges,
+    pin
+  }, null, 2);
+}
+
 async function downloadMembersZip(members, ribbonMap, badgeMap, rankMap, pinMap, zipFilename, btn, groupByUnit){
   if(members.length === 0){ alert('Nothing to download.'); return; }
   const original = btn.textContent;
@@ -599,9 +614,10 @@ async function downloadMembersZip(members, ribbonMap, badgeMap, rankMap, pinMap,
       const m = members[i];
       const canvas = await renderJacketCanvas(m, ribbonMap, badgeMap, rankMap, pinMap);
       const blob = await canvasToPngBlob(canvas);
-      const name = safeFilename(`${m.rank}.${m.name}`) + '.png';
-      const path = groupByUnit ? `${safeFilename(m.unit)}/${name}` : name;
-      zip.file(path, blob);
+      const stem = safeFilename(`${m.rank}.${m.name}`);
+      const path = groupByUnit ? `${safeFilename(m.unit)}/${stem}` : stem;
+      zip.file(path + '.png', blob);
+      zip.file(path + '.json', buildAwardsJSON(m, ribbonMap, badgeMap, pinMap));
     }
     btn.textContent = 'Zipping…';
     const zipBlob = await zip.generateAsync({type:'blob'});
@@ -678,7 +694,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.019</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.020</div>
 
 </body>
 </html>
