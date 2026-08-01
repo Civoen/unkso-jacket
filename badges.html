@@ -41,8 +41,15 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   padding:10px 14px; border-radius:8px; font-size:14px; font-family:'Inter';
 }
 
-.col-labels{display:grid; grid-template-columns:22px 44px 1fr 110px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
-.badge-row{display:grid; grid-template-columns:22px 44px 1fr 110px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
+.filter-row{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+.filter-row label{font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em;}
+.filter-row select{
+  background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
+  padding:8px 12px; border-radius:8px; font-size:13.5px; font-family:'Inter';
+}
+
+.col-labels{display:grid; grid-template-columns:22px 44px 1fr 100px 110px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
+.badge-row{display:grid; grid-template-columns:22px 44px 1fr 100px 110px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
 .badge-row:last-child{border-bottom:none;}
 .badge-row.dragging{opacity:.4;}
 .drag-handle{color:var(--text-muted); font-size:15px; text-align:center; cursor:grab; user-select:none;}
@@ -56,6 +63,10 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .badge-row input[type=text]{
   background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
   padding:8px 10px; border-radius:6px; font-size:13.5px; font-family:'Inter';
+}
+.badge-row select, .add-grid select{
+  background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
+  padding:8px 10px; border-radius:6px; font-size:13px; font-family:'Inter';
 }
 .upload-btn{
   background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary);
@@ -73,7 +84,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .add-panel{margin-top:20px; padding-top:18px; border-top:1px solid var(--border);}
 .add-panel h3{font-family:'Poppins'; font-size:14px; font-weight:600; margin:0 0 4px; color:var(--orange);}
 .add-panel .dims-note{font-size:11.5px; color:var(--text-muted); margin-bottom:12px;}
-.add-grid{display:grid; grid-template-columns:40px 1fr 130px auto; align-items:center; gap:10px;}
+.add-grid{display:grid; grid-template-columns:40px 1fr 100px 130px auto; align-items:center; gap:10px;}
 .add-grid input[type=text]{
   background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
   padding:9px 12px; border-radius:6px; font-size:13.5px; font-family:'Inter';
@@ -104,11 +115,15 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 <main>
   <h1>Badges</h1>
-  <div class="sub">CONTROLS THE BADGES CHECKLIST ON THE ADMIN PAGE — YOUR IMAGE'S OWN SHAPE IS KEPT, SCALED DOWN IF TALLER THAN 180PX</div>
+  <div class="sub">CONTROLS THE BADGES CHECKLIST ON THE ADMIN PAGE — YOUR IMAGE'S OWN SHAPE IS KEPT, SCALED DOWN IF TALLER THAN 180PX. EACH BADGE BELONGS TO ONE UNIT — BATTALION BADGES ARE AVAILABLE TO EVERY MEMBER, COMPANY BADGES ONLY TO THAT COMPANY.</div>
 
   <div class="panel">
     <div class="search-row"><input id="searchInput" type="text" placeholder="Search badges…"></div>
-    <div class="col-labels"><span></span><span>Preview</span><span>Name</span><span>Image</span><span></span></div>
+    <div class="filter-row">
+      <label for="unitFilterSelect">Showing</label>
+      <select id="unitFilterSelect"></select>
+    </div>
+    <div class="col-labels"><span></span><span>Preview</span><span>Name</span><span>Unit</span><span>Image</span><span></span></div>
     <div id="badgeList"></div>
 
     <div class="add-panel">
@@ -117,6 +132,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
       <div class="add-grid">
         <div class="swatch" id="newPreview"></div>
         <input id="newLabel" type="text" placeholder="Badge name">
+        <select id="newUnit"></select>
         <label class="upload-btn" id="newUploadLabel">Choose image<input type="file" id="newUpload" accept="image/*"></label>
         <button class="add-btn" id="addBtn" disabled>Add badge</button>
       </div>
@@ -127,13 +143,18 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 <script>
 const MAX_BADGE_HEIGHT = 180;
+const UNITS = ["Battalion","Bravo","Charlie","Delta"];
 
 const DEFAULT_BADGES = [
-  { key:"expert_marksman", label:"Expert Marksmanship Badge", image:null, width:1, height:1 },
-  { key:"airborne_wings",  label:"Airborne Wings",             image:null, width:1, height:1 },
-  { key:"combat_infantry", label:"Combat Infantryman Badge",   image:null, width:1, height:1 },
-  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       image:null, width:1, height:1 }
+  { key:"expert_marksman", label:"Expert Marksmanship Badge", image:null, width:1, height:1, unit:"Battalion" },
+  { key:"airborne_wings",  label:"Airborne Wings",             image:null, width:1, height:1, unit:"Battalion" },
+  { key:"combat_infantry", label:"Combat Infantryman Badge",   image:null, width:1, height:1, unit:"Battalion" },
+  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       image:null, width:1, height:1, unit:"Battalion" }
 ];
+
+function normalizeBadges(badges){
+  return badges.map(b => b.unit ? b : {...b, unit:"Battalion"});
+}
 
 const API_BASE = 'https://unkso-api.adambramfitt.workers.dev';
 
@@ -200,6 +221,7 @@ function newKey(label){
 let BADGES = [];
 let MEMBERS = [];
 let searchTerm = '';
+let unitFilter = UNITS[0];
 let dragSrcIdx = null;
 
 async function pruneFromMembers(key){
@@ -211,10 +233,13 @@ function renderBadges(){
   const list = document.getElementById('badgeList');
   list.innerHTML = '';
   const q = searchTerm.trim().toLowerCase();
-  const visibleIdx = BADGES.map((_,i)=>i).filter(i => !q || BADGES[i].label.toLowerCase().includes(q));
+  const visibleIdx = BADGES.map((_,i)=>i).filter(i => {
+    if(BADGES[i].unit !== unitFilter) return false;
+    return !q || BADGES[i].label.toLowerCase().includes(q);
+  });
 
   if(visibleIdx.length === 0){
-    list.innerHTML = '<div class="note" style="margin-top:6px;">No badges match your search.</div>';
+    list.innerHTML = `<div class="note" style="margin-top:6px;">No ${unitFilter} badges${q ? ' match your search' : ''}.</div>`;
     return;
   }
 
@@ -228,12 +253,18 @@ function renderBadges(){
       <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
       <div class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></div>
       <input type="text" value="${b.label}" data-field="label">
+      <select data-field="unit">${UNITS.map(u=>`<option ${u===b.unit?'selected':''}>${u}</option>`).join('')}</select>
       <label class="upload-btn">${b.image ? 'Replace image' : 'Upload image'}<input type="file" accept="image/*" data-field="image"></label>
       <button class="icon-btn" title="Remove">&times;</button>
     `;
     row.querySelector('[data-field="label"]').addEventListener('change', async (e)=>{
       BADGES[idx].label = e.target.value;
       await saveBadgesChecked();
+    });
+    row.querySelector('[data-field="unit"]').addEventListener('change', async (e)=>{
+      BADGES[idx].unit = e.target.value;
+      await saveBadgesChecked();
+      renderBadges();
     });
     row.querySelector('[data-field="image"]').addEventListener('change', async (e)=>{
       const file = e.target.files[0];
@@ -283,6 +314,13 @@ document.getElementById('searchInput').addEventListener('input', (e)=>{
   renderBadges();
 });
 
+document.getElementById('unitFilterSelect').innerHTML = UNITS.map(u=>`<option>${u}</option>`).join('');
+document.getElementById('unitFilterSelect').addEventListener('change', (e)=>{
+  unitFilter = e.target.value;
+  document.getElementById('newUnit').value = unitFilter;
+  renderBadges();
+});
+
 let pendingImage = null;
 
 function refreshAddButton(){
@@ -314,7 +352,8 @@ document.getElementById('newUpload').addEventListener('change', async (e)=>{
 document.getElementById('addBtn').addEventListener('click', async ()=>{
   const label = document.getElementById('newLabel').value.trim();
   if(!label || !pendingImage) return;
-  BADGES.push({ key: newKey(label), label, image: pendingImage.dataUrl, width: pendingImage.width, height: pendingImage.height });
+  const unit = document.getElementById('newUnit').value;
+  BADGES.push({ key: newKey(label), label, image: pendingImage.dataUrl, width: pendingImage.width, height: pendingImage.height, unit });
   document.getElementById('newLabel').value = '';
   document.getElementById('newUpload').value = '';
   document.getElementById('newPreview').style.backgroundImage = '';
@@ -326,14 +365,19 @@ document.getElementById('addBtn').addEventListener('click', async ()=>{
 });
 
 async function init(){
-  BADGES = await loadJSON('badges', DEFAULT_BADGES);
+  document.getElementById('newUnit').innerHTML = UNITS.map(u=>`<option>${u}</option>`).join('');
+  document.getElementById('newUnit').value = unitFilter;
+  const rawBadges = await loadJSON('badges', DEFAULT_BADGES);
+  const badgesNeedMigration = rawBadges.some(b => !b.unit);
+  BADGES = normalizeBadges(rawBadges);
+  if(badgesNeedMigration) await saveJSON('badges', BADGES);
   MEMBERS = await loadJSON('members', []);
   renderBadges();
 }
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.020</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.021</div>
 
 </body>
 </html>

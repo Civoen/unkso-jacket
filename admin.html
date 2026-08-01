@@ -180,10 +180,10 @@ const DEFAULT_RIBBONS = [
 ];
 
 const DEFAULT_BADGES = [
-  { key:"expert_marksman", label:"Expert Marksmanship Badge", image:null, width:1, height:1 },
-  { key:"airborne_wings",  label:"Airborne Wings",             image:null, width:1, height:1 },
-  { key:"combat_infantry", label:"Combat Infantryman Badge",   image:null, width:1, height:1 },
-  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       image:null, width:1, height:1 }
+  { key:"expert_marksman", label:"Expert Marksmanship Badge", image:null, width:1, height:1, unit:"Battalion" },
+  { key:"airborne_wings",  label:"Airborne Wings",             image:null, width:1, height:1, unit:"Battalion" },
+  { key:"combat_infantry", label:"Combat Infantryman Badge",   image:null, width:1, height:1, unit:"Battalion" },
+  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       image:null, width:1, height:1, unit:"Battalion" }
 ];
 
 const DEFAULT_MEMBERS = [
@@ -421,13 +421,21 @@ function populateRibbonGrid(){
   });
 }
 
-function populateBadgeGrid(){
+function visibleBadgesForUnit(unit){
+  return BADGES.filter(b => b.unit === 'Battalion' || b.unit === unit);
+}
+
+function populateBadgeGrid(unit){
+  const prevChecked = new Set(Array.from(badgeGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key));
   badgeGrid.innerHTML = '';
-  BADGES.forEach(b=>{
+  visibleBadgesForUnit(unit).forEach(b=>{
     const wrap = document.createElement('label');
     wrap.className = 'badge-check';
     wrap.innerHTML = `<input type="checkbox" data-key="${b.key}"><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span>${b.label}`;
     badgeGrid.appendChild(wrap);
+  });
+  badgeGrid.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.checked = prevChecked.has(cb.dataset.key);
   });
 }
 
@@ -478,6 +486,7 @@ function loadMember(id){
   ribbonGrid.querySelectorAll('input[type=checkbox]').forEach(cb=>{
     cb.checked = m.ribbons.includes(cb.dataset.key);
   });
+  populateBadgeGrid(m.unit);
   badgeGrid.querySelectorAll('input[type=checkbox]').forEach(cb=>{
     cb.checked = (m.badges||[]).includes(cb.dataset.key);
   });
@@ -499,7 +508,11 @@ memberSelect.addEventListener('change', e=>loadMember(e.target.value));
 nameInput.addEventListener('input', refreshPreview);
 pinSelect.addEventListener('change', refreshPreview);
 rankSelect.addEventListener('change', refreshPreview);
-unitSelect.addEventListener('change', refreshPreview);
+unitSelect.addEventListener('change', ()=>{
+  populateBadgeGrid(unitSelect.value);
+  enforceBadgeLimit();
+  refreshPreview();
+});
 positionSelect.addEventListener('change', refreshPreview);
 ribbonGrid.addEventListener('change', refreshPreview);
 badgeGrid.addEventListener('change', ()=>{
@@ -549,6 +562,10 @@ function normalizeRanks(ranks){
   return ranks.map(r => typeof r === 'string' ? { name:r, insignia:null } : r);
 }
 
+function normalizeBadges(badges){
+  return badges.map(b => b.unit ? b : {...b, unit:"Battalion"});
+}
+
 async function init(){
   MEMBERS = await loadJSON('members', DEFAULT_MEMBERS);
   const rawRanks = await loadJSON('ranks', DEFAULT_RANKS);
@@ -556,13 +573,16 @@ async function init(){
   RANKS = normalizeRanks(rawRanks);
   if(ranksNeedMigration) await saveJSON('ranks', RANKS);
   RIBBONS = await loadJSON('ribbons', DEFAULT_RIBBONS);
-  BADGES = await loadJSON('badges', DEFAULT_BADGES);
+  const rawBadges = await loadJSON('badges', DEFAULT_BADGES);
+  const badgesNeedMigration = rawBadges.some(b => !b.unit);
+  BADGES = normalizeBadges(rawBadges);
+  if(badgesNeedMigration) await saveJSON('badges', BADGES);
   PINS = await loadJSON('pins', []);
   sortMembersBySeniority();
   populateStaticSelects();
   populateRankSelect();
   populateRibbonGrid();
-  populateBadgeGrid();
+  populateBadgeGrid(unitSelect.value);
   populatePinSelect();
 
   const requestedId = new URLSearchParams(window.location.search).get('member');
@@ -575,7 +595,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.020</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.021</div>
 
 </body>
 </html>
