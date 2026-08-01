@@ -1,9 +1,0 @@
-name = "unkso-api"
-main = "src/index.js"
-compatibility_date = "2026-07-01"
-
-# Replace "id" with your existing KV namespace's ID.
-# Find it with: wrangler kv namespace list
-[[kv_namespaces]]
-binding = "UNKSO_KV"
-id = "b1fc208de382466ba85269cc65734d4e"
