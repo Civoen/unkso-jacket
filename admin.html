@@ -65,7 +65,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35); background-size:cover; background-position:center; background-color:#2a2d22;}
 .badge{position:absolute; border:1px solid rgba(0,0,0,.4); box-shadow:0 1px 1px rgba(0,0,0,.3); border-radius:4px; background-size:contain; background-position:center; background-repeat:no-repeat;}
 .pin{position:absolute; background-size:contain; background-position:center; background-repeat:no-repeat;}
-.insignia{position:absolute; background-size:cover; background-position:center; background-repeat:no-repeat; transform-origin:50% 50%;}
+.insignia{position:absolute; background-size:contain; background-position:center; background-repeat:no-repeat; transform-origin:50% 50%;}
 .name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px; padding:0 4%; overflow:hidden;}
 .name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; white-space:nowrap; display:inline-block;}
 
@@ -455,6 +455,13 @@ const stage = document.getElementById('stage');
 // specific badges without having to temporarily reassign the member to that Company.
 let badgeViewUnit = UNIT_OPTIONS[0];
 
+// The actual set of badges the member being edited has — kept separate from the
+// grid's own checkbox DOM, since the grid only ever renders whichever Company is
+// currently selected in badgeViewUnit. A badge earned in a different Company than
+// the one currently being viewed stays here (so Save never drops it) even though
+// its checkbox isn't currently on screen.
+let currentMemberBadges = [];
+
 function populateStaticSelects(){
   unitSelect.innerHTML = UNIT_OPTIONS.map(u=>`<option>${u}</option>`).join('');
   positionSelect.innerHTML = POSITION_OPTIONS.map(p=>`<option>${p}</option>`).join('');
@@ -475,22 +482,21 @@ function populateRibbonGrid(){
   });
 }
 
-function visibleBadgesForUnit(unit, keepKeys){
-  const keep = keepKeys || new Set();
-  return BADGES.filter(b => b.unit === 'Battalion' || b.unit === unit || keep.has(b.key));
+function visibleBadgesForUnit(unit){
+  return BADGES.filter(b => b.unit === 'Battalion' || b.unit === unit);
 }
 
-// keepKeys: badge keys that must stay visible+checked even if they belong to a
-// different unit than `unit` — a member can have earned a badge while assigned
-// to a different Company, and switching their unit should never silently drop it.
-function populateBadgeGrid(unit, checkedKeys){
-  const checked = new Set(checkedKeys || []);
+// currentMemberBadges is the source of truth for which badges the member being
+// edited actually has — independent of badgeViewUnit. The grid only ever shows
+// Battalion + the selected Company's badges; a badge earned in a different
+// Company stays checked in currentMemberBadges (so it's never lost on save)
+// even while it's filtered out of view.
+function populateBadgeGrid(unit){
   badgeGrid.innerHTML = '';
-  visibleBadgesForUnit(unit, checked).forEach(b=>{
+  visibleBadgesForUnit(unit).forEach(b=>{
     const wrap = document.createElement('label');
     wrap.className = 'badge-check';
-    const foreign = b.unit !== 'Battalion' && b.unit !== unit;
-    wrap.innerHTML = `<input type="checkbox" data-key="${b.key}"${checked.has(b.key) ? ' checked' : ''}><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span>${b.label}${foreign ? ` <span style="color:var(--text-muted); font-size:11px;">(${b.unit})</span>` : ''}`;
+    wrap.innerHTML = `<input type="checkbox" data-key="${b.key}"${currentMemberBadges.includes(b.key) ? ' checked' : ''}><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span>${b.label}`;
     badgeGrid.appendChild(wrap);
   });
 }
@@ -500,9 +506,8 @@ function populatePinSelect(){
 }
 
 function enforceBadgeLimit(){
+  const atLimit = currentMemberBadges.length >= MAX_BADGES;
   const boxes = Array.from(badgeGrid.querySelectorAll('input[type=checkbox]'));
-  const checkedCount = boxes.filter(cb=>cb.checked).length;
-  const atLimit = checkedCount >= MAX_BADGES;
   boxes.forEach(cb=>{
     const wrap = cb.closest('.badge-check');
     if(!cb.checked && atLimit){
@@ -544,7 +549,8 @@ function loadMember(id){
   });
   badgeViewUnit = m.unit;
   badgeViewSelect.value = badgeViewUnit;
-  populateBadgeGrid(badgeViewUnit, m.badges||[]);
+  currentMemberBadges = [...(m.badges||[])];
+  populateBadgeGrid(badgeViewUnit);
   enforceBadgeLimit();
   renderJacket(stage, m);
 }
@@ -552,7 +558,7 @@ function loadMember(id){
 function currentEdits(){
   const m = MEMBERS.find(x=>x.id===memberSelect.value);
   const ribbons = Array.from(ribbonGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key);
-  const badges = Array.from(badgeGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key).slice(0, MAX_BADGES);
+  const badges = currentMemberBadges.slice(0, MAX_BADGES);
   const pin = pinSelect.value || null;
   return { id:m.id, name:nameInput.value, rank:rankSelect.value, unit:unitSelect.value, position:positionSelect.value, ribbons, badges, pin };
 }
@@ -566,20 +572,24 @@ rankSelect.addEventListener('change', refreshPreview);
 unitSelect.addEventListener('change', ()=>{
   badgeViewUnit = unitSelect.value;
   badgeViewSelect.value = badgeViewUnit;
-  const currentlyChecked = Array.from(badgeGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key);
-  populateBadgeGrid(badgeViewUnit, currentlyChecked);
+  populateBadgeGrid(badgeViewUnit);
   enforceBadgeLimit();
   refreshPreview();
 });
 badgeViewSelect.addEventListener('change', ()=>{
   badgeViewUnit = badgeViewSelect.value;
-  const currentlyChecked = Array.from(badgeGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key);
-  populateBadgeGrid(badgeViewUnit, currentlyChecked);
+  populateBadgeGrid(badgeViewUnit);
   enforceBadgeLimit();
 });
 positionSelect.addEventListener('change', refreshPreview);
 ribbonGrid.addEventListener('change', refreshPreview);
-badgeGrid.addEventListener('change', ()=>{
+badgeGrid.addEventListener('change', (e)=>{
+  const key = e.target.dataset.key;
+  if(e.target.checked){
+    if(!currentMemberBadges.includes(key)) currentMemberBadges.push(key);
+  } else {
+    currentMemberBadges = currentMemberBadges.filter(k=>k!==key);
+  }
   enforceBadgeLimit();
   refreshPreview();
 });
@@ -658,7 +668,7 @@ async function init(){
   populateStaticSelects();
   populateRankSelect();
   populateRibbonGrid();
-  populateBadgeGrid(badgeViewUnit, []);
+  populateBadgeGrid(badgeViewUnit);
   populatePinSelect();
 
   const requestedId = new URLSearchParams(window.location.search).get('member');
@@ -671,7 +681,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.023</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.024</div>
 
 </body>
 </html>
