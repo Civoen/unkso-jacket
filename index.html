@@ -77,6 +77,19 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
   padding:6px 16px; border-radius:7px; font-weight:600; text-decoration:none; font-size:13px; cursor:pointer;
 }
 .subnav a.nav-secondary:hover{border-color:var(--orange-dim); color:var(--orange);}
+
+.nav-dropdown{position:relative;}
+.nav-dropdown-menu{
+  display:none; position:absolute; top:100%; left:0; margin-top:10px;
+  background:var(--bg-card); border:1px solid var(--border); border-radius:8px;
+  min-width:130px; padding:6px; box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:20;
+}
+.nav-dropdown:hover .nav-dropdown-menu{display:block;}
+.nav-dropdown-menu a{
+  display:block; padding:8px 10px; border-radius:6px; font-size:13px;
+  color:var(--text-secondary); text-decoration:none; border-bottom:none;
+}
+.nav-dropdown-menu a:hover, .nav-dropdown-menu a.active{background:var(--bg-panel); color:var(--orange);}
 .subnav a.nav-secondary:disabled, .subnav a.nav-secondary.busy{opacity:.6; pointer-events:none;}
 
 .insignia{position:absolute; background-size:cover; background-position:center; background-repeat:no-repeat; transform-origin:50% 50%;}
@@ -132,7 +145,12 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
   <a href="index.html" class="active">Jackets</a>
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
-  <a href="badges.html">Badges</a>
+  <div class="nav-dropdown">
+    <a href="badges.html">Badges</a>
+    <div class="nav-dropdown-menu">
+      <a href="tracker.html">Tracker</a>
+    </div>
+  </div>
   <a href="pins.html">Pins</a>
   <a href="#" id="downloadAllBtn" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta">Admin</a>
@@ -694,7 +712,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.021</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.022</div>
 
 </body>
 </html>
