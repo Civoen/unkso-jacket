@@ -32,12 +32,15 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
 .subnav a.nav-secondary.busy{opacity:.6; pointer-events:none;}
 
 .nav-dropdown{position:relative;}
+.nav-dropdown > a{display:block;}
 .nav-dropdown-menu{
-  display:none; position:absolute; top:100%; left:0; margin-top:10px;
-  background:var(--bg-card); border:1px solid var(--border); border-radius:8px;
-  min-width:130px; padding:6px; box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:20;
+  display:none; position:absolute; top:100%; left:0; padding-top:10px; z-index:20;
 }
 .nav-dropdown:hover .nav-dropdown-menu{display:block;}
+.nav-dropdown-menu-inner{
+  background:var(--bg-card); border:1px solid var(--border); border-radius:8px;
+  min-width:130px; padding:6px; box-shadow:0 8px 24px rgba(0,0,0,.4);
+}
 .nav-dropdown-menu a{
   display:block; padding:8px 10px; border-radius:6px; font-size:13px;
   color:var(--text-secondary); text-decoration:none; border-bottom:none;
@@ -86,11 +89,17 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 .field-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;}
 .field-header label{margin-bottom:0;}
+.field-header-actions{display:flex; align-items:center; gap:8px;}
 .collapse-btn{
   background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary);
   border-radius:6px; padding:4px 10px; font-size:11px; font-family:'Inter'; cursor:pointer;
 }
 .collapse-btn:hover{border-color:var(--orange-dim); color:var(--orange);}
+.badge-view-select{
+  background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary);
+  border-radius:6px; padding:4px 8px; font-size:11px; font-family:'Inter'; cursor:pointer;
+}
+.badge-view-select:hover{border-color:var(--orange-dim); color:var(--orange);}
 .field.collapsed .ribbon-grid, .field.collapsed .badge-grid, .field.collapsed .badge-limit-note{display:none;}
 
 .ribbon-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
@@ -123,7 +132,9 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <div class="nav-dropdown">
     <a href="badges.html">Badges</a>
     <div class="nav-dropdown-menu">
-      <a href="tracker.html">Tracker</a>
+      <div class="nav-dropdown-menu-inner">
+        <a href="tracker.html">Tracker</a>
+      </div>
     </div>
   </div>
   <a href="pins.html">Pins</a>
@@ -173,7 +184,10 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
       <div class="field" id="badgesField">
         <div class="field-header">
           <label>Badges</label>
-          <button type="button" class="collapse-btn" id="badgesToggle" aria-expanded="true">&#9650; Collapse</button>
+          <div class="field-header-actions">
+            <select id="badgeViewSelect" class="badge-view-select" title="Preview badges for a different Company without changing this member's Unit"></select>
+            <button type="button" class="collapse-btn" id="badgesToggle" aria-expanded="true">&#9650; Collapse</button>
+          </div>
         </div>
         <div class="badge-grid" id="badgeGrid"></div>
         <div id="badgeLimitNote" class="badge-limit-note" style="display:none;">Maximum amount of Badges reached (6)</div>
@@ -353,9 +367,9 @@ function insigniaHTML(rankName, rankMap){
   const leftAnchorX=20, leftAnchorY=22;
   const rightAnchorX=80, rightAnchorY=22;
   const left = `
-    <div class="insignia" style="left:${leftAnchorX-w/2}%; top:${leftAnchorY-h/2}%; width:${w}%; height:${h}%; background-image:url(${def.insignia}); transform:rotate(-24deg);"></div>`;
+    <div class="insignia" style="left:${leftAnchorX-w/2}%; top:${leftAnchorY-h/2}%; width:${w}%; height:${h}%; background-image:url(${def.insignia}); transform:rotate(55deg) scale(0.3);"></div>`;
   const right = `
-    <div class="insignia" style="left:${rightAnchorX-w/2}%; top:${rightAnchorY-h/2}%; width:${w}%; height:${h}%; background-image:url(${def.insignia}); transform:rotate(24deg);"></div>`;
+    <div class="insignia" style="left:${rightAnchorX-w/2}%; top:${rightAnchorY-h/2}%; width:${w}%; height:${h}%; background-image:url(${def.insignia}); transform:rotate(-55deg) scale(0.3);"></div>`;
   return left + right;
 }
 
@@ -432,12 +446,19 @@ const unitSelect = document.getElementById('unitSelect');
 const positionSelect = document.getElementById('positionSelect');
 const ribbonGrid = document.getElementById('ribbonGrid');
 const badgeGrid = document.getElementById('badgeGrid');
+const badgeViewSelect = document.getElementById('badgeViewSelect');
 const pinSelect = document.getElementById('pinSelect');
 const stage = document.getElementById('stage');
+
+// The Badges checklist's own "which Company am I looking at" filter — independent
+// from the member's actual assigned Unit, so an admin can browse/assign a Company's
+// specific badges without having to temporarily reassign the member to that Company.
+let badgeViewUnit = UNIT_OPTIONS[0];
 
 function populateStaticSelects(){
   unitSelect.innerHTML = UNIT_OPTIONS.map(u=>`<option>${u}</option>`).join('');
   positionSelect.innerHTML = POSITION_OPTIONS.map(p=>`<option>${p}</option>`).join('');
+  badgeViewSelect.innerHTML = UNIT_OPTIONS.map(u=>`<option>${u}</option>`).join('');
 }
 
 function populateRankSelect(){
@@ -521,7 +542,9 @@ function loadMember(id){
   ribbonGrid.querySelectorAll('input[type=checkbox]').forEach(cb=>{
     cb.checked = m.ribbons.includes(cb.dataset.key);
   });
-  populateBadgeGrid(m.unit, m.badges||[]);
+  badgeViewUnit = m.unit;
+  badgeViewSelect.value = badgeViewUnit;
+  populateBadgeGrid(badgeViewUnit, m.badges||[]);
   enforceBadgeLimit();
   renderJacket(stage, m);
 }
@@ -541,10 +564,18 @@ nameInput.addEventListener('input', refreshPreview);
 pinSelect.addEventListener('change', refreshPreview);
 rankSelect.addEventListener('change', refreshPreview);
 unitSelect.addEventListener('change', ()=>{
+  badgeViewUnit = unitSelect.value;
+  badgeViewSelect.value = badgeViewUnit;
   const currentlyChecked = Array.from(badgeGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key);
-  populateBadgeGrid(unitSelect.value, currentlyChecked);
+  populateBadgeGrid(badgeViewUnit, currentlyChecked);
   enforceBadgeLimit();
   refreshPreview();
+});
+badgeViewSelect.addEventListener('change', ()=>{
+  badgeViewUnit = badgeViewSelect.value;
+  const currentlyChecked = Array.from(badgeGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key);
+  populateBadgeGrid(badgeViewUnit, currentlyChecked);
+  enforceBadgeLimit();
 });
 positionSelect.addEventListener('change', refreshPreview);
 ribbonGrid.addEventListener('change', refreshPreview);
@@ -627,7 +658,7 @@ async function init(){
   populateStaticSelects();
   populateRankSelect();
   populateRibbonGrid();
-  populateBadgeGrid(unitSelect.value, []);
+  populateBadgeGrid(badgeViewUnit, []);
   populatePinSelect();
 
   const requestedId = new URLSearchParams(window.location.search).get('member');
@@ -640,7 +671,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.022</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.023</div>
 
 </body>
 </html>
