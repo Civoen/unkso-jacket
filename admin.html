@@ -484,14 +484,15 @@ function populateRibbonGrid(){
 }
 
 function visibleBadgesForUnit(unit){
-  return BADGES.filter(b => b.unit === 'Battalion' || b.unit === unit);
+  return BADGES.filter(b => b.unit === unit);
 }
 
 // currentMemberBadges is the source of truth for which badges the member being
 // edited actually has — independent of badgeViewUnit. The grid only ever shows
-// Battalion + the selected Company's badges; a badge earned in a different
-// Company stays checked in currentMemberBadges (so it's never lost on save)
-// even while it's filtered out of view.
+// badges belonging to the selected Company (no Battalion crossover, even though
+// Battalion badges are available to every member); a badge earned in a
+// different Company stays checked in currentMemberBadges (so it's never lost
+// on save) even while it's filtered out of view.
 function populateBadgeGrid(unit){
   badgeGrid.innerHTML = '';
   visibleBadgesForUnit(unit).forEach(b=>{
@@ -682,7 +683,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.032</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.033</div>
 
 </body>
 </html>
