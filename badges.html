@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>UNKSO — Badges</title>
-<link rel="icon" type="image/png" href="favicon.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
 :root{
@@ -24,22 +23,6 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
   padding:6px 16px; border-radius:7px; font-weight:600; text-decoration:none; font-size:13px; cursor:pointer;
 }
 .subnav a.nav-secondary:hover{border-color:var(--orange-dim); color:var(--orange);}
-
-.nav-dropdown{position:relative;}
-.nav-dropdown > a{display:block;}
-.nav-dropdown-menu{
-  display:none; position:absolute; top:100%; left:0; padding-top:10px; z-index:20;
-}
-.nav-dropdown:hover .nav-dropdown-menu{display:block;}
-.nav-dropdown-menu-inner{
-  background:var(--bg-card); border:1px solid var(--border); border-radius:8px;
-  min-width:130px; padding:6px; box-shadow:0 8px 24px rgba(0,0,0,.4);
-}
-.nav-dropdown-menu a{
-  display:block; padding:8px 10px; border-radius:6px; font-size:13px;
-  color:var(--text-secondary); text-decoration:none; border-bottom:none;
-}
-.nav-dropdown-menu a:hover, .nav-dropdown-menu a.active{background:var(--bg-panel); color:var(--orange);}
 .subnav a.nav-cta{
   color:#1c1108; background:var(--orange); padding:7px 18px; border-radius:7px;
   font-weight:700; border-bottom:none; box-shadow:0 1px 0 rgba(0,0,0,.2);
@@ -58,15 +41,8 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   padding:10px 14px; border-radius:8px; font-size:14px; font-family:'Inter';
 }
 
-.filter-row{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
-.filter-row label{font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em;}
-.filter-row select{
-  background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
-  padding:8px 12px; border-radius:8px; font-size:13.5px; font-family:'Inter';
-}
-
-.col-labels{display:grid; grid-template-columns:22px 44px 1fr 100px 110px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
-.badge-row{display:grid; grid-template-columns:22px 44px 1fr 100px 110px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
+.col-labels{display:grid; grid-template-columns:22px 44px 1fr 110px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
+.badge-row{display:grid; grid-template-columns:22px 44px 1fr 110px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
 .badge-row:last-child{border-bottom:none;}
 .badge-row.dragging{opacity:.4;}
 .drag-handle{color:var(--text-muted); font-size:15px; text-align:center; cursor:grab; user-select:none;}
@@ -80,10 +56,6 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .badge-row input[type=text]{
   background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
   padding:8px 10px; border-radius:6px; font-size:13.5px; font-family:'Inter';
-}
-.badge-row select, .add-grid select{
-  background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
-  padding:8px 10px; border-radius:6px; font-size:13px; font-family:'Inter';
 }
 .upload-btn{
   background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary);
@@ -101,7 +73,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .add-panel{margin-top:20px; padding-top:18px; border-top:1px solid var(--border);}
 .add-panel h3{font-family:'Poppins'; font-size:14px; font-weight:600; margin:0 0 4px; color:var(--orange);}
 .add-panel .dims-note{font-size:11.5px; color:var(--text-muted); margin-bottom:12px;}
-.add-grid{display:grid; grid-template-columns:40px 1fr 100px 130px auto; align-items:center; gap:10px;}
+.add-grid{display:grid; grid-template-columns:40px 1fr 130px auto; align-items:center; gap:10px;}
 .add-grid input[type=text]{
   background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
   padding:9px 12px; border-radius:6px; font-size:13.5px; font-family:'Inter';
@@ -116,22 +88,77 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .note{color:var(--text-muted); font-size:12px; margin-top:14px; line-height:1.5;}
 
 .site-footer{border-top:1px solid var(--border); padding:18px 20px; text-align:center; color:var(--text-muted); font-size:11.5px; letter-spacing:.02em;}
+
+/* Toast notifications */
+.toast-container{position:fixed; bottom:20px; right:20px; z-index:500; display:flex; flex-direction:column; gap:10px; pointer-events:none; max-width:340px;}
+.toast{background:var(--bg-panel); border:1px solid var(--border); border-left:4px solid var(--orange); color:var(--text-primary); padding:12px 16px; border-radius:8px; font-size:13px; line-height:1.4; box-shadow:0 4px 14px rgba(0,0,0,.4); pointer-events:auto; opacity:0; transform:translateY(8px); transition:opacity .2s, transform .2s;}
+.toast.show{opacity:1; transform:translateY(0);}
+.toast.error{border-left-color:var(--red, #c0392b);}
+.toast.success{border-left-color:#4caf6b;}
+
+/* Password gate */
+.auth-gate{position:fixed; inset:0; background:rgba(10,11,14,.94); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px;}
+.auth-box{background:var(--bg-panel); border:1px solid var(--border); border-radius:14px; padding:32px; max-width:340px; width:100%; text-align:center;}
+.auth-box h2{font-family:'Poppins'; font-weight:600; font-size:19px; margin:0 0 8px; color:var(--orange);}
+.auth-box p{color:var(--text-secondary); font-size:13px; margin:0 0 18px;}
+.auth-box input{width:100%; background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary); padding:11px 14px; border-radius:8px; font-size:14px; text-align:center; margin-bottom:12px; font-family:'Inter'; box-sizing:border-box;}
+.auth-box button{width:100%; background:var(--orange); color:#1c1108; border:none; border-radius:8px; padding:11px; font-family:'Poppins'; font-weight:600; font-size:14px; cursor:pointer;}
+.auth-box button:hover{background:#f06c37;}
+.auth-error{color:var(--red, #c0392b); font-size:12.5px; margin-top:10px; display:none;}
+/* Mobile */
+@media (max-width:640px){
+  .subnav{padding:12px 16px; gap:18px; overflow-x:auto; -webkit-overflow-scrolling:touch;}
+  .subnav a{flex-shrink:0;}
+  main{padding:16px;}
+  .panel{padding:14px; overflow-x:auto;}
+  .col-labels, .badge-row{grid-template-columns:18px 32px 1fr 76px 32px; gap:6px; min-width:400px;}
+  .add-grid{grid-template-columns:32px 1fr 90px auto; gap:6px;}
+}
+/* Clasp manager (Weapon Mastery badge only) */
+.clasp-manager{background:var(--bg-card); border:1px solid var(--border); border-top:none; border-radius:0 0 8px 8px; padding:14px 16px 16px; margin:-1px 0 4px;}
+.clasp-manager h4{font-family:'Poppins'; font-size:12.5px; font-weight:600; margin:0 0 10px; color:var(--orange); text-transform:uppercase; letter-spacing:.04em;}
+.clasp-sub{font-size:11.5px; color:var(--text-muted); margin-bottom:10px; line-height:1.5;}
+.clasp-link-row{display:flex; align-items:center; gap:10px; margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid var(--border);}
+.clasp-link-row .clasp-swatch{width:40px; height:22px;}
+.clasp-list{display:flex; flex-direction:column; gap:6px; margin-bottom:10px;}
+.clasp-row{display:flex; align-items:center; gap:8px;}
+.clasp-swatch{
+  width:56px; height:16px; border-radius:3px; border:1px solid rgba(0,0,0,.35); flex-shrink:0;
+  background-size:contain; background-position:center; background-repeat:no-repeat; background-color:#20232c;
+  background-image:repeating-linear-gradient(45deg,#33362a 0 5px,#25271e 5px 10px);
+}
+.clasp-row input[type=text]{
+  flex:1; background:var(--bg-panel); border:1px solid var(--border); color:var(--text-primary);
+  padding:7px 10px; border-radius:6px; font-size:12.5px; font-family:'Inter';
+}
+.clasp-row .icon-btn{width:30px; height:30px; font-size:14px;}
+.clasp-add-btn{
+  background:var(--bg-panel); border:1px solid var(--border); color:var(--text-secondary);
+  padding:8px 14px; border-radius:6px; font-size:12px; cursor:pointer; font-family:'Inter';
+}
+.clasp-add-btn:hover{border-color:var(--orange-dim); color:var(--orange);}
+.clasp-add-btn input{display:none;}
+.clasp-add-btn.disabled{opacity:.4; pointer-events:none;}
 </style>
 </head>
 <body>
+
+<div class="auth-gate" id="authGate">
+  <div class="auth-box">
+    <h2>Restricted Access</h2>
+    <p>Enter the password to continue.</p>
+    <input type="password" id="authPassword" placeholder="Password" autocomplete="off">
+    <button id="authSubmit">Enter</button>
+    <div class="auth-error" id="authError">Incorrect password.</div>
+  </div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
 
 <div class="subnav">
   <a href="index.html">Jackets</a>
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
-  <div class="nav-dropdown">
-    <a href="badges.html" class="active">Badges</a>
-    <div class="nav-dropdown-menu">
-      <div class="nav-dropdown-menu-inner">
-        <a href="tracker.html">Tracker</a>
-      </div>
-    </div>
-  </div>
+  <a href="badges.html" class="active">Badges</a>
   <a href="pins.html">Pins</a>
   <a href="index.html?autodownload=1" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta">Admin</a>
@@ -139,15 +166,11 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 <main>
   <h1>Badges</h1>
-  <div class="sub">CONTROLS THE BADGES CHECKLIST ON THE ADMIN PAGE — YOUR IMAGE'S OWN SHAPE IS KEPT, SCALED DOWN IF TALLER THAN 180PX. EACH BADGE BELONGS TO ONE UNIT — BATTALION BADGES ARE AVAILABLE TO EVERY MEMBER, COMPANY BADGES ONLY TO THAT COMPANY.</div>
+  <div class="sub">CONTROLS THE BADGES CHECKLIST ON THE ADMIN PAGE — YOUR IMAGE'S OWN SHAPE IS KEPT, SCALED DOWN IF TALLER THAN 180PX</div>
 
   <div class="panel">
     <div class="search-row"><input id="searchInput" type="text" placeholder="Search badges…"></div>
-    <div class="filter-row">
-      <label for="unitFilterSelect">Showing</label>
-      <select id="unitFilterSelect"></select>
-    </div>
-    <div class="col-labels"><span></span><span>Preview</span><span>Name</span><span>Unit</span><span>Image</span><span></span></div>
+    <div class="col-labels"><span></span><span>Preview</span><span>Name</span><span>Image</span><span></span></div>
     <div id="badgeList"></div>
 
     <div class="add-panel">
@@ -156,7 +179,6 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
       <div class="add-grid">
         <div class="swatch" id="newPreview"></div>
         <input id="newLabel" type="text" placeholder="Badge name">
-        <select id="newUnit"></select>
         <label class="upload-btn" id="newUploadLabel">Choose image<input type="file" id="newUpload" accept="image/*"></label>
         <button class="add-btn" id="addBtn" disabled>Add badge</button>
       </div>
@@ -166,19 +188,77 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 </main>
 
 <script>
+// --- Password gate + toast notifications (shared across every page) ---
+const SITE_PASSWORD = 'boost';
+let AUTH_OK = false;
+
+function withAuth(url){
+  if(!AUTH_OK) return url;
+  try{
+    const u = new URL(url, window.location.href);
+    u.searchParams.set('k', SITE_PASSWORD);
+    return u.pathname + u.search;
+  }catch(e){ return url; }
+}
+
+function carryAuthForward(){
+  document.querySelectorAll('a[href]').forEach(a=>{
+    const href = a.getAttribute('href');
+    if(!href || !href.includes('.html')) return;
+    a.setAttribute('href', withAuth(href));
+  });
+}
+
+(function initAuthGate(){
+  const params = new URLSearchParams(window.location.search);
+  const gate = document.getElementById('authGate');
+  if(params.get('k') === SITE_PASSWORD){
+    AUTH_OK = true;
+    if(gate) gate.remove();
+    carryAuthForward();
+    return;
+  }
+  const submit = document.getElementById('authSubmit');
+  const input = document.getElementById('authPassword');
+  const error = document.getElementById('authError');
+  function tryUnlock(){
+    if(input.value === SITE_PASSWORD){
+      AUTH_OK = true;
+      gate.remove();
+      carryAuthForward();
+    } else {
+      error.style.display = 'block';
+      input.value = '';
+      input.focus();
+    }
+  }
+  submit.addEventListener('click', tryUnlock);
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
+  input.focus();
+})();
+
+function showToast(message, type){
+  const container = document.getElementById('toastContainer');
+  if(!container) return;
+  const toast = document.createElement('div');
+  toast.className = 'toast' + (type === 'error' ? ' error' : type === 'success' ? ' success' : '');
+  toast.textContent = message;
+  container.appendChild(toast);
+  requestAnimationFrame(()=> toast.classList.add('show'));
+  setTimeout(()=>{
+    toast.classList.remove('show');
+    setTimeout(()=> toast.remove(), 250);
+  }, 4000);
+}
+
 const MAX_BADGE_HEIGHT = 180;
-const UNITS = ["Battalion","Bravo","Charlie","Delta"];
 
 const DEFAULT_BADGES = [
-  { key:"expert_marksman", label:"Expert Marksmanship Badge", image:null, width:1, height:1, unit:"Battalion" },
-  { key:"airborne_wings",  label:"Airborne Wings",             image:null, width:1, height:1, unit:"Battalion" },
-  { key:"combat_infantry", label:"Combat Infantryman Badge",   image:null, width:1, height:1, unit:"Battalion" },
-  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       image:null, width:1, height:1, unit:"Battalion" }
+  { key:"expert_marksman", label:"Expert Marksmanship Badge", image:null, width:1, height:1, clasps:[], linkImage:null },
+  { key:"airborne_wings",  label:"Airborne Wings",             image:null, width:1, height:1, clasps:[], linkImage:null },
+  { key:"combat_infantry", label:"Combat Infantryman Badge",   image:null, width:1, height:1, clasps:[], linkImage:null },
+  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       image:null, width:1, height:1, clasps:[], linkImage:null }
 ];
-
-function normalizeBadges(badges){
-  return badges.map(b => b.unit ? b : {...b, unit:"Battalion"});
-}
 
 const API_BASE = 'https://unkso-api.adambramfitt.workers.dev';
 
@@ -213,7 +293,7 @@ async function saveJSON(key, value){
 
 async function saveBadgesChecked(){
   const ok = await saveJSON('badges', BADGES);
-  if(!ok) alert('Could not save that change. Check your connection to the API — see the browser console for details.');
+  if(!ok) showToast('Could not save that change. Check your connection to the API — see the browser console for details.', 'error');
   return ok;
 }
 
@@ -245,25 +325,108 @@ function newKey(label){
 let BADGES = [];
 let MEMBERS = [];
 let searchTerm = '';
-let unitFilter = UNITS[0];
 let dragSrcIdx = null;
+const MAX_CLASPS = 5;
+
+function isWeaponMastery(b){
+  return b.label.trim().toLowerCase() === 'weapon mastery';
+}
 
 async function pruneFromMembers(key){
   MEMBERS = MEMBERS.map(m => ({...m, badges: (m.badges||[]).filter(k=>k!==key)}));
   await saveJSON('members', MEMBERS);
 }
 
+function buildClaspManager(b, idx){
+  const wrap = document.createElement('div');
+  wrap.className = 'clasp-manager';
+
+  const linkSet = !!b.linkImage;
+  wrap.innerHTML = `
+    <h4>Clasps — Weapon Mastery only</h4>
+    <div class="clasp-sub">Each clasp is its own small image (e.g. a "RIFLE" bar). They hang below this badge's core image on the jacket, connected by the link image below. Up to ${MAX_CLASPS}.</div>
+    <div class="clasp-link-row">
+      <div class="swatch clasp-swatch" id="claspLinkSwatch" style="${b.linkImage ? `background-image:url(${b.linkImage})` : ''}"></div>
+      <label class="clasp-add-btn" id="claspLinkBtn">${linkSet ? 'Replace link image' : 'Upload link image'}<input type="file" accept="image/*" id="claspLinkInput"></label>
+      ${linkSet ? '<button class="icon-btn" id="claspLinkRemove" title="Remove link image">&times;</button>' : ''}
+    </div>
+    <div class="clasp-list" id="claspList"></div>
+    <label class="clasp-add-btn ${b.clasps.length >= MAX_CLASPS ? 'disabled' : ''}" id="claspAddBtn">+ Add clasp<input type="file" accept="image/*" id="claspAddInput"></label>
+  `;
+
+  const claspList = wrap.querySelector('#claspList');
+  b.clasps.forEach((clasp, cidx)=>{
+    const row = document.createElement('div');
+    row.className = 'clasp-row';
+    row.innerHTML = `
+      <div class="clasp-swatch" style="${clasp.image ? `background-image:url(${clasp.image})` : ''}"></div>
+      <input type="text" value="${clasp.label}" data-clasp-idx="${cidx}">
+      <button class="icon-btn" title="Remove clasp">&times;</button>
+    `;
+    row.querySelector('input').addEventListener('change', async (e)=>{
+      BADGES[idx].clasps[cidx].label = e.target.value;
+      await saveBadgesChecked();
+    });
+    row.querySelector('.icon-btn').addEventListener('click', async ()=>{
+      if(!confirm(`Remove the "${clasp.label}" clasp?`)) return;
+      BADGES[idx].clasps.splice(cidx,1);
+      await saveBadgesChecked();
+      renderBadges();
+    });
+    claspList.appendChild(row);
+  });
+
+  wrap.querySelector('#claspLinkInput').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    try{
+      const result = await resizeToBadgeSize(file);
+      BADGES[idx].linkImage = result.dataUrl;
+      BADGES[idx].linkWidth = result.width;
+      BADGES[idx].linkHeight = result.height;
+      await saveBadgesChecked();
+      renderBadges();
+    }catch(err){
+      showToast('Could not process that image. Try a different file.', 'error');
+    }
+  });
+  const linkRemoveBtn = wrap.querySelector('#claspLinkRemove');
+  if(linkRemoveBtn){
+    linkRemoveBtn.addEventListener('click', async ()=>{
+      BADGES[idx].linkImage = null;
+      await saveBadgesChecked();
+      renderBadges();
+    });
+  }
+
+  wrap.querySelector('#claspAddInput').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(BADGES[idx].clasps.length >= MAX_CLASPS) return;
+    try{
+      const result = await resizeToBadgeSize(file);
+      BADGES[idx].clasps.push({
+        image: result.dataUrl, width: result.width, height: result.height,
+        label: filenameToLabel(file.name)
+      });
+      await saveBadgesChecked();
+      renderBadges();
+    }catch(err){
+      showToast('Could not process that image. Try a different file.', 'error');
+    }
+  });
+
+  return wrap;
+}
+
 function renderBadges(){
   const list = document.getElementById('badgeList');
   list.innerHTML = '';
   const q = searchTerm.trim().toLowerCase();
-  const visibleIdx = BADGES.map((_,i)=>i).filter(i => {
-    if(BADGES[i].unit !== unitFilter) return false;
-    return !q || BADGES[i].label.toLowerCase().includes(q);
-  });
+  const visibleIdx = BADGES.map((_,i)=>i).filter(i => !q || BADGES[i].label.toLowerCase().includes(q));
 
   if(visibleIdx.length === 0){
-    list.innerHTML = `<div class="note" style="margin-top:6px;">No ${unitFilter} badges${q ? ' match your search' : ''}.</div>`;
+    list.innerHTML = '<div class="note" style="margin-top:6px;">No badges match your search.</div>';
     return;
   }
 
@@ -277,18 +440,12 @@ function renderBadges(){
       <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
       <div class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></div>
       <input type="text" value="${b.label}" data-field="label">
-      <select data-field="unit">${UNITS.map(u=>`<option ${u===b.unit?'selected':''}>${u}</option>`).join('')}</select>
       <label class="upload-btn">${b.image ? 'Replace image' : 'Upload image'}<input type="file" accept="image/*" data-field="image"></label>
       <button class="icon-btn" title="Remove">&times;</button>
     `;
     row.querySelector('[data-field="label"]').addEventListener('change', async (e)=>{
       BADGES[idx].label = e.target.value;
       await saveBadgesChecked();
-    });
-    row.querySelector('[data-field="unit"]').addEventListener('change', async (e)=>{
-      BADGES[idx].unit = e.target.value;
-      await saveBadgesChecked();
-      renderBadges();
     });
     row.querySelector('[data-field="image"]').addEventListener('change', async (e)=>{
       const file = e.target.files[0];
@@ -302,7 +459,7 @@ function renderBadges(){
         row.querySelector('.swatch').style.backgroundImage = `url(${result.dataUrl})`;
         row.querySelector('.upload-btn').firstChild.textContent = 'Replace image';
       }catch(err){
-        alert('Could not process that image. Try a different file.');
+        showToast('Could not process that image. Try a different file.', 'error');
       }
     });
     row.querySelector('.icon-btn').addEventListener('click', async ()=>{
@@ -330,18 +487,14 @@ function renderBadges(){
       renderBadges();
     });
     list.appendChild(row);
+    if(isWeaponMastery(b)){
+      list.appendChild(buildClaspManager(b, idx));
+    }
   });
 }
 
 document.getElementById('searchInput').addEventListener('input', (e)=>{
   searchTerm = e.target.value;
-  renderBadges();
-});
-
-document.getElementById('unitFilterSelect').innerHTML = UNITS.map(u=>`<option>${u}</option>`).join('');
-document.getElementById('unitFilterSelect').addEventListener('change', (e)=>{
-  unitFilter = e.target.value;
-  document.getElementById('newUnit').value = unitFilter;
   renderBadges();
 });
 
@@ -369,15 +522,14 @@ document.getElementById('newUpload').addEventListener('change', async (e)=>{
     document.getElementById('newLabel').value = filenameToLabel(file.name);
     refreshAddButton();
   }catch(err){
-    alert('Could not process that image. Try a different file.');
+    showToast('Could not process that image. Try a different file.', 'error');
   }
 });
 
 document.getElementById('addBtn').addEventListener('click', async ()=>{
   const label = document.getElementById('newLabel').value.trim();
   if(!label || !pendingImage) return;
-  const unit = document.getElementById('newUnit').value;
-  BADGES.push({ key: newKey(label), label, image: pendingImage.dataUrl, width: pendingImage.width, height: pendingImage.height, unit });
+  BADGES.push({ key: newKey(label), label, image: pendingImage.dataUrl, width: pendingImage.width, height: pendingImage.height, clasps:[], linkImage:null });
   document.getElementById('newLabel').value = '';
   document.getElementById('newUpload').value = '';
   document.getElementById('newPreview').style.backgroundImage = '';
@@ -389,19 +541,15 @@ document.getElementById('addBtn').addEventListener('click', async ()=>{
 });
 
 async function init(){
-  document.getElementById('newUnit').innerHTML = UNITS.map(u=>`<option>${u}</option>`).join('');
-  document.getElementById('newUnit').value = unitFilter;
-  const rawBadges = await loadJSON('badges', DEFAULT_BADGES);
-  const badgesNeedMigration = rawBadges.some(b => !b.unit);
-  BADGES = normalizeBadges(rawBadges);
-  if(badgesNeedMigration) await saveJSON('badges', BADGES);
+  BADGES = await loadJSON('badges', DEFAULT_BADGES);
+  BADGES = BADGES.map(b => ({ clasps: [], linkImage: null, linkWidth: null, linkHeight: null, ...b }));
   MEMBERS = await loadJSON('members', []);
   renderBadges();
 }
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.033</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.021</div>
 
 </body>
 </html>
