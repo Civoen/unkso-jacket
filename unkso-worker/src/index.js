@@ -19,7 +19,7 @@
 // under "unkso-backup-<ISO date>", each holding a single JSON object with
 // every collection's data at that point in time.
 
-const ALLOWED_KEYS = ["members", "ranks", "ribbons", "badges", "pins"];
+const ALLOWED_KEYS = ["members", "ranks", "ribbons", "badges", "pins", "tracker"];
 const BACKUP_PREFIX = "unkso-backup-";
 const BACKUP_RETENTION = 12; // keep the last 12 backups (~3 months at a weekly cadence), prune older ones
 

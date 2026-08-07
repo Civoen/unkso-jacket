@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>UNKSO — Admin</title>
+<link rel="icon" type="image/png" href="favicon.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
 :root{
@@ -17,6 +18,21 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
 .subnav{display:flex; align-items:center; gap:30px; padding:16px 32px; background:var(--bg-panel); border-bottom:1px solid var(--border);}
 .subnav a{color:var(--text-secondary); text-decoration:none; font-size:14px; font-weight:500; padding-bottom:4px; border-bottom:2px solid transparent;}
 .subnav a.active{color:var(--orange); border-color:var(--orange);}
+.nav-dropdown{position:relative;}
+.nav-dropdown > a{display:block;}
+.nav-dropdown-menu{
+  display:none; position:absolute; top:100%; left:0; padding-top:10px; z-index:20;
+}
+.nav-dropdown:hover .nav-dropdown-menu{display:block;}
+.nav-dropdown-menu-inner{
+  background:var(--bg-card); border:1px solid var(--border); border-radius:8px;
+  min-width:130px; padding:6px; box-shadow:0 8px 24px rgba(0,0,0,.4);
+}
+.nav-dropdown-menu a{
+  display:block; padding:8px 10px; border-radius:6px; font-size:13px;
+  color:var(--text-secondary); text-decoration:none; border-bottom:none;
+}
+.nav-dropdown-menu a:hover, .nav-dropdown-menu a.active{background:var(--bg-panel); color:var(--orange);}
 .subnav a.nav-cta{
   color:#1c1108; background:var(--orange); padding:7px 18px; border-radius:7px;
   font-weight:700; border-bottom:none; box-shadow:0 1px 0 rgba(0,0,0,.2);
@@ -66,6 +82,20 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .icon-btn.danger:hover{border-color:var(--red); color:var(--red);}
 
 .field{margin-bottom:18px;}
+.field-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;}
+.field-header label{margin-bottom:0;}
+.field-header-actions{display:flex; align-items:center; gap:8px;}
+.collapse-btn{
+  background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary);
+  border-radius:6px; padding:4px 10px; font-size:11px; font-family:'Inter'; cursor:pointer;
+}
+.collapse-btn:hover{border-color:var(--orange-dim); color:var(--orange);}
+.badge-view-select{
+  background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary);
+  border-radius:6px; padding:4px 8px; font-size:11px; font-family:'Inter'; cursor:pointer;
+}
+.badge-view-select:hover{border-color:var(--orange-dim); color:var(--orange);}
+.field.collapsed .ribbon-grid, .field.collapsed .badge-grid, .field.collapsed .badge-limit-note{display:none;}
 .field label{display:block; font-size:12px; color:var(--text-secondary); margin-bottom:6px; letter-spacing:.03em; text-transform:uppercase;}
 .field input, .field select{
   width:100%; background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
@@ -164,7 +194,14 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <a href="index.html">Jackets</a>
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
-  <a href="badges.html">Badges</a>
+  <div class="nav-dropdown">
+    <a href="badges.html">Badges</a>
+    <div class="nav-dropdown-menu">
+      <div class="nav-dropdown-menu-inner">
+        <a href="tracker.html">Tracker</a>
+      </div>
+    </div>
+  </div>
   <a href="pins.html">Pins</a>
   <a href="index.html?autodownload=1" id="downloadAllBtn" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta active">Admin</a>
@@ -202,12 +239,21 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
           <select id="positionSelect"></select>
         </div>
       </div>
-      <div class="field">
-        <label>Ribbons &amp; decorations</label>
+      <div class="field" id="ribbonsField">
+        <div class="field-header">
+          <label>Ribbons &amp; decorations</label>
+          <button type="button" class="collapse-btn" id="ribbonsToggle" aria-expanded="true">&#9650; Collapse</button>
+        </div>
         <div class="ribbon-grid" id="ribbonGrid"></div>
       </div>
-      <div class="field">
-        <label>Badges</label>
+      <div class="field" id="badgesField">
+        <div class="field-header">
+          <label>Badges</label>
+          <div class="field-header-actions">
+            <select id="badgeViewSelect" class="badge-view-select" title="Preview badges for a different Company without changing this member's Unit"></select>
+            <button type="button" class="collapse-btn" id="badgesToggle" aria-expanded="true">&#9650; Collapse</button>
+          </div>
+        </div>
         <div class="badge-grid" id="badgeGrid"></div>
         <div id="badgeLimitNote" class="badge-limit-note" style="display:none;">Maximum amount of Badges reached (6)</div>
       </div>
@@ -327,11 +373,15 @@ const DEFAULT_RIBBONS = [
 ];
 
 const DEFAULT_BADGES = [
-  { key:"expert_marksman", label:"Expert Marksmanship Badge", image:null, width:1, height:1, clasps:[], linkImage:null },
-  { key:"airborne_wings",  label:"Airborne Wings",             image:null, width:1, height:1, clasps:[], linkImage:null },
-  { key:"combat_infantry", label:"Combat Infantryman Badge",   image:null, width:1, height:1, clasps:[], linkImage:null },
-  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       image:null, width:1, height:1, clasps:[], linkImage:null }
+  { key:"expert_marksman", label:"Expert Marksmanship Badge", image:null, width:1, height:1, clasps:[], linkImage:null, unit:"Battalion" },
+  { key:"airborne_wings",  label:"Airborne Wings",             image:null, width:1, height:1, clasps:[], linkImage:null, unit:"Battalion" },
+  { key:"combat_infantry", label:"Combat Infantryman Badge",   image:null, width:1, height:1, clasps:[], linkImage:null, unit:"Battalion" },
+  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       image:null, width:1, height:1, clasps:[], linkImage:null, unit:"Battalion" }
 ];
+
+function normalizeBadgeUnits(badges){
+  return badges.map(b => b.unit ? b : {...b, unit:"Battalion"});
+}
 
 const DEFAULT_MEMBERS = [
   { id:"dentalmav", name:"LTC.DentalMav", rank:"LTC", unit:"Battalion", position:"CO", ribbons:["national_defense","valor_purple","combat_readiness","meritorious","marksmanship","achievement","overseas_service","campaign_service","unit_citation","good_conduct","longevity","bct_completion"], badges:["combat_infantry","expert_marksman"] },
@@ -578,11 +628,22 @@ const unitSelect = document.getElementById('unitSelect');
 const positionSelect = document.getElementById('positionSelect');
 const ribbonGrid = document.getElementById('ribbonGrid');
 const badgeGrid = document.getElementById('badgeGrid');
+const badgeViewSelect = document.getElementById('badgeViewSelect');
 const pinSelect = document.getElementById('pinSelect');
 const stage = document.getElementById('stage');
 
+// currentMemberBadges is the source of truth for which badges the member being
+// edited actually has — independent of badgeViewUnit. The grid only ever shows
+// badges belonging to the selected Company (no Battalion crossover, even though
+// Battalion badges are available to every member); a badge earned in a
+// different Company stays checked in currentMemberBadges (so it's never lost
+// on save) even while it's filtered out of view.
+let badgeViewUnit = UNIT_OPTIONS[0];
+let currentMemberBadges = [];
+
 function populateStaticSelects(){
   unitSelect.innerHTML = UNIT_OPTIONS.map(u=>`<option>${u}</option>`).join('');
+  badgeViewSelect.innerHTML = UNIT_OPTIONS.map(u=>`<option>${u}</option>`).join('');
   positionSelect.innerHTML = POSITION_OPTIONS.map(p=>`<option>${p}</option>`).join('');
 }
 
@@ -600,12 +661,16 @@ function populateRibbonGrid(){
   });
 }
 
-function populateBadgeGrid(){
+function visibleBadgesForUnit(unit){
+  return BADGES.filter(b => b.unit === unit);
+}
+
+function populateBadgeGrid(unit){
   badgeGrid.innerHTML = '';
-  BADGES.forEach(b=>{
+  visibleBadgesForUnit(unit).forEach(b=>{
     const wrap = document.createElement('label');
     wrap.className = 'badge-check';
-    wrap.innerHTML = `<input type="checkbox" data-key="${b.key}"><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span>${b.label}`;
+    wrap.innerHTML = `<input type="checkbox" data-key="${b.key}"${currentMemberBadges.includes(b.key) ? ' checked' : ''}><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span>${b.label}`;
     badgeGrid.appendChild(wrap);
   });
 }
@@ -615,9 +680,8 @@ function populatePinSelect(){
 }
 
 function enforceBadgeLimit(){
+  const atLimit = currentMemberBadges.length >= MAX_BADGES;
   const boxes = Array.from(badgeGrid.querySelectorAll('input[type=checkbox]'));
-  const checkedCount = boxes.filter(cb=>cb.checked).length;
-  const atLimit = checkedCount >= MAX_BADGES;
   boxes.forEach(cb=>{
     const wrap = cb.closest('.badge-check');
     if(!cb.checked && atLimit){
@@ -657,9 +721,10 @@ function loadMember(id){
   ribbonGrid.querySelectorAll('input[type=checkbox]').forEach(cb=>{
     cb.checked = m.ribbons.includes(cb.dataset.key);
   });
-  badgeGrid.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-    cb.checked = (m.badges||[]).includes(cb.dataset.key);
-  });
+  badgeViewUnit = m.unit;
+  badgeViewSelect.value = badgeViewUnit;
+  currentMemberBadges = [...(m.badges||[])];
+  populateBadgeGrid(badgeViewUnit);
   enforceBadgeLimit();
   renderJacket(stage, m);
 }
@@ -667,7 +732,7 @@ function loadMember(id){
 function currentEdits(){
   const m = MEMBERS.find(x=>x.id===memberSelect.value);
   const ribbons = Array.from(ribbonGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key);
-  const badges = Array.from(badgeGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key).slice(0, MAX_BADGES);
+  const badges = currentMemberBadges.slice(0, MAX_BADGES);
   const pin = pinSelect.value || null;
   return { id:m.id, name:nameInput.value, rank:rankSelect.value, unit:unitSelect.value, position:positionSelect.value, ribbons, badges, pin };
 }
@@ -678,13 +743,42 @@ memberSelect.addEventListener('change', e=>loadMember(e.target.value));
 nameInput.addEventListener('input', refreshPreview);
 pinSelect.addEventListener('change', refreshPreview);
 rankSelect.addEventListener('change', refreshPreview);
-unitSelect.addEventListener('change', refreshPreview);
-positionSelect.addEventListener('change', refreshPreview);
-ribbonGrid.addEventListener('change', refreshPreview);
-badgeGrid.addEventListener('change', ()=>{
+unitSelect.addEventListener('change', ()=>{
+  badgeViewUnit = unitSelect.value;
+  badgeViewSelect.value = badgeViewUnit;
+  populateBadgeGrid(badgeViewUnit);
   enforceBadgeLimit();
   refreshPreview();
 });
+badgeViewSelect.addEventListener('change', ()=>{
+  badgeViewUnit = badgeViewSelect.value;
+  populateBadgeGrid(badgeViewUnit);
+  enforceBadgeLimit();
+});
+positionSelect.addEventListener('change', refreshPreview);
+ribbonGrid.addEventListener('change', refreshPreview);
+badgeGrid.addEventListener('change', (e)=>{
+  const key = e.target.dataset.key;
+  if(e.target.checked){
+    if(!currentMemberBadges.includes(key)) currentMemberBadges.push(key);
+  } else {
+    currentMemberBadges = currentMemberBadges.filter(k=>k!==key);
+  }
+  enforceBadgeLimit();
+  refreshPreview();
+});
+
+function setupCollapsible(fieldId, btnId){
+  const field = document.getElementById(fieldId);
+  const btn = document.getElementById(btnId);
+  btn.addEventListener('click', ()=>{
+    const collapsed = field.classList.toggle('collapsed');
+    btn.innerHTML = collapsed ? '&#9660; Expand' : '&#9650; Collapse';
+    btn.setAttribute('aria-expanded', String(!collapsed));
+  });
+}
+setupCollapsible('ribbonsField', 'ribbonsToggle');
+setupCollapsible('badgesField', 'badgesToggle');
 
 document.getElementById('saveBtn').addEventListener('click', async ()=>{
   const edits = currentEdits();
@@ -847,13 +941,15 @@ async function init(){
   RANKS = normalizeRanks(rawRanks);
   if(ranksNeedMigration) await saveJSON('ranks', RANKS);
   RIBBONS = await loadJSON('ribbons', DEFAULT_RIBBONS);
-  BADGES = await loadJSON('badges', DEFAULT_BADGES);
+  const rawBadges = await loadJSON('badges', DEFAULT_BADGES);
+  const badgesNeedMigration = rawBadges.some(b => !b.unit);
+  BADGES = normalizeBadgeUnits(rawBadges);
+  if(badgesNeedMigration) await saveJSON('badges', BADGES);
   PINS = await loadJSON('pins', []);
   sortMembersBySeniority();
   populateStaticSelects();
   populateRankSelect();
   populateRibbonGrid();
-  populateBadgeGrid();
   populatePinSelect();
 
   const requestedId = new URLSearchParams(window.location.search).get('member');
@@ -867,7 +963,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.021</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.034</div>
 
 </body>
 </html>

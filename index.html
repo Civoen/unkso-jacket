@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>UNKSO — Jackets</title>
+<link rel="icon" type="image/png" href="favicon.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
 :root{
@@ -17,6 +18,21 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
 .subnav{display:flex; align-items:center; gap:30px; padding:16px 32px; background:var(--bg-panel); border-bottom:1px solid var(--border);}
 .subnav a{color:var(--text-secondary); text-decoration:none; font-size:14px; font-weight:500; padding-bottom:4px; border-bottom:2px solid transparent;}
 .subnav a.active{color:var(--orange); border-color:var(--orange);}
+.nav-dropdown{position:relative;}
+.nav-dropdown > a{display:block;}
+.nav-dropdown-menu{
+  display:none; position:absolute; top:100%; left:0; padding-top:10px; z-index:20;
+}
+.nav-dropdown:hover .nav-dropdown-menu{display:block;}
+.nav-dropdown-menu-inner{
+  background:var(--bg-card); border:1px solid var(--border); border-radius:8px;
+  min-width:130px; padding:6px; box-shadow:0 8px 24px rgba(0,0,0,.4);
+}
+.nav-dropdown-menu a{
+  display:block; padding:8px 10px; border-radius:6px; font-size:13px;
+  color:var(--text-secondary); text-decoration:none; border-bottom:none;
+}
+.nav-dropdown-menu a:hover, .nav-dropdown-menu a.active{background:var(--bg-panel); color:var(--orange);}
 .subnav a.nav-cta{
   color:#1c1108; background:var(--orange); padding:7px 18px; border-radius:7px;
   font-weight:700; border-bottom:none; box-shadow:0 1px 0 rgba(0,0,0,.2);
@@ -173,7 +189,14 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
   <a href="index.html" class="active">Jackets</a>
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
-  <a href="badges.html">Badges</a>
+  <div class="nav-dropdown">
+    <a href="badges.html">Badges</a>
+    <div class="nav-dropdown-menu">
+      <div class="nav-dropdown-menu-inner">
+        <a href="tracker.html">Tracker</a>
+      </div>
+    </div>
+  </div>
   <a href="pins.html">Pins</a>
   <a href="#" id="downloadAllBtn" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta">Admin</a>
@@ -294,10 +317,10 @@ const DEFAULT_MEMBERS = [
 ];
 
 const DEFAULT_BADGES = [
-  { key:"expert_marksman", label:"Expert Marksmanship Badge", image:null, width:1, height:1, clasps:[], linkImage:null },
-  { key:"airborne_wings",  label:"Airborne Wings",             image:null, width:1, height:1, clasps:[], linkImage:null },
-  { key:"combat_infantry", label:"Combat Infantryman Badge",   image:null, width:1, height:1, clasps:[], linkImage:null },
-  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       image:null, width:1, height:1, clasps:[], linkImage:null }
+  { key:"expert_marksman", label:"Expert Marksmanship Badge", image:null, width:1, height:1, clasps:[], linkImage:null, unit:"Battalion" },
+  { key:"airborne_wings",  label:"Airborne Wings",             image:null, width:1, height:1, clasps:[], linkImage:null, unit:"Battalion" },
+  { key:"combat_infantry", label:"Combat Infantryman Badge",   image:null, width:1, height:1, clasps:[], linkImage:null, unit:"Battalion" },
+  { key:"drill_sergeant",  label:"Drill Sergeant Badge",       image:null, width:1, height:1, clasps:[], linkImage:null, unit:"Battalion" }
 ];
 
 // Set this to your deployed Worker URL (no trailing slash), e.g. 'https://unkso-api.yoursubdomain.workers.dev'
@@ -832,7 +855,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.021</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.034</div>
 
 </body>
 </html>
