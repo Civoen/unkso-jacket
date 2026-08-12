@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>UNKSO — Pins</title>
+<title>UNKSO — NCOA</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
@@ -61,6 +61,13 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .col-labels{display:grid; grid-template-columns:22px 44px 1fr 100px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
 .pin-row{display:grid; grid-template-columns:22px 44px 1fr 100px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
 .oe-row{display:grid; grid-template-columns:44px 1fr 110px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
+.ncoa-row{display:grid; grid-template-columns:56px 1fr 130px; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
+.ncoa-row:last-child{border-bottom:none;}
+.ncoa-row .swatch{width:56px; height:56px;}
+.ncoa-row input[type=text]{
+  background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
+  padding:9px 12px; border-radius:6px; font-size:13.5px; font-family:'Inter'; font-weight:600;
+}
 .oe-row:last-child{border-bottom:none;}
 .oe-row .oe-label{font-weight:600; font-size:13.5px;}
 .pin-row:last-child{border-bottom:none;}
@@ -132,6 +139,8 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   .panel{padding:14px; overflow-x:auto;}
   .col-labels, .pin-row{grid-template-columns:18px 32px 1fr 76px 32px; gap:6px; min-width:380px;}
   .oe-row{grid-template-columns:32px 1fr 76px; gap:6px;}
+  .ncoa-row{grid-template-columns:40px 1fr 90px; gap:6px;}
+  .ncoa-row .swatch{width:40px; height:40px;}
   .add-grid{grid-template-columns:1fr 90px auto; gap:6px;}
 }
 </style>
@@ -158,43 +167,23 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
     <div class="nav-dropdown-menu">
       <div class="nav-dropdown-menu-inner">
         <a href="tracker.html">Tracker</a>
-        <a href="ncoa.html">NCOA</a>
+        <a href="ncoa.html" class="active">NCOA</a>
       </div>
     </div>
   </div>
-  <a href="pins.html" class="active">Pins</a>
+  <a href="pins.html">Pins</a>
   <a href="index.html?autodownload=1" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta">Admin</a>
 </div>
 
 <main>
-  <h1>Pins</h1>
-  <div class="sub">CONTROLS THE PIN DROPDOWN ON THE ADMIN PAGE — A MEMBER'S PIN SHOWS ON THE LEFT COLLAR TIP</div>
+  <h1>NCOA</h1>
+  <div class="sub">CONTROLS THE NCOA DROPDOWN ON THE ADMIN PAGE — SHOWN LARGE ON THE RIGHT POCKET. NAME EACH TIER AND UPLOAD ITS IMAGE.</div>
 
   <div class="panel">
-    <div class="search-row"><input id="searchInput" type="text" placeholder="Search pins…"></div>
-    <div class="col-labels"><span></span><span>Preview</span><span>Name</span><span>Image</span><span></span></div>
-    <div id="pinList"></div>
-
-    <div class="add-panel">
-      <h3>Add a new pin</h3>
-      <div class="dims-note">Upload any image — square or rectangular both work. It's scaled down only if taller than 180px; nothing gets cropped.</div>
-      <div class="add-grid">
-        <input id="newLabel" type="text" placeholder="Pin name">
-        <label class="upload-btn" id="newUploadLabel">Choose image<input type="file" id="newUpload" accept="image/*"></label>
-        <button class="add-btn" id="addBtn" disabled>Add pin</button>
-      </div>
-    </div>
+    <div id="ncoaList"></div>
   </div>
-  <div class="note">A member can have one pin at a time (picked from a dropdown on the Admin page, unlike the ribbon/badge checklists). It shows on the left collar tip only — the right tip is controlled by Officer/Enlisted below. Removing a pin here also unassigns it from any member currently wearing it.</div>
-
-  <h1 style="margin-top:36px;">Officer / Enlisted</h1>
-  <div class="sub">CONTROLS THE OFFICER/ENLISTED DROPDOWN ON THE ADMIN PAGE — SHOWS ON THE RIGHT COLLAR TIP</div>
-
-  <div class="panel">
-    <div id="officerEnlistedList"></div>
-  </div>
-  <div class="note">Fixed at exactly two options — Officer and Enlisted. Set which image represents each; a member's Admin selection determines which one shows on their right collar tip.</div>
+  <div class="note">Fixed at exactly three tiers. A member can have one at a time (picked from a dropdown on the Admin page) — it renders large on the right pocket, below the button.</div>
 </main>
 
 <script>
@@ -261,14 +250,6 @@ function showToast(message, type){
   }, 4000);
 }
 
-const MAX_PIN_HEIGHT = 180;
-const DEFAULT_PINS = [];
-
-const DEFAULT_OFFICER_ENLISTED = [
-  { key:"officer",  label:"Officer",  image:null, width:1, height:1 },
-  { key:"enlisted", label:"Enlisted", image:null, width:1, height:1 }
-];
-
 const API_BASE = 'https://unkso-api.adambramfitt.workers.dev';
 
 async function loadJSON(key, defaults){
@@ -300,13 +281,15 @@ async function saveJSON(key, value){
   }catch(err){ console.log('Save failed for '+key, err); return false; }
 }
 
-function resizePinImage(file){
+const MAX_NCOA_HEIGHT = 300; // this renders large on the pocket, so allow more source resolution than a small pin
+
+function resizeNcoaImage(file){
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
     reader.onload = (e)=>{
       const img = new Image();
       img.onload = ()=>{
-        const scale = Math.min(1, MAX_PIN_HEIGHT / img.height);
+        const scale = Math.min(1, MAX_NCOA_HEIGHT / img.height);
         const w = Math.round(img.width*scale), h = Math.round(img.height*scale);
         const canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
@@ -321,158 +304,38 @@ function resizePinImage(file){
   });
 }
 
-function newKey(label){
-  return 'p_' + label.toLowerCase().replace(/[^a-z0-9]+/g,'_').slice(0,24) + '_' + Math.random().toString(36).slice(2,5);
-}
+const DEFAULT_NCOA = [
+  { key:"ncoa1", label:"Tier 1", image:null, width:1, height:1 },
+  { key:"ncoa2", label:"Tier 2", image:null, width:1, height:1 },
+  { key:"ncoa3", label:"Tier 3", image:null, width:1, height:1 }
+];
+let NCOA = DEFAULT_NCOA;
 
-function filenameToLabel(filename){
-  const base = filename.replace(/\.[^.]+$/, '');
-  return base.replace(/[_\-]+/g, ' ').trim();
-}
-
-let PINS = [];
-let OFFICER_ENLISTED = [];
-let MEMBERS = [];
-let searchTerm = '';
-let dragSrcIdx = null;
-
-async function pruneFromMembers(key){
-  MEMBERS = MEMBERS.map(m => m.pin === key ? {...m, pin: null} : m);
-  await saveJSON('members', MEMBERS);
-}
-
-function renderPins(){
-  const list = document.getElementById('pinList');
+function renderNcoa(){
+  const list = document.getElementById('ncoaList');
   list.innerHTML = '';
-  const q = searchTerm.trim().toLowerCase();
-  const visibleIdx = PINS.map((_,i)=>i).filter(i => !q || PINS[i].label.toLowerCase().includes(q));
-
-  if(visibleIdx.length === 0){
-    list.innerHTML = '<div class="note" style="margin-top:6px;">No pins match your search.</div>';
-    return;
-  }
-
-  visibleIdx.forEach(idx=>{
-    const p = PINS[idx];
+  NCOA.forEach((n, idx)=>{
     const row = document.createElement('div');
-    row.className = 'pin-row';
-    row.draggable = true;
-    row.dataset.idx = idx;
+    row.className = 'ncoa-row';
     row.innerHTML = `
-      <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
-      <div class="swatch" style="${p.image ? `background-image:url(${p.image})` : ''}"></div>
-      <input type="text" value="${p.label}" data-field="label">
-      <label class="upload-btn">${p.image ? 'Replace' : 'Upload'}<input type="file" accept="image/*" data-field="image"></label>
-      <button class="icon-btn" title="Remove">&times;</button>
+      <div class="swatch" style="${n.image ? `background-image:url(${n.image})` : ''}"></div>
+      <input type="text" value="${n.label}" data-field="label">
+      <label class="upload-btn">${n.image ? 'Replace' : 'Upload'} image<input type="file" accept="image/*"></label>
     `;
     row.querySelector('[data-field="label"]').addEventListener('change', async (e)=>{
-      PINS[idx].label = e.target.value;
-      await saveJSON('pins', PINS);
+      NCOA[idx].label = e.target.value;
+      await saveJSON('ncoa', NCOA);
     });
-    row.querySelector('[data-field="image"]').addEventListener('change', async (e)=>{
-      const file = e.target.files[0];
-      if(!file) return;
-      try{
-        const result = await resizePinImage(file);
-        PINS[idx].image = result.dataUrl;
-        PINS[idx].width = result.width;
-        PINS[idx].height = result.height;
-        await saveJSON('pins', PINS);
-        row.querySelector('.swatch').style.backgroundImage = `url(${result.dataUrl})`;
-        row.querySelector('[data-field="image"]').closest('label').firstChild.textContent = 'Replace';
-      }catch(err){
-        showToast('Could not process that image. Try a different file.', 'error');
-      }
-    });
-    row.querySelector('.icon-btn').addEventListener('click', async ()=>{
-      if(!confirm(`Remove "${p.label}"? This will unassign it from any member wearing it.`)) return;
-      await pruneFromMembers(p.key);
-      PINS.splice(idx,1);
-      await saveJSON('pins', PINS);
-      renderPins();
-    });
-    row.addEventListener('dragstart', ()=>{
-      dragSrcIdx = idx;
-      row.classList.add('dragging');
-    });
-    row.addEventListener('dragend', ()=> row.classList.remove('dragging'));
-    row.addEventListener('dragover', (e)=> e.preventDefault());
-    row.addEventListener('drop', async (e)=>{
-      e.preventDefault();
-      if(dragSrcIdx === null || dragSrcIdx === idx) return;
-      const targetKey = PINS[idx].key;
-      const [moved] = PINS.splice(dragSrcIdx, 1);
-      const newTargetIdx = PINS.findIndex(x=>x.key===targetKey);
-      PINS.splice(newTargetIdx, 0, moved);
-      dragSrcIdx = null;
-      await saveJSON('pins', PINS);
-      renderPins();
-    });
-    list.appendChild(row);
-  });
-}
-
-document.getElementById('searchInput').addEventListener('input', (e)=>{
-  searchTerm = e.target.value;
-  renderPins();
-});
-
-let pendingImage = null;
-
-function refreshAddButton(){
-  const label = document.getElementById('newLabel').value.trim();
-  document.getElementById('addBtn').disabled = !(label && pendingImage);
-}
-
-document.getElementById('newLabel').addEventListener('input', refreshAddButton);
-
-document.getElementById('newUpload').addEventListener('change', async (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  try{
-    pendingImage = await resizePinImage(file);
-    document.getElementById('newUploadLabel').firstChild.textContent = 'Change image';
-    document.getElementById('newLabel').value = filenameToLabel(file.name);
-    refreshAddButton();
-  }catch(err){
-    showToast('Could not process that image. Try a different file.', 'error');
-  }
-});
-
-document.getElementById('addBtn').addEventListener('click', async ()=>{
-  const label = document.getElementById('newLabel').value.trim();
-  if(!label || !pendingImage) return;
-  PINS.push({ key: newKey(label), label, image: pendingImage.dataUrl, width: pendingImage.width, height: pendingImage.height });
-  document.getElementById('newLabel').value = '';
-  document.getElementById('newUpload').value = '';
-  document.getElementById('newUploadLabel').firstChild.textContent = 'Choose image';
-  pendingImage = null;
-  refreshAddButton();
-  await saveJSON('pins', PINS);
-  renderPins();
-});
-
-function renderOfficerEnlisted(){
-  const list = document.getElementById('officerEnlistedList');
-  list.innerHTML = '';
-  OFFICER_ENLISTED.forEach((o, idx)=>{
-    const row = document.createElement('div');
-    row.className = 'oe-row';
-    row.innerHTML = `
-      <div class="swatch" style="${o.image ? `background-image:url(${o.image})` : ''}"></div>
-      <span class="oe-label">${o.label}</span>
-      <label class="upload-btn">${o.image ? 'Replace' : 'Upload'} image<input type="file" accept="image/*"></label>
-    `;
     row.querySelector('input[type=file]').addEventListener('change', async (e)=>{
       const file = e.target.files[0];
       if(!file) return;
       try{
-        const result = await resizePinImage(file);
-        OFFICER_ENLISTED[idx].image = result.dataUrl;
-        OFFICER_ENLISTED[idx].width = result.width;
-        OFFICER_ENLISTED[idx].height = result.height;
-        await saveJSON('officerenlisted', OFFICER_ENLISTED);
-        renderOfficerEnlisted();
+        const result = await resizeNcoaImage(file);
+        NCOA[idx].image = result.dataUrl;
+        NCOA[idx].width = result.width;
+        NCOA[idx].height = result.height;
+        await saveJSON('ncoa', NCOA);
+        renderNcoa();
       }catch(err){
         showToast('Could not process that image. Try a different file.', 'error');
       }
@@ -482,11 +345,8 @@ function renderOfficerEnlisted(){
 }
 
 async function init(){
-  PINS = await loadJSON('pins', DEFAULT_PINS);
-  OFFICER_ENLISTED = await loadJSON('officerenlisted', DEFAULT_OFFICER_ENLISTED);
-  MEMBERS = await loadJSON('members', []);
-  renderPins();
-  renderOfficerEnlisted();
+  NCOA = await loadJSON('ncoa', DEFAULT_NCOA);
+  renderNcoa();
 }
 init();
 </script>

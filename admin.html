@@ -69,6 +69,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .badge-link{position:absolute; background-size:contain; background-position:center; background-repeat:no-repeat;}
 .badge-link-dot{position:absolute; background:#c9a84c; border-radius:50%; border:1px solid rgba(0,0,0,.4);}
 .insignia{position:absolute; background-size:contain; background-position:center; background-repeat:no-repeat; transform-origin:50% 50%;}
+.sleeve-insignia{position:absolute; background-repeat:no-repeat;}
 .name-tape{position:absolute; display:flex; align-items:center; justify-content:center; background:#c9bfa0; border:2px solid #3d3527; border-radius:2px; padding:0 4%; overflow:hidden;}
 .name-tape span{font-family:'JetBrains Mono'; font-weight:600; color:#2b2717; letter-spacing:.01em; white-space:nowrap; display:inline-block;}
 
@@ -83,6 +84,8 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 .field{margin-bottom:18px;}
 .field-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;}
+.checkbox-field{display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13.5px; color:var(--text-primary); margin-bottom:0 !important;}
+.checkbox-field input{width:16px; height:16px; accent-color:var(--orange); cursor:pointer;}
 .field-header label{margin-bottom:0;}
 .field-header-actions{display:flex; align-items:center; gap:8px;}
 .collapse-btn{
@@ -203,6 +206,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
     <div class="nav-dropdown-menu">
       <div class="nav-dropdown-menu-inner">
         <a href="tracker.html">Tracker</a>
+        <a href="ncoa.html">NCOA</a>
       </div>
     </div>
   </div>
@@ -264,6 +268,14 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
       <div class="field">
         <label>Pin</label>
         <select id="pinSelect"></select>
+      </div>
+      <div class="field">
+        <label>Officer / Enlisted</label>
+        <select id="officerEnlistedSelect"></select>
+      </div>
+      <div class="field">
+        <label>NCOA</label>
+        <select id="ncoaSelect"></select>
       </div>
       <button class="save-btn" id="saveBtn">Save changes</button>
     </div>
@@ -359,6 +371,17 @@ function showToast(message, type){
 const UNIT_OPTIONS = ["Battalion","Bravo","Charlie","Delta"];
 const POSITION_OPTIONS = ["Member","SL","PS","1SG","XO","CO"];
 const DEFAULT_RANKS = ["LTC","MAJ","2LT","1LT","CSM","SFC","SSG","SGT","CPL","SPC","PFC","PV2","PVT","RT"].map(name=>({name, insignia:null}));
+
+const DEFAULT_OFFICER_ENLISTED = [
+  { key:"officer",  label:"Officer",  image:null, width:1, height:1 },
+  { key:"enlisted", label:"Enlisted", image:null, width:1, height:1 }
+];
+
+const DEFAULT_NCOA = [
+  { key:"ncoa1", label:"Tier 1", image:null, width:1, height:1 },
+  { key:"ncoa2", label:"Tier 2", image:null, width:1, height:1 },
+  { key:"ncoa3", label:"Tier 3", image:null, width:1, height:1 }
+];
 
 const DEFAULT_RIBBONS = [
   { key:"medal_of_honor",    label:"Medal of Honor",             image:null, neckImage:null },
@@ -546,9 +569,7 @@ function badgeHTML(badgeKeys, badgeMap){
   return renderRow(rightKeys, 68.8, 5.5, 63) + renderRow(leftKeys, 31.2, 5.5, 54);
 }
 
-function insigniaHTML(rankName, rankMap){
-  const def = rankMap[rankName];
-  if(!def || !def.insignia) return '';
+function shoulderInsigniaHTML(def){
   const w=4.2, h=2.5;
   const leftAnchorX=20, leftAnchorY=22;
   const rightAnchorX=80, rightAnchorY=22.5;
@@ -557,6 +578,31 @@ function insigniaHTML(rankName, rankMap){
   const right = `
     <div class="insignia" style="left:${rightAnchorX-w/2}%; top:${rightAnchorY-h/2}%; width:${w}%; height:${h}%; background-image:url(${def.insignia}); transform:rotate(-62deg) scale(1.3);"></div>`;
   return left + right;
+}
+
+// Ranks below CDT wear insignia on the sleeve instead of the shoulder — large,
+// duplicated on both arms, showing only the half of the image that would
+// actually be visible on a curved sleeve (the other half wraps out of view).
+// Position measured directly off a reference photo of the sleeve.
+function sleeveInsigniaHTML(def){
+  const cellH = 26;
+  const jacketHtoW = 2052/3023;
+  const aspect = (def.insigniaWidth && def.insigniaHeight) ? def.insigniaWidth/def.insigniaHeight : 1;
+  const boxW = cellH * (aspect/2) * jacketHtoW;
+  const leftCenterX = 12.3, rightCenterX = 87.7, centerY = 54;
+  const top = centerY - cellH/2;
+  const left = `<div class="sleeve-insignia" style="left:${leftCenterX-boxW/2}%; top:${top}%; width:${boxW}%; height:${cellH}%; background-image:url(${def.insignia}); background-size:200% 100%; background-position:left center;"></div>`;
+  const right = `<div class="sleeve-insignia" style="left:${rightCenterX-boxW/2}%; top:${top}%; width:${boxW}%; height:${cellH}%; background-image:url(${def.insignia}); background-size:200% 100%; background-position:right center;"></div>`;
+  return left + right;
+}
+
+function insigniaHTML(rankName, rankMap){
+  const def = rankMap[rankName];
+  if(!def || !def.insignia) return '';
+  const cdtIdx = RANKS.findIndex(r=>r.name==='CDT');
+  const rankIdx = RANKS.findIndex(r=>r.name===rankName);
+  const useSleeve = cdtIdx !== -1 && rankIdx > cdtIdx;
+  return useSleeve ? sleeveInsigniaHTML(def) : shoulderInsigniaHTML(def);
 }
 
 function fitNameTape(tapeEl){
@@ -578,10 +624,14 @@ let RANKS = [];
 let RIBBONS = [];
 let BADGES = [];
 let PINS = [];
+let OFFICER_ENLISTED = [];
+let NCOA = [];
 
 function ribbonMapOf(){ const m={}; RIBBONS.forEach(r=>m[r.key]=r); return m; }
 function badgeMapOf(){ const m={}; BADGES.forEach(b=>m[b.key]=b); return m; }
 function pinMapOf(){ const m={}; PINS.forEach(p=>m[p.key]=p); return m; }
+function officerEnlistedMapOf(){ const m={}; OFFICER_ENLISTED.forEach(o=>m[o.key]=o); return m; }
+function ncoaMapOf(){ const m={}; NCOA.forEach(n=>m[n.key]=n); return m; }
 function rankMapOf(){ const m={}; RANKS.forEach(r=>m[r.name]=r); return m; }
 function rankIndex(name){ return RANKS.findIndex(r=>r.name===name); }
 function newId(){ return 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
@@ -593,18 +643,37 @@ function neckMedalHTML(memberRibbonKeys, ribbonMap){
   return `<div class="neck-medal" style="background-image:url(${def.neckImage});"></div>`;
 }
 
-function pinHTML(pinKey, pinMap){
-  if(!pinKey) return '';
-  const def = pinMap[pinKey];
+function collarImageHTML(def, centerX, centerY, rotateDeg){
   if(!def || !def.image) return '';
   const cellH = 5.5;
   const jacketHtoW = 2052/3023;
   const aspect = (def.width && def.height) ? def.width/def.height : 1;
   const w = cellH * aspect * jacketHtoW;
+  return `<div class="pin" style="left:${centerX-w/2}%; top:${centerY-cellH/2}%; width:${w}%; height:${cellH}%; background-image:url(${def.image}); transform:rotate(${rotateDeg}deg);"></div>`;
+}
+
+// Left collar tip shows the member's Unit Pin; right shows Officer/Enlisted —
+// two independent images now, not the same one mirrored on both sides.
+function pinHTML(pinKey, pinMap, officerType, officerEnlistedMap){
   const leftCenterX = 36.0, rightCenterX = 64.0, centerY = 21.9;
-  const left = `<div class="pin" style="left:${leftCenterX-w/2}%; top:${centerY-cellH/2}%; width:${w}%; height:${cellH}%; background-image:url(${def.image}); transform:rotate(-3deg);"></div>`;
-  const right = `<div class="pin" style="left:${rightCenterX-w/2}%; top:${centerY-cellH/2}%; width:${w}%; height:${cellH}%; background-image:url(${def.image}); transform:rotate(3deg);"></div>`;
+  const left = pinKey ? collarImageHTML(pinMap[pinKey], leftCenterX, centerY, -3) : '';
+  const right = officerType ? collarImageHTML(officerEnlistedMap[officerType], rightCenterX, centerY, 3) : '';
   return left + right;
+}
+
+// Large square badge on the right pocket BAG (below the button/flap, distinct
+// from the smaller badge row that sits on the flap above it) — bounds
+// measured directly off the jacket art so it's centered in the pocket
+// outline. Sized as a true square in real pixels, not just equal percentages,
+// since the jacket art itself isn't square.
+function ncoaHTML(ncoaType, ncoaMap){
+  if(!ncoaType) return '';
+  const def = ncoaMap[ncoaType];
+  if(!def || !def.image) return '';
+  const centerX = 67.75, centerY = 78, heightPct = 24;
+  const jacketHtoW = 2052/3023;
+  const widthPct = heightPct * jacketHtoW;
+  return `<div class="badge" style="left:${centerX-widthPct/2}%; top:${centerY-heightPct/2}%; width:${widthPct}%; height:${heightPct}%; background-image:url(${def.image});"></div>`;
 }
 
 function renderJacket(stage, member){
@@ -612,12 +681,15 @@ function renderJacket(stage, member){
   const badgeMap = badgeMapOf();
   const rankMap = rankMapOf();
   const pinMap = pinMapOf();
+  const officerEnlistedMap = officerEnlistedMapOf();
+  const ncoaMap = ncoaMapOf();
   stage.innerHTML = `
     ${insigniaHTML(member.rank, rankMap)}
-    ${pinHTML(member.pin, pinMap)}
+    ${pinHTML(member.pin, pinMap, member.officerType, officerEnlistedMap)}
     <div class="name-tape" style="left:23.25%; top:57%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
     ${ribbonHTML(member.ribbons, ribbonMap)}
     ${badgeHTML(member.badges||[], badgeMap)}
+    ${ncoaHTML(member.ncoaType, ncoaMap)}
     <div class="jacket-overlay"></div>
     ${neckMedalHTML(member.ribbons, ribbonMap)}
   `;
@@ -634,6 +706,8 @@ const ribbonGrid = document.getElementById('ribbonGrid');
 const badgeGrid = document.getElementById('badgeGrid');
 const badgeViewSelect = document.getElementById('badgeViewSelect');
 const pinSelect = document.getElementById('pinSelect');
+const officerEnlistedSelect = document.getElementById('officerEnlistedSelect');
+const ncoaSelect = document.getElementById('ncoaSelect');
 const stage = document.getElementById('stage');
 
 // currentMemberBadges is the source of truth for which badges the member being
@@ -683,6 +757,14 @@ function populatePinSelect(){
   pinSelect.innerHTML = '<option value="">None</option>' + PINS.map(p=>`<option value="${p.key}">${p.label}</option>`).join('');
 }
 
+function populateOfficerEnlistedSelect(){
+  officerEnlistedSelect.innerHTML = '<option value="">None</option>' + OFFICER_ENLISTED.map(o=>`<option value="${o.key}">${o.label}</option>`).join('');
+}
+
+function populateNcoaSelect(){
+  ncoaSelect.innerHTML = '<option value="">None</option>' + NCOA.map(n=>`<option value="${n.key}">${n.label}</option>`).join('');
+}
+
 function enforceBadgeLimit(){
   const atLimit = currentMemberBadges.length >= MAX_BADGES;
   const boxes = Array.from(badgeGrid.querySelectorAll('input[type=checkbox]'));
@@ -722,6 +804,8 @@ function loadMember(id){
   unitSelect.value = m.unit;
   positionSelect.value = m.position;
   pinSelect.value = m.pin || '';
+  officerEnlistedSelect.value = m.officerType || '';
+  ncoaSelect.value = m.ncoaType || '';
   ribbonGrid.querySelectorAll('input[type=checkbox]').forEach(cb=>{
     cb.checked = m.ribbons.includes(cb.dataset.key);
   });
@@ -738,7 +822,9 @@ function currentEdits(){
   const ribbons = Array.from(ribbonGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key);
   const badges = currentMemberBadges.slice(0, MAX_BADGES);
   const pin = pinSelect.value || null;
-  return { id:m.id, name:nameInput.value, rank:rankSelect.value, unit:unitSelect.value, position:positionSelect.value, ribbons, badges, pin };
+  const officerType = officerEnlistedSelect.value || null;
+  const ncoaType = ncoaSelect.value || null;
+  return { id:m.id, name:nameInput.value, rank:rankSelect.value, unit:unitSelect.value, position:positionSelect.value, ribbons, badges, pin, officerType, ncoaType };
 }
 
 function refreshPreview(){ renderJacket(stage, currentEdits()); }
@@ -746,6 +832,8 @@ function refreshPreview(){ renderJacket(stage, currentEdits()); }
 memberSelect.addEventListener('change', e=>loadMember(e.target.value));
 nameInput.addEventListener('input', refreshPreview);
 pinSelect.addEventListener('change', refreshPreview);
+officerEnlistedSelect.addEventListener('change', refreshPreview);
+ncoaSelect.addEventListener('change', refreshPreview);
 rankSelect.addEventListener('change', refreshPreview);
 unitSelect.addEventListener('change', ()=>{
   badgeViewUnit = unitSelect.value;
@@ -798,7 +886,7 @@ document.getElementById('saveBtn').addEventListener('click', async ()=>{
 });
 
 document.getElementById('newBtn').addEventListener('click', async ()=>{
-  const member = { id:newId(), name:"New Member", rank: (RANKS[0] && RANKS[0].name) || "PVT", unit: UNIT_OPTIONS[0], position:"Member", ribbons:[], badges:[], pin:null };
+  const member = { id:newId(), name:"New Member", rank: (RANKS[0] && RANKS[0].name) || "PVT", unit: UNIT_OPTIONS[0], position:"Member", ribbons:[], badges:[], pin:null, officerType:null, ncoaType:null };
   MEMBERS.push(member);
   await saveJSON('members', MEMBERS);
   sortMembersBySeniority();
@@ -954,11 +1042,15 @@ async function init(){
   BADGES = normalizeBadgeUnits(rawBadges);
   if(badgesNeedMigration) await saveJSON('badges', BADGES);
   PINS = await loadJSON('pins', []);
+  OFFICER_ENLISTED = await loadJSON('officerenlisted', DEFAULT_OFFICER_ENLISTED);
+  NCOA = await loadJSON('ncoa', DEFAULT_NCOA);
   sortMembersBySeniority();
   populateStaticSelects();
   populateRankSelect();
   populateRibbonGrid();
   populatePinSelect();
+  populateOfficerEnlistedSelect();
+  populateNcoaSelect();
 
   const requestedId = new URLSearchParams(window.location.search).get('member');
   const initialId = (requestedId && MEMBERS.some(m=>m.id===requestedId)) ? requestedId : MEMBERS[0].id;
@@ -971,7 +1063,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.038</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.042</div>
 
 </body>
 </html>

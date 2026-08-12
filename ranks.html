@@ -153,6 +153,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
     <div class="nav-dropdown-menu">
       <div class="nav-dropdown-menu-inner">
         <a href="tracker.html">Tracker</a>
+        <a href="ncoa.html">NCOA</a>
       </div>
     </div>
   </div>
@@ -295,7 +296,7 @@ function readInsigniaFile(file){
         const canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/png'));
+        resolve({ dataUrl: canvas.toDataURL('image/png'), width: w, height: h });
       };
       img.onerror = () => reject(new Error('Could not read that image'));
       img.src = e.target.result;
@@ -343,10 +344,12 @@ function renderRanks(){
       const file = e.target.files[0];
       if(!file) return;
       try{
-        const dataUrl = await readInsigniaFile(file);
-        RANKS[idx].insignia = dataUrl;
+        const result = await readInsigniaFile(file);
+        RANKS[idx].insignia = result.dataUrl;
+        RANKS[idx].insigniaWidth = result.width;
+        RANKS[idx].insigniaHeight = result.height;
         await saveJSON('ranks', RANKS);
-        row.querySelector('.insignia-swatch').style.backgroundImage = `url(${dataUrl})`;
+        row.querySelector('.insignia-swatch').style.backgroundImage = `url(${result.dataUrl})`;
         row.querySelector('.upload-btn').firstChild.textContent = 'Replace insignia';
       }catch(err){
         showToast('Could not process that image. Try a different file.', 'error');
@@ -392,7 +395,7 @@ document.getElementById('newUpload').addEventListener('change', async (e)=>{
   if(!file) return;
   try{
     pendingInsignia = await readInsigniaFile(file);
-    document.getElementById('newPreview').style.backgroundImage = `url(${pendingInsignia})`;
+    document.getElementById('newPreview').style.backgroundImage = `url(${pendingInsignia.dataUrl})`;
     document.getElementById('newUploadLabel').firstChild.textContent = 'Change insignia';
   }catch(err){
     showToast('Could not process that image. Try a different file.', 'error');
@@ -404,7 +407,12 @@ document.getElementById('addBtn').addEventListener('click', async ()=>{
   const val = input.value.trim().toUpperCase();
   if(!val) return;
   if(RANKS.some(r=>r.name === val)){ showToast('That rank already exists.', 'error'); return; }
-  RANKS.push({ name: val, insignia: pendingInsignia });
+  RANKS.push({
+    name: val,
+    insignia: pendingInsignia ? pendingInsignia.dataUrl : null,
+    insigniaWidth: pendingInsignia ? pendingInsignia.width : null,
+    insigniaHeight: pendingInsignia ? pendingInsignia.height : null
+  });
   input.value = '';
   pendingInsignia = null;
   document.getElementById('newUpload').value = '';
@@ -434,7 +442,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.038</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.042</div>
 
 </body>
 </html>
