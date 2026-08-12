@@ -172,6 +172,10 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .backup-list{display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--border); border-radius:8px; overflow:hidden;}
 .backup-row{display:flex; align-items:center; justify-content:space-between; background:var(--bg-panel); padding:10px 14px; font-size:13px; gap:12px;}
 .backup-row .backup-date{font-family:'JetBrains Mono'; font-weight:600;}
+.backup-row .backup-info{display:flex; align-items:center; gap:10px;}
+.backup-type-tag{font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px; text-transform:uppercase; letter-spacing:.03em;}
+.backup-type-tag.automated{background:rgba(227,95,46,.15); color:var(--orange);}
+.backup-type-tag.manual{background:rgba(107,114,128,.2); color:var(--text-muted);}
 .backup-row-actions{display:flex; gap:8px;}
 .backup-row button{background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary); padding:6px 12px; border-radius:6px; font-size:12px; cursor:pointer; font-family:'Inter';}
 .backup-row button:hover{border-color:var(--orange-dim); color:var(--orange);}
@@ -850,34 +854,38 @@ async function loadBackupList(){
     if(!res.ok) throw new Error('bad response');
     const backups = await res.json();
     if(backups.length === 0){
-      list.innerHTML = '<div class="note">No automated backups yet — the first one runs this Sunday, or click "Download Backup Now" to create one immediately.</div>';
+      list.innerHTML = '<div class="note">No backups yet — the first automated one runs this Sunday, or click "Download Backup Now" to create one immediately.</div>';
       return;
     }
     list.innerHTML = '';
     backups.forEach(b=>{
+      const when = b.createdAt ? new Date(b.createdAt).toLocaleString(undefined, {dateStyle:'medium', timeStyle:'short'}) : b.date;
+      const tag = b.automated
+        ? '<span class="backup-type-tag automated">Automated</span>'
+        : '<span class="backup-type-tag manual">Manual</span>';
       const row = document.createElement('div');
       row.className = 'backup-row';
       row.innerHTML = `
-        <span class="backup-date">${b.date}</span>
+        <div class="backup-info">${tag}<span class="backup-date">${when}</span></div>
         <div class="backup-row-actions">
           <button data-action="download">Download</button>
           <button data-action="restore">Restore</button>
         </div>
       `;
       row.querySelector('[data-action="download"]').addEventListener('click', async ()=>{
-        const r = await fetch(`${API_BASE}/api/backups/${b.date}`);
+        const r = await fetch(`${API_BASE}/api/backups/${b.id}`);
         if(!r.ok){ showToast('Could not fetch that backup.', 'error'); return; }
         const snapshot = await r.json();
-        triggerJSONDownload(snapshot, `unkso-backup-${b.date}.json`);
+        triggerJSONDownload(snapshot, `unkso-backup-${b.date}-${b.automated ? 'auto' : 'manual'}.json`);
       });
       row.querySelector('[data-action="restore"]').addEventListener('click', async ()=>{
-        if(!confirm(`Restore everything to the ${b.date} backup? This overwrites all current members, ranks, ribbons, badges, and pins — this cannot be undone.`)) return;
-        const r = await fetch(`${API_BASE}/api/backups/${b.date}`);
+        if(!confirm(`Restore everything to the ${when} backup? This overwrites all current members, ranks, ribbons, badges, and pins — this cannot be undone.`)) return;
+        const r = await fetch(`${API_BASE}/api/backups/${b.id}`);
         if(!r.ok){ showToast('Could not fetch that backup.', 'error'); return; }
         const snapshot = await r.json();
         const ok = await applyRestoredSnapshot(snapshot);
         if(ok){
-          showToast(`Restored to the ${b.date} backup. Reloading…`, 'success');
+          showToast(`Restored to the ${when} backup. Reloading…`, 'success');
           setTimeout(()=> window.location.reload(), 1200);
         } else {
           showToast('Restore failed partway through — check your connection and try again.', 'error');
@@ -898,10 +906,10 @@ document.getElementById('backupNowBtn').addEventListener('click', async (e)=>{
   try{
     const res = await fetch(`${API_BASE}/api/backup-now`, { method:'POST' });
     if(!res.ok) throw new Error('bad response');
-    const { date } = await res.json();
-    const snapRes = await fetch(`${API_BASE}/api/backups/${date}`);
+    const { id, date } = await res.json();
+    const snapRes = await fetch(`${API_BASE}/api/backups/${id}`);
     const snapshot = await snapRes.json();
-    triggerJSONDownload(snapshot, `unkso-backup-${date}.json`);
+    triggerJSONDownload(snapshot, `unkso-backup-${date}-manual.json`);
     showToast('Backup created and downloaded.', 'success');
     loadBackupList();
   }catch(err){
@@ -963,7 +971,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.036</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.038</div>
 
 </body>
 </html>

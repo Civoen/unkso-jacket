@@ -1,0 +1,17 @@
+name = "unkso-api"
+main = "src/index.js"
+compatibility_date = "2026-07-01"
+
+# Replace "id" with your existing KV namespace's ID.
+# Find it with: wrangler kv namespace list
+[[kv_namespaces]]
+binding = "UNKSO_KV"
+id = "b1fc208de382466ba85269cc65734d4e"
+
+# Runs the automated backup (see the `scheduled` handler in src/index.js)
+# every Sunday at 00:00 UTC. Cron schedules are always in UTC regardless of
+# your own timezone. If deploying via the Cloudflare dashboard instead of
+# `wrangler deploy`, add this under Settings -> Triggers -> Cron Triggers
+# instead, since dashboard-pasted code doesn't read this file.
+[triggers]
+crons = ["0 0 * * 0"]
