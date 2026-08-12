@@ -60,7 +60,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 .col-labels{display:grid; grid-template-columns:22px 44px 1fr 100px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
 .pin-row{display:grid; grid-template-columns:22px 44px 1fr 100px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
-.oe-row{display:grid; grid-template-columns:44px 1fr 110px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
+.oe-row{display:grid; grid-template-columns:44px 1fr 100px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
 .oe-row:last-child{border-bottom:none;}
 .oe-row .oe-label{font-weight:600; font-size:13.5px;}
 .pin-row:last-child{border-bottom:none;}
@@ -131,7 +131,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   main{padding:16px;}
   .panel{padding:14px; overflow-x:auto;}
   .col-labels, .pin-row{grid-template-columns:18px 32px 1fr 76px 32px; gap:6px; min-width:380px;}
-  .oe-row{grid-template-columns:32px 1fr 76px; gap:6px;}
+  .oe-row{grid-template-columns:32px 1fr 76px 32px; gap:6px;}
   .add-grid{grid-template-columns:1fr 90px auto; gap:6px;}
 }
 </style>
@@ -192,9 +192,20 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <div class="sub">CONTROLS THE OFFICER/ENLISTED DROPDOWN ON THE ADMIN PAGE — SHOWS ON THE RIGHT COLLAR TIP</div>
 
   <div class="panel">
+    <div class="col-labels"><span></span><span>Name</span><span>Image</span><span></span></div>
     <div id="officerEnlistedList"></div>
+
+    <div class="add-panel">
+      <h3>Add a new option</h3>
+      <div class="dims-note">Upload any image — square or rectangular both work. It's scaled down only if taller than 180px; nothing gets cropped.</div>
+      <div class="add-grid" style="grid-template-columns:1fr 130px auto;">
+        <input id="newOeLabel" type="text" placeholder="Option name">
+        <label class="upload-btn" id="newOeUploadLabel">Choose image<input type="file" id="newOeUpload" accept="image/*"></label>
+        <button class="add-btn" id="addOeBtn" disabled>Add option</button>
+      </div>
+    </div>
   </div>
-  <div class="note">Fixed at exactly two options — Officer and Enlisted. Set which image represents each; a member's Admin selection determines which one shows on their right collar tip.</div>
+  <div class="note">A member picks one option at a time from a dropdown on the Admin page — it shows on the right collar tip. Removing an option here also unassigns it from any member currently set to it.</div>
 </main>
 
 <script>
@@ -452,6 +463,11 @@ document.getElementById('addBtn').addEventListener('click', async ()=>{
   renderPins();
 });
 
+async function pruneOeFromMembers(key){
+  MEMBERS = MEMBERS.map(m => m.officerType === key ? {...m, officerType: null} : m);
+  await saveJSON('members', MEMBERS);
+}
+
 function renderOfficerEnlisted(){
   const list = document.getElementById('officerEnlistedList');
   list.innerHTML = '';
@@ -460,9 +476,14 @@ function renderOfficerEnlisted(){
     row.className = 'oe-row';
     row.innerHTML = `
       <div class="swatch" style="${o.image ? `background-image:url(${o.image})` : ''}"></div>
-      <span class="oe-label">${o.label}</span>
+      <input type="text" value="${o.label}" data-field="label">
       <label class="upload-btn">${o.image ? 'Replace' : 'Upload'} image<input type="file" accept="image/*"></label>
+      <button class="icon-btn" title="Remove">&times;</button>
     `;
+    row.querySelector('[data-field="label"]').addEventListener('change', async (e)=>{
+      OFFICER_ENLISTED[idx].label = e.target.value;
+      await saveJSON('officerenlisted', OFFICER_ENLISTED);
+    });
     row.querySelector('input[type=file]').addEventListener('change', async (e)=>{
       const file = e.target.files[0];
       if(!file) return;
@@ -477,9 +498,53 @@ function renderOfficerEnlisted(){
         showToast('Could not process that image. Try a different file.', 'error');
       }
     });
+    row.querySelector('.icon-btn').addEventListener('click', async ()=>{
+      if(!confirm(`Remove "${o.label}"? This will unassign it from any member currently set to it.`)) return;
+      await pruneOeFromMembers(o.key);
+      OFFICER_ENLISTED.splice(idx,1);
+      await saveJSON('officerenlisted', OFFICER_ENLISTED);
+      renderOfficerEnlisted();
+    });
     list.appendChild(row);
   });
 }
+
+let pendingOeImage = null;
+
+function refreshOeAddButton(){
+  const label = document.getElementById('newOeLabel').value.trim();
+  document.getElementById('addOeBtn').disabled = !(label && pendingOeImage);
+}
+
+document.getElementById('newOeLabel').addEventListener('input', refreshOeAddButton);
+
+document.getElementById('newOeUpload').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    pendingOeImage = await resizePinImage(file);
+    document.getElementById('newOeUploadLabel').firstChild.textContent = 'Change image';
+    if(!document.getElementById('newOeLabel').value.trim()){
+      document.getElementById('newOeLabel').value = filenameToLabel(file.name);
+    }
+    refreshOeAddButton();
+  }catch(err){
+    showToast('Could not process that image. Try a different file.', 'error');
+  }
+});
+
+document.getElementById('addOeBtn').addEventListener('click', async ()=>{
+  const label = document.getElementById('newOeLabel').value.trim();
+  if(!label || !pendingOeImage) return;
+  OFFICER_ENLISTED.push({ key: newKey(label), label, image: pendingOeImage.dataUrl, width: pendingOeImage.width, height: pendingOeImage.height });
+  document.getElementById('newOeLabel').value = '';
+  document.getElementById('newOeUpload').value = '';
+  document.getElementById('newOeUploadLabel').firstChild.textContent = 'Choose image';
+  pendingOeImage = null;
+  refreshOeAddButton();
+  await saveJSON('officerenlisted', OFFICER_ENLISTED);
+  renderOfficerEnlisted();
+});
 
 async function init(){
   PINS = await loadJSON('pins', DEFAULT_PINS);
@@ -491,7 +556,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.042</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.043</div>
 
 </body>
 </html>

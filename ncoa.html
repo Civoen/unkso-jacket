@@ -61,7 +61,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .col-labels{display:grid; grid-template-columns:22px 44px 1fr 100px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
 .pin-row{display:grid; grid-template-columns:22px 44px 1fr 100px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
 .oe-row{display:grid; grid-template-columns:44px 1fr 110px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
-.ncoa-row{display:grid; grid-template-columns:56px 1fr 130px; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
+.ncoa-row{display:grid; grid-template-columns:56px 1fr 130px 36px; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
 .ncoa-row:last-child{border-bottom:none;}
 .ncoa-row .swatch{width:56px; height:56px;}
 .ncoa-row input[type=text]{
@@ -139,7 +139,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   .panel{padding:14px; overflow-x:auto;}
   .col-labels, .pin-row{grid-template-columns:18px 32px 1fr 76px 32px; gap:6px; min-width:380px;}
   .oe-row{grid-template-columns:32px 1fr 76px; gap:6px;}
-  .ncoa-row{grid-template-columns:40px 1fr 90px; gap:6px;}
+  .ncoa-row{grid-template-columns:40px 1fr 90px 32px; gap:6px;}
   .ncoa-row .swatch{width:40px; height:40px;}
   .add-grid{grid-template-columns:1fr 90px auto; gap:6px;}
 }
@@ -181,9 +181,20 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <div class="sub">CONTROLS THE NCOA DROPDOWN ON THE ADMIN PAGE — SHOWN LARGE ON THE RIGHT POCKET. NAME EACH TIER AND UPLOAD ITS IMAGE.</div>
 
   <div class="panel">
+    <div class="col-labels" style="grid-template-columns:56px 1fr 130px 36px;"><span>Preview</span><span>Name</span><span>Image</span><span></span></div>
     <div id="ncoaList"></div>
+
+    <div class="add-panel">
+      <h3>Add a new tier</h3>
+      <div class="dims-note">Upload any image — square or rectangular both work. It's scaled down only if taller than 300px; nothing gets cropped.</div>
+      <div class="add-grid" style="grid-template-columns:1fr 130px auto;">
+        <input id="newNcoaLabel" type="text" placeholder="Tier name">
+        <label class="upload-btn" id="newNcoaUploadLabel">Choose image<input type="file" id="newNcoaUpload" accept="image/*"></label>
+        <button class="add-btn" id="addNcoaBtn" disabled>Add tier</button>
+      </div>
+    </div>
   </div>
-  <div class="note">Fixed at exactly three tiers. A member can have one at a time (picked from a dropdown on the Admin page) — it renders large on the right pocket, below the button.</div>
+  <div class="note">A member can have one tier at a time (picked from a dropdown on the Admin page) — it renders large on the right pocket, below the button. Removing a tier here also unassigns it from any member currently set to it.</div>
 </main>
 
 <script>
@@ -311,6 +322,16 @@ const DEFAULT_NCOA = [
 ];
 let NCOA = DEFAULT_NCOA;
 
+async function pruneNcoaFromMembers(key){
+  try{
+    const members = await loadJSON('members', []);
+    const updated = members.map(m => m.ncoaType === key ? {...m, ncoaType: null} : m);
+    await saveJSON('members', updated);
+  }catch(err){
+    console.log('Could not prune NCOA from members', err);
+  }
+}
+
 function renderNcoa(){
   const list = document.getElementById('ncoaList');
   list.innerHTML = '';
@@ -321,10 +342,18 @@ function renderNcoa(){
       <div class="swatch" style="${n.image ? `background-image:url(${n.image})` : ''}"></div>
       <input type="text" value="${n.label}" data-field="label">
       <label class="upload-btn">${n.image ? 'Replace' : 'Upload'} image<input type="file" accept="image/*"></label>
+      <button class="icon-btn" title="Remove">&times;</button>
     `;
     row.querySelector('[data-field="label"]').addEventListener('change', async (e)=>{
       NCOA[idx].label = e.target.value;
       await saveJSON('ncoa', NCOA);
+    });
+    row.querySelector('.icon-btn').addEventListener('click', async ()=>{
+      if(!confirm(`Remove "${n.label}"? This will unassign it from any member currently set to it.`)) return;
+      await pruneNcoaFromMembers(n.key);
+      NCOA.splice(idx,1);
+      await saveJSON('ncoa', NCOA);
+      renderNcoa();
     });
     row.querySelector('input[type=file]').addEventListener('change', async (e)=>{
       const file = e.target.files[0];
@@ -344,6 +373,49 @@ function renderNcoa(){
   });
 }
 
+let pendingNcoaImage = null;
+
+function refreshNcoaAddButton(){
+  const label = document.getElementById('newNcoaLabel').value.trim();
+  document.getElementById('addNcoaBtn').disabled = !(label && pendingNcoaImage);
+}
+
+document.getElementById('newNcoaLabel').addEventListener('input', refreshNcoaAddButton);
+
+function filenameToLabelNcoa(filename){
+  const base = filename.replace(/\.[^.]+$/, '');
+  return base.replace(/[_\-]+/g, ' ').trim();
+}
+
+document.getElementById('newNcoaUpload').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    pendingNcoaImage = await resizeNcoaImage(file);
+    document.getElementById('newNcoaUploadLabel').firstChild.textContent = 'Change image';
+    if(!document.getElementById('newNcoaLabel').value.trim()){
+      document.getElementById('newNcoaLabel').value = filenameToLabelNcoa(file.name);
+    }
+    refreshNcoaAddButton();
+  }catch(err){
+    showToast('Could not process that image. Try a different file.', 'error');
+  }
+});
+
+document.getElementById('addNcoaBtn').addEventListener('click', async ()=>{
+  const label = document.getElementById('newNcoaLabel').value.trim();
+  if(!label || !pendingNcoaImage) return;
+  const key = 'ncoa_' + label.toLowerCase().replace(/[^a-z0-9]+/g,'_').slice(0,24) + '_' + Math.random().toString(36).slice(2,5);
+  NCOA.push({ key, label, image: pendingNcoaImage.dataUrl, width: pendingNcoaImage.width, height: pendingNcoaImage.height });
+  document.getElementById('newNcoaLabel').value = '';
+  document.getElementById('newNcoaUpload').value = '';
+  document.getElementById('newNcoaUploadLabel').firstChild.textContent = 'Choose image';
+  pendingNcoaImage = null;
+  refreshNcoaAddButton();
+  await saveJSON('ncoa', NCOA);
+  renderNcoa();
+});
+
 async function init(){
   NCOA = await loadJSON('ncoa', DEFAULT_NCOA);
   renderNcoa();
@@ -351,7 +423,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.042</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.043</div>
 
 </body>
 </html>

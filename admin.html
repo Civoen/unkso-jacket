@@ -627,11 +627,11 @@ let PINS = [];
 let OFFICER_ENLISTED = [];
 let NCOA = [];
 
-function ribbonMapOf(){ const m={}; RIBBONS.forEach(r=>m[r.key]=r); return m; }
-function badgeMapOf(){ const m={}; BADGES.forEach(b=>m[b.key]=b); return m; }
-function pinMapOf(){ const m={}; PINS.forEach(p=>m[p.key]=p); return m; }
-function officerEnlistedMapOf(){ const m={}; OFFICER_ENLISTED.forEach(o=>m[o.key]=o); return m; }
-function ncoaMapOf(){ const m={}; NCOA.forEach(n=>m[n.key]=n); return m; }
+function ribbonMapOf(){ const m={}; (Array.isArray(RIBBONS)?RIBBONS:[]).forEach(r=>m[r.key]=r); return m; }
+function badgeMapOf(){ const m={}; (Array.isArray(BADGES)?BADGES:[]).forEach(b=>m[b.key]=b); return m; }
+function pinMapOf(){ const m={}; (Array.isArray(PINS)?PINS:[]).forEach(p=>m[p.key]=p); return m; }
+function officerEnlistedMapOf(){ const m={}; (Array.isArray(OFFICER_ENLISTED)?OFFICER_ENLISTED:[]).forEach(o=>m[o.key]=o); return m; }
+function ncoaMapOf(){ const m={}; (Array.isArray(NCOA)?NCOA:[]).forEach(n=>m[n.key]=n); return m; }
 function rankMapOf(){ const m={}; RANKS.forEach(r=>m[r.name]=r); return m; }
 function rankIndex(name){ return RANKS.findIndex(r=>r.name===name); }
 function newId(){ return 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
@@ -1063,7 +1063,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.042</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.043</div>
 
 </body>
 </html>
