@@ -603,8 +603,8 @@ function sleeveInsigniaHTML(def){
   const sleeveEdgeX = 9.9;
   const leftBoxLeft = sleeveEdgeX;
   const rightBoxLeft = (100 - sleeveEdgeX) - boxW;
-  const left = `<div class="sleeve-insignia" style="left:${leftBoxLeft}%; top:${top}%; width:${boxW}%; height:${cellH}%; background-image:url(${def.insignia}); background-size:200% 100%; background-position:right center; transform:rotate(10deg);"></div>`;
-  const right = `<div class="sleeve-insignia" style="left:${rightBoxLeft}%; top:${top}%; width:${boxW}%; height:${cellH}%; background-image:url(${def.insignia}); background-size:200% 100%; background-position:left center; transform:rotate(-10deg);"></div>`;
+  const left = `<div class="sleeve-insignia" style="left:${leftBoxLeft}%; top:${top}%; width:${boxW}%; height:${cellH}%; background-image:url(${def.insignia}); background-size:200% 100%; background-position:right center; transform:rotate(12deg);"></div>`;
+  const right = `<div class="sleeve-insignia" style="left:${rightBoxLeft}%; top:${top}%; width:${boxW}%; height:${cellH}%; background-image:url(${def.insignia}); background-size:200% 100%; background-position:left center; transform:rotate(-12deg);"></div>`;
   return left + right;
 }
 
@@ -682,7 +682,7 @@ function ncoaHTML(ncoaType, ncoaMap){
   if(!ncoaType) return '';
   const def = ncoaMap[ncoaType];
   if(!def || !def.image) return '';
-  const centerX = 67.75, centerY = 78, heightPct = 24;
+  const centerX = 69.5, centerY = 82, heightPct = 24 * 0.7;
   const jacketHtoW = 2052/3023;
   const widthPct = heightPct * jacketHtoW;
   return `<div class="badge" style="left:${centerX-widthPct/2}%; top:${centerY-heightPct/2}%; width:${widthPct}%; height:${heightPct}%; background-image:url(${def.image});"></div>`;
@@ -1075,7 +1075,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.047</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.049</div>
 
 </body>
 </html>
