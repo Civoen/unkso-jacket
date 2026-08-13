@@ -513,7 +513,7 @@ function shoulderInsigniaHTML(def){
 // actually be visible on a curved sleeve (the other half wraps out of view).
 // Position measured directly off a reference photo of the sleeve.
 function sleeveInsigniaHTML(def){
-  const cellH = 26 * 0.8; // scaled down per feedback
+  const cellH = 26 * 0.6; // scale per feedback
   const jacketHtoW = 2052/3023;
   const aspect = (def.insigniaWidth && def.insigniaHeight) ? def.insigniaWidth/def.insigniaHeight : 1;
   const boxW = cellH * (aspect/2) * jacketHtoW; // half-image slice, so half the full-image width
@@ -526,8 +526,8 @@ function sleeveInsigniaHTML(def){
   const sleeveEdgeX = 9.9;
   const leftBoxLeft = sleeveEdgeX;
   const rightBoxLeft = (100 - sleeveEdgeX) - boxW;
-  const left = `<div class="sleeve-insignia" style="left:${leftBoxLeft}%; top:${top}%; width:${boxW}%; height:${cellH}%; background-image:url(${def.insignia}); background-size:200% 100%; background-position:right center;"></div>`;
-  const right = `<div class="sleeve-insignia" style="left:${rightBoxLeft}%; top:${top}%; width:${boxW}%; height:${cellH}%; background-image:url(${def.insignia}); background-size:200% 100%; background-position:left center;"></div>`;
+  const left = `<div class="sleeve-insignia" style="left:${leftBoxLeft}%; top:${top}%; width:${boxW}%; height:${cellH}%; background-image:url(${def.insignia}); background-size:200% 100%; background-position:right center; transform:rotate(10deg);"></div>`;
+  const right = `<div class="sleeve-insignia" style="left:${rightBoxLeft}%; top:${top}%; width:${boxW}%; height:${cellH}%; background-image:url(${def.insignia}); background-size:200% 100%; background-position:left center; transform:rotate(-10deg);"></div>`;
   return left + right;
 }
 
@@ -932,7 +932,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.046</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.047</div>
 
 </body>
 </html>
