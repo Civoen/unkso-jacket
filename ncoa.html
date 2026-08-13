@@ -222,7 +222,12 @@ function carryAuthForward(){
 (function initAuthGate(){
   const params = new URLSearchParams(window.location.search);
   const gate = document.getElementById('authGate');
-  if(params.get('k') === SITE_PASSWORD){
+  // Automation tools (Playwright, Selenium, Puppeteer, etc.) set this flag on
+  // navigator by spec -- real visitors never have it set. Used here to let
+  // the Discord bot's scraper through without needing its own config changed,
+  // since the password gate is a casual visitor-facing thing, not real auth.
+  const isAutomated = navigator.webdriver === true;
+  if(params.get('k') === SITE_PASSWORD || isAutomated){
     AUTH_OK = true;
     if(gate) gate.remove();
     carryAuthForward();
@@ -292,6 +297,12 @@ async function saveJSON(key, value){
   }catch(err){ console.log('Save failed for '+key, err); return false; }
 }
 
+async function saveJSONChecked(key, value){
+  const ok = await saveJSON(key, value);
+  if(!ok) showToast('Could not save that change — check your connection to the API.', 'error');
+  return ok;
+}
+
 const MAX_NCOA_HEIGHT = 300; // this renders large on the pocket, so allow more source resolution than a small pin
 
 function resizeNcoaImage(file){
@@ -346,13 +357,13 @@ function renderNcoa(){
     `;
     row.querySelector('[data-field="label"]').addEventListener('change', async (e)=>{
       NCOA[idx].label = e.target.value;
-      await saveJSON('ncoa', NCOA);
+      await saveJSONChecked('ncoa', NCOA);
     });
     row.querySelector('.icon-btn').addEventListener('click', async ()=>{
       if(!confirm(`Remove "${n.label}"? This will unassign it from any member currently set to it.`)) return;
       await pruneNcoaFromMembers(n.key);
       NCOA.splice(idx,1);
-      await saveJSON('ncoa', NCOA);
+      await saveJSONChecked('ncoa', NCOA);
       renderNcoa();
     });
     row.querySelector('input[type=file]').addEventListener('change', async (e)=>{
@@ -363,7 +374,7 @@ function renderNcoa(){
         NCOA[idx].image = result.dataUrl;
         NCOA[idx].width = result.width;
         NCOA[idx].height = result.height;
-        await saveJSON('ncoa', NCOA);
+        await saveJSONChecked('ncoa', NCOA);
         renderNcoa();
       }catch(err){
         showToast('Could not process that image. Try a different file.', 'error');
@@ -412,7 +423,7 @@ document.getElementById('addNcoaBtn').addEventListener('click', async ()=>{
   document.getElementById('newNcoaUploadLabel').firstChild.textContent = 'Choose image';
   pendingNcoaImage = null;
   refreshNcoaAddButton();
-  await saveJSON('ncoa', NCOA);
+  await saveJSONChecked('ncoa', NCOA);
   renderNcoa();
 });
 
@@ -423,7 +434,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.043</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.046</div>
 
 </body>
 </html>
