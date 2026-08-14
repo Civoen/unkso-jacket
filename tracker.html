@@ -77,11 +77,18 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .tracker-header{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:4px;}
 .tracker-header h2{font-family:'Poppins'; font-weight:600; font-size:18px; margin:0;}
 .tracker-header .tag{color:var(--text-muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em;}
-.tracker-count{color:var(--text-muted); font-size:12.5px; margin-bottom:16px;}
+.tracker-count{color:var(--text-muted); font-size:12.5px; margin-bottom:12px;}
+.tracker-filters{display:flex; gap:8px; margin-bottom:16px;}
+.tracker-filter-btn{
+  background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary);
+  padding:7px 14px; border-radius:7px; font-size:12.5px; font-weight:600; cursor:pointer; font-family:'Inter';
+}
+.tracker-filter-btn:hover{border-color:var(--orange-dim); color:var(--orange);}
+.tracker-filter-btn.active{background:var(--orange); border-color:var(--orange); color:#1c1108;}
 
 .badge-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
 .badge-check{display:flex; align-items:center; gap:8px; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:12.5px; cursor:pointer;}
-.badge-check input{margin:0;}
+.badge-check input{margin:0; width:16px; height:16px; accent-color:var(--orange); cursor:pointer;}
 .badge-check .swatch{width:16px; height:16px; border-radius:3px; border:1px solid rgba(0,0,0,.35); flex-shrink:0; background-size:contain; background-position:center; background-repeat:no-repeat;}
 .badge-check .unit-tag{color:var(--text-muted); font-size:10.5px; margin-left:auto; text-transform:uppercase; letter-spacing:.03em;}
 
@@ -285,12 +292,12 @@ function renderMemberList(){
   const list = document.getElementById('memberList');
   const q = searchTerm.trim().toLowerCase();
   const visible = sortedMembers().filter(m=>{
-    if(m.unit !== unitFilter) return false;
-    return !q || m.name.toLowerCase().includes(q);
+    if(q) return m.name.toLowerCase().includes(q);
+    return m.unit === unitFilter;
   });
 
   if(visible.length === 0){
-    list.innerHTML = `<div class="no-results">No ${unitFilter} members${q ? ' match your search' : ''}.</div>`;
+    list.innerHTML = `<div class="no-results">${q ? 'No members match your search.' : `No ${unitFilter} members.`}</div>`;
     return;
   }
 
@@ -298,7 +305,8 @@ function renderMemberList(){
   visible.forEach(m=>{
     const row = document.createElement('div');
     row.className = 'member-item' + (m.id === selectedMemberId ? ' selected' : '');
-    row.innerHTML = `<span>${m.name}</span><span class="unit-tag">${m.rank}</span>`;
+    const tag = q ? `${m.rank} · ${m.unit}` : m.rank;
+    row.innerHTML = `<span>${m.name}</span><span class="unit-tag">${tag}</span>`;
     row.addEventListener('click', ()=>{
       selectedMemberId = m.id;
       renderMemberList();
@@ -307,6 +315,8 @@ function renderMemberList(){
     list.appendChild(row);
   });
 }
+
+let trackerFilterMode = 'all';
 
 function renderTracker(){
   const body = document.getElementById('trackerBody');
@@ -319,15 +329,36 @@ function renderTracker(){
   body.innerHTML = `
     <div class="tracker-header"><h2>${m.name}</h2><span class="tag">${m.rank} — ${m.unit}</span></div>
     <div class="tracker-count" id="trackerCount"></div>
+    <div class="tracker-filters">
+      <button class="tracker-filter-btn" data-mode="earned">Show Earned</button>
+      <button class="tracker-filter-btn" data-mode="company">Show Company</button>
+      <button class="tracker-filter-btn" data-mode="all">Show All</button>
+    </div>
     <div class="badge-grid" id="trackerBadgeGrid"></div>
   `;
-  const grid = document.getElementById('trackerBadgeGrid');
-  BADGES.forEach(b=>{
-    const wrap = document.createElement('label');
-    wrap.className = 'badge-check';
-    wrap.innerHTML = `<input type="checkbox" data-key="${b.key}"${earned.has(b.key) ? ' checked' : ''}><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span>${b.label}<span class="unit-tag">${b.unit || 'Battalion'}</span>`;
-    grid.appendChild(wrap);
+  body.querySelectorAll('.tracker-filter-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.mode === trackerFilterMode);
+    btn.addEventListener('click', ()=>{
+      trackerFilterMode = btn.dataset.mode;
+      renderTracker();
+    });
   });
+  const visibleBadges = BADGES.filter(b=>{
+    if(trackerFilterMode === 'earned') return earned.has(b.key);
+    if(trackerFilterMode === 'company') return (b.unit || 'Battalion') === m.unit;
+    return true;
+  });
+  const grid = document.getElementById('trackerBadgeGrid');
+  if(visibleBadges.length === 0){
+    grid.innerHTML = '<div class="no-results">No badges match this filter.</div>';
+  } else {
+    visibleBadges.forEach(b=>{
+      const wrap = document.createElement('label');
+      wrap.className = 'badge-check';
+      wrap.innerHTML = `<input type="checkbox" data-key="${b.key}"${earned.has(b.key) ? ' checked' : ''}><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span>${b.label}<span class="unit-tag">${b.unit || 'Battalion'}</span>`;
+      grid.appendChild(wrap);
+    });
+  }
   grid.addEventListener('change', async (e)=>{
     const key = e.target.dataset.key;
     const current = new Set(TRACKER[m.id] || []);
@@ -335,6 +366,7 @@ function renderTracker(){
     TRACKER[m.id] = Array.from(current);
     updateCount(m.id);
     await saveJSON('tracker', TRACKER);
+    if(trackerFilterMode === 'earned') renderTracker();
   });
   updateCount(m.id);
 }
@@ -366,7 +398,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.053</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.061</div>
 
 </body>
 </html>

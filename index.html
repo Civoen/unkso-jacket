@@ -596,7 +596,7 @@ function ncoaHTML(ncoaType, ncoaMap){
   if(!ncoaType) return '';
   const def = ncoaMap[ncoaType];
   if(!def || !def.image) return '';
-  const centerX = 69, centerY = 85, heightPct = 24 * 0.7;
+  const centerX = 69, centerY = 81.4, heightPct = 24 * 0.7;
   const jacketHtoW = 2052/3023;
   const widthPct = heightPct * jacketHtoW;
   return `<div class="badge" style="left:${centerX-widthPct/2}%; top:${centerY-heightPct/2}%; width:${widthPct}%; height:${heightPct}%; background-image:url(${def.image});"></div>`;
@@ -935,7 +935,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.053</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.061</div>
 
 </body>
 </html>

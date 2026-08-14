@@ -61,17 +61,17 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .filter-row label{font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em;}
 .filter-row select{
   background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
-  padding:8px 12px; border-radius:8px; font-size:13.5px; font-family:'Inter';
+  padding:8px 12px; border-radius:8px; font-size:13.5px; font-family:'Inter'; min-width:150px;
 }
 
-.col-labels{display:grid; grid-template-columns:22px 44px 1fr 90px 110px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
-.badge-row{display:grid; grid-template-columns:22px 44px 1fr 90px 110px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
+.col-labels{display:grid; grid-template-columns:22px 44px 1fr 110px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
+.badge-row{display:grid; grid-template-columns:22px 44px 1fr 110px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
 .badge-row:last-child{border-bottom:none;}
 .badge-row.dragging{opacity:.4;}
 .drag-handle{color:var(--text-muted); font-size:15px; text-align:center; cursor:grab; user-select:none;}
-.badge-row select, .add-grid select{
+.add-grid select{
   background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
-  padding:8px 10px; border-radius:6px; font-size:13px; font-family:'Inter';
+  padding:8px 14px 8px 10px; border-radius:6px; font-size:13px; font-family:'Inter';
 }
 
 .swatch{
@@ -100,7 +100,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .add-panel{margin-top:20px; padding-top:18px; border-top:1px solid var(--border);}
 .add-panel h3{font-family:'Poppins'; font-size:14px; font-weight:600; margin:0 0 4px; color:var(--orange);}
 .add-panel .dims-note{font-size:11.5px; color:var(--text-muted); margin-bottom:12px;}
-.add-grid{display:grid; grid-template-columns:40px 1fr 100px 130px auto; align-items:center; gap:10px;}
+.add-grid{display:grid; grid-template-columns:40px 1fr 120px 130px auto; align-items:center; gap:10px;}
 .add-grid input[type=text]{
   background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
   padding:9px 12px; border-radius:6px; font-size:13.5px; font-family:'Inter';
@@ -138,7 +138,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   .subnav a{flex-shrink:0;}
   main{padding:16px;}
   .panel{padding:14px; overflow-x:auto;}
-  .col-labels, .badge-row{grid-template-columns:18px 32px 1fr 60px 76px 32px; gap:6px; min-width:460px;}
+  .col-labels, .badge-row{grid-template-columns:18px 32px 1fr 76px 32px; gap:6px; min-width:400px;}
   .add-grid{grid-template-columns:32px 1fr 70px 90px auto; gap:6px;}
 }
 /* Clasp manager (Weapon Mastery badge only) */
@@ -209,7 +209,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
       <label for="unitFilterSelect">Showing</label>
       <select id="unitFilterSelect"></select>
     </div>
-    <div class="col-labels"><span></span><span>Preview</span><span>Name</span><span>Unit</span><span>Image</span><span></span></div>
+    <div class="col-labels"><span></span><span>Preview</span><span>Name</span><span>Image</span><span></span></div>
     <div id="badgeList"></div>
 
     <div class="add-panel">
@@ -495,18 +495,12 @@ function renderBadges(){
       <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
       <div class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></div>
       <input type="text" value="${b.label}" data-field="label">
-      <select data-field="unit">${UNITS.map(u=>`<option ${u===b.unit?'selected':''}>${u}</option>`).join('')}</select>
       <label class="upload-btn">${b.image ? 'Replace image' : 'Upload image'}<input type="file" accept="image/*" data-field="image"></label>
       <button class="icon-btn" title="Remove">&times;</button>
     `;
     row.querySelector('[data-field="label"]').addEventListener('change', async (e)=>{
       BADGES[idx].label = e.target.value;
       await saveBadgesChecked();
-    });
-    row.querySelector('[data-field="unit"]').addEventListener('change', async (e)=>{
-      BADGES[idx].unit = e.target.value;
-      await saveBadgesChecked();
-      renderBadges();
     });
     row.querySelector('[data-field="image"]').addEventListener('change', async (e)=>{
       const file = e.target.files[0];
@@ -622,7 +616,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.053</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.061</div>
 
 </body>
 </html>
