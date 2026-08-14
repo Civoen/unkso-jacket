@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>UNKSO Admin</title>
+<title>UNKSO — Admin</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
@@ -108,7 +108,18 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 .ribbon-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
 .ribbon-check{display:flex; align-items:center; gap:8px; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:12.5px; cursor:pointer;}
-.ribbon-check input{margin:0; width:16px; height:16px; accent-color:var(--orange); cursor:pointer;}
+.ribbon-check input, .badge-check input{
+  appearance:none; -webkit-appearance:none; margin:0; flex-shrink:0; cursor:pointer;
+  width:16px; height:16px; border-radius:4px; border:1px solid var(--border);
+  background:var(--bg-page); position:relative;
+}
+.ribbon-check input:checked, .badge-check input:checked{
+  background:var(--orange); border-color:var(--orange);
+}
+.ribbon-check input:checked::after, .badge-check input:checked::after{
+  content:''; position:absolute; left:4px; top:1px; width:5px; height:9px;
+  border:solid #1c1108; border-width:0 2px 2px 0; transform:rotate(45deg);
+}
 .ribbon-check .swatch{width:26px; height:10px; border-radius:1.5px; border:1px solid rgba(0,0,0,.35); flex-shrink:0; background-size:cover; background-position:center; background-color:#2a2d22;}
 
 .badge-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
@@ -116,7 +127,6 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .badge-check .unit-tag{color:var(--text-muted); font-size:10.5px; margin-left:auto; text-transform:uppercase; letter-spacing:.03em;}
 .badge-check.disabled{opacity:.35; cursor:not-allowed;}
 .badge-limit-note{margin-top:8px; font-size:12px; color:var(--orange); font-weight:600;}
-.badge-check input{margin:0; width:16px; height:16px; accent-color:var(--orange); cursor:pointer;}
 .badge-check .swatch{width:16px; height:16px; border-radius:3px; border:1px solid rgba(0,0,0,.35); flex-shrink:0; background-size:contain; background-position:center; background-repeat:no-repeat;}
 
 .save-btn{
@@ -644,6 +654,7 @@ let BADGES = [];
 let PINS = [];
 let OFFICER_ENLISTED = [];
 let NCOA = [];
+let TRACKER = {};
 
 function ribbonMapOf(){ const m={}; (Array.isArray(RIBBONS)?RIBBONS:[]).forEach(r=>m[r.key]=r); return m; }
 function badgeMapOf(){ const m={}; (Array.isArray(BADGES)?BADGES:[]).forEach(b=>m[b.key]=b); return m; }
@@ -688,7 +699,7 @@ function ncoaHTML(ncoaType, ncoaMap){
   if(!ncoaType) return '';
   const def = ncoaMap[ncoaType];
   if(!def || !def.image) return '';
-  const centerX = 69, centerY = 81.4, heightPct = 24 * 0.7;
+  const centerX = 69, centerY = 83.2, heightPct = 24 * 0.7;
   const jacketHtoW = 2052/3023;
   const widthPct = heightPct * jacketHtoW;
   return `<div class="badge" style="left:${centerX-widthPct/2}%; top:${centerY-heightPct/2}%; width:${widthPct}%; height:${heightPct}%; background-image:url(${def.image});"></div>`;
@@ -894,10 +905,19 @@ setupCollapsible('badgesField', 'badgesToggle');
 document.getElementById('saveBtn').addEventListener('click', async ()=>{
   const edits = currentEdits();
   MEMBERS = MEMBERS.map(m => m.id===edits.id ? edits : m);
+  // A badge selected for display on the jacket is, by definition, earned —
+  // fold it into Tracker's record so the two never drift apart. This only
+  // flows one direction: Tracker can hold MORE earned badges than the 6
+  // slots Admin can display, so marking something "earned" there never
+  // forces it onto the jacket automatically.
+  const earnedSet = new Set(TRACKER[edits.id] || []);
+  edits.badges.forEach(key => earnedSet.add(key));
+  TRACKER[edits.id] = Array.from(earnedSet);
   const btn = document.getElementById('saveBtn');
   const original = btn.textContent;
   btn.textContent = 'Saving…';
   const ok = await saveJSON('members', MEMBERS);
+  await saveJSON('tracker', TRACKER);
   sortMembersBySeniority();
   populateMemberSelect(edits.id);
   btn.textContent = ok ? 'Saved' : 'Save failed — retry';
@@ -1064,6 +1084,7 @@ async function init(){
   PINS = await loadJSON('pins', []);
   OFFICER_ENLISTED = await loadJSON('officerenlisted', DEFAULT_OFFICER_ENLISTED);
   NCOA = await loadJSON('ncoa', DEFAULT_NCOA);
+  TRACKER = await loadJSON('tracker', {});
   sortMembersBySeniority();
   populateStaticSelects();
   populateRankSelect();
@@ -1083,7 +1104,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.061</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.062</div>
 
 </body>
 </html>

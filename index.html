@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>UNKSO Jackets</title>
+<title>UNKSO — Jackets</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
@@ -596,7 +596,7 @@ function ncoaHTML(ncoaType, ncoaMap){
   if(!ncoaType) return '';
   const def = ncoaMap[ncoaType];
   if(!def || !def.image) return '';
-  const centerX = 69, centerY = 81.4, heightPct = 24 * 0.7;
+  const centerX = 69, centerY = 83.2, heightPct = 24 * 0.7;
   const jacketHtoW = 2052/3023;
   const widthPct = heightPct * jacketHtoW;
   return `<div class="badge" style="left:${centerX-widthPct/2}%; top:${centerY-heightPct/2}%; width:${widthPct}%; height:${heightPct}%; background-image:url(${def.image});"></div>`;
@@ -935,7 +935,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.061</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.062</div>
 
 </body>
 </html>
