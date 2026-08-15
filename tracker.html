@@ -402,12 +402,26 @@ async function init(){
   const rawRanks = await loadJSON('ranks', []);
   RANKS = normalizeRanks(rawRanks);
   TRACKER = await loadJSON('tracker', {});
+  // One-time reconciliation: a badge already selected for display on a
+  // member's jacket counts as earned, even for members whose data predates
+  // the save-time sync that now keeps these two in step going forward.
+  let trackerNeedsBackfill = false;
+  MEMBERS.forEach(m=>{
+    const earnedSet = new Set(TRACKER[m.id] || []);
+    const before = earnedSet.size;
+    (m.badges||[]).forEach(key=>earnedSet.add(key));
+    if(earnedSet.size !== before){
+      TRACKER[m.id] = Array.from(earnedSet);
+      trackerNeedsBackfill = true;
+    }
+  });
+  if(trackerNeedsBackfill) await saveJSON('tracker', TRACKER);
   renderMemberList();
 }
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.062</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.064</div>
 
 </body>
 </html>

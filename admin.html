@@ -777,8 +777,7 @@ function populateBadgeGrid(unit){
   visibleBadgesForUnit(unit).forEach(b=>{
     const wrap = document.createElement('label');
     wrap.className = 'badge-check';
-    const tag = unit === 'All' ? `<span class="unit-tag">${b.unit || 'Battalion'}</span>` : '';
-    wrap.innerHTML = `<input type="checkbox" data-key="${b.key}"${currentMemberBadges.includes(b.key) ? ' checked' : ''}><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span>${b.label}${tag}`;
+    wrap.innerHTML = `<input type="checkbox" data-key="${b.key}"${currentMemberBadges.includes(b.key) ? ' checked' : ''}><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span>${b.label}<span class="unit-tag">${b.unit || 'Battalion'}</span>`;
     badgeGrid.appendChild(wrap);
   });
 }
@@ -1085,6 +1084,20 @@ async function init(){
   OFFICER_ENLISTED = await loadJSON('officerenlisted', DEFAULT_OFFICER_ENLISTED);
   NCOA = await loadJSON('ncoa', DEFAULT_NCOA);
   TRACKER = await loadJSON('tracker', {});
+  // One-time reconciliation: a badge already selected for display on a
+  // member's jacket counts as earned, even for members whose data predates
+  // the save-time sync that now keeps these two in step going forward.
+  let trackerNeedsBackfill = false;
+  MEMBERS.forEach(m=>{
+    const earnedSet = new Set(TRACKER[m.id] || []);
+    const before = earnedSet.size;
+    (m.badges||[]).forEach(key=>earnedSet.add(key));
+    if(earnedSet.size !== before){
+      TRACKER[m.id] = Array.from(earnedSet);
+      trackerNeedsBackfill = true;
+    }
+  });
+  if(trackerNeedsBackfill) await saveJSON('tracker', TRACKER);
   sortMembersBySeniority();
   populateStaticSelects();
   populateRankSelect();
@@ -1104,7 +1117,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.062</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.064</div>
 
 </body>
 </html>
