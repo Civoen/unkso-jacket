@@ -587,12 +587,27 @@ function pinHTML(memberRank, pinMap, memberUnit, officerEnlistedMap){
   const cdtIdx = RANKS.findIndex(r=>r.name==='CDT');
   const rankIdx = RANKS.findIndex(r=>r.name===memberRank);
   const isEnlisted = cdtIdx !== -1 && rankIdx > cdtIdx;
+  const isOfficer = !isEnlisted;
   const battalionPin = pinForUnit('Battalion');
   const leftCenterX = 36.0, rightCenterX = 64.0, centerY = 21.9;
   const left = battalionPin ? collarImageHTML(battalionPin, leftCenterX, centerY, -3) : '';
   const rightPin = isEnlisted ? pinForUnit(memberUnit) : battalionPin;
   const right = rightPin ? collarImageHTML(rightPin, rightCenterX, centerY, 3) : '';
-  return left + right;
+
+  // Officers get their own unit's pin too, lower on both lapels, in addition
+  // to the Battalion pin at the collar tip -- position measured directly off
+  // a reference photo of an officer's jacket.
+  let officerUnitPins = '';
+  if(isOfficer && memberUnit !== 'Battalion'){
+    const unitPin = pinForUnit(memberUnit);
+    if(unitPin){
+      const lowerCenterY = 32.2;
+      officerUnitPins += collarImageHTML(unitPin, leftCenterX, lowerCenterY, -3);
+      officerUnitPins += collarImageHTML(unitPin, rightCenterX, lowerCenterY, 3);
+    }
+  }
+
+  return left + right + officerUnitPins;
 }
 
 // Large square badge on the right pocket BAG (below the button/flap, distinct
@@ -990,7 +1005,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.074</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.076</div>
 
 </body>
 </html>
