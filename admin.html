@@ -92,16 +92,15 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .field-row .field{flex:1;}
 
 .ribbon-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
-.ribbon-check{display:flex; align-items:center; gap:8px; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:12.5px; cursor:pointer;}
-.ribbon-check input, .badge-check input{
+.badge-check input{
   appearance:none; -webkit-appearance:none; margin:0; flex-shrink:0; cursor:pointer;
   width:16px; height:16px; border-radius:4px; border:1px solid var(--border);
   background:var(--bg-page); position:relative;
 }
-.ribbon-check input:checked, .badge-check input:checked{
+.badge-check input:checked{
   background:var(--orange); border-color:var(--orange);
 }
-.ribbon-check input:checked::after, .badge-check input:checked::after{
+.badge-check input:checked::after{
   content:''; position:absolute; left:4px; top:1px; width:5px; height:9px;
   border:solid #1c1108; border-width:0 2px 2px 0; transform:rotate(45deg);
 }
@@ -198,8 +197,8 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
   <a href="badges.html">Badges</a>
-  <a href="tracker.html">Tracker</a>
   <a href="pins.html">Pins</a>
+  <a href="tracker.html">Tracker</a>
   <a href="index.html?autodownload=1" id="downloadAllBtn" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta active">Admin</a>
 </div>
@@ -257,7 +256,6 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
         <label>NCOA</label>
         <select id="ncoaSelect"></select>
       </div>
-      <button class="save-btn" id="saveBtn">Save changes</button>
     </div>
   </div>
 
@@ -774,8 +772,8 @@ function populateRibbonGrid(){
   const earned = new Set(RIBBON_TRACKER[currentMemberId] || []);
   RIBBONS.forEach(r=>{
     const wrap = document.createElement('label');
-    wrap.className = 'ribbon-check';
-    wrap.innerHTML = `<input type="checkbox" data-key="${r.key}"${earned.has(r.key) ? ' checked' : ''}><span class="check-label">${r.label}</span>`;
+    wrap.className = 'badge-check';
+    wrap.innerHTML = `<input type="checkbox" data-key="${r.key}"${earned.has(r.key) ? ' checked' : ''}><span class="swatch" style="${r.image ? `background-image:url(${r.image})` : ''}"></span><span class="check-label">${r.label}</span>`;
     ribbonGrid.appendChild(wrap);
   });
 }
@@ -838,21 +836,33 @@ function currentEdits(){
 
 function refreshPreview(){ renderJacket(stage, currentEdits()); }
 
+async function saveMemberField(){
+  const edits = currentEdits();
+  MEMBERS = MEMBERS.map(m => m.id===edits.id ? edits : m);
+  await saveJSONChecked('members', MEMBERS);
+  sortMembersBySeniority();
+  populateMemberSelect(edits.id);
+}
+
 memberSelect.addEventListener('change', e=>loadMember(e.target.value));
+// Live preview updates on every keystroke; the actual save only fires on
+// blur (the 'change' event), so typing a name doesn't spam the API.
 nameInput.addEventListener('input', refreshPreview);
-ncoaSelect.addEventListener('change', refreshPreview);
-rankSelect.addEventListener('change', refreshPreview);
+nameInput.addEventListener('change', saveMemberField);
+ncoaSelect.addEventListener('change', ()=>{ refreshPreview(); saveMemberField(); });
+rankSelect.addEventListener('change', ()=>{ refreshPreview(); saveMemberField(); });
 unitSelect.addEventListener('change', ()=>{
   badgeViewUnit = unitSelect.value;
   badgeViewSelect.value = badgeViewUnit;
   populateBadgeGrid(badgeViewUnit);
   refreshPreview();
+  saveMemberField();
 });
 badgeViewSelect.addEventListener('change', ()=>{
   badgeViewUnit = badgeViewSelect.value;
   populateBadgeGrid(badgeViewUnit);
 });
-positionSelect.addEventListener('change', refreshPreview);
+positionSelect.addEventListener('change', ()=>{ refreshPreview(); saveMemberField(); });
 ribbonGrid.addEventListener('change', async (e)=>{
   const key = e.target.dataset.key;
   const current = new Set(RIBBON_TRACKER[currentMemberId] || []);
@@ -882,19 +892,6 @@ function setupCollapsible(fieldId, btnId){
 setupCollapsible('ribbonsField', 'ribbonsToggle');
 setupCollapsible('badgesField', 'badgesToggle');
 
-document.getElementById('saveBtn').addEventListener('click', async ()=>{
-  const edits = currentEdits();
-  MEMBERS = MEMBERS.map(m => m.id===edits.id ? edits : m);
-  const btn = document.getElementById('saveBtn');
-  const original = btn.textContent;
-  btn.textContent = 'Saving…';
-  const ok = await saveJSON('members', MEMBERS);
-  sortMembersBySeniority();
-  populateMemberSelect(edits.id);
-  btn.textContent = ok ? 'Saved' : 'Save failed — retry';
-  setTimeout(()=>{ btn.textContent = original; }, 1400);
-  loadMember(edits.id);
-});
 
 document.getElementById('newBtn').addEventListener('click', async ()=>{
   const member = { id:newId(), name:"New Member", rank: (RANKS[0] && RANKS[0].name) || "PVT", unit: UNIT_OPTIONS[0], position:"Member", ncoaType:null };
@@ -1097,7 +1094,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.072</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.074</div>
 
 </body>
 </html>

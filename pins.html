@@ -45,6 +45,10 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 .col-labels{display:grid; grid-template-columns:22px 44px 1fr 90px 100px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
 .pin-row{display:grid; grid-template-columns:22px 44px 1fr 90px 100px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
+.pin-row select, .add-grid select{
+  background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
+  padding:8px 14px 8px 10px; border-radius:6px; font-size:13px; font-family:'Inter';
+}
 .pin-row:last-child{border-bottom:none;}
 .pin-row.dragging{opacity:.4;}
 .drag-handle{color:var(--text-muted); font-size:15px; text-align:center; cursor:grab; user-select:none;}
@@ -135,8 +139,8 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
   <a href="badges.html">Badges</a>
-  <a href="tracker.html">Tracker</a>
   <a href="pins.html" class="active">Pins</a>
+  <a href="tracker.html">Tracker</a>
   <a href="index.html?autodownload=1" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta">Admin</a>
 </div>
@@ -440,7 +444,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.072</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.074</div>
 
 </body>
 </html>
