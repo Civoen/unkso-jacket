@@ -105,7 +105,6 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   content:''; position:absolute; left:4px; top:1px; width:5px; height:9px;
   border:solid #1c1108; border-width:0 2px 2px 0; transform:rotate(45deg);
 }
-.ribbon-check .swatch{width:26px; height:10px; border-radius:1.5px; border:1px solid rgba(0,0,0,.35); flex-shrink:0; background-size:cover; background-position:center; background-color:#2a2d22;}
 .check-label{min-width:0; overflow-wrap:break-word;}
 
 .badge-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
@@ -776,7 +775,7 @@ function populateRibbonGrid(){
   RIBBONS.forEach(r=>{
     const wrap = document.createElement('label');
     wrap.className = 'ribbon-check';
-    wrap.innerHTML = `<input type="checkbox" data-key="${r.key}"${earned.has(r.key) ? ' checked' : ''}><span class="swatch" style="${r.image ? `background-image:url(${r.image})` : ''}"></span><span class="check-label">${r.label}</span>`;
+    wrap.innerHTML = `<input type="checkbox" data-key="${r.key}"${earned.has(r.key) ? ' checked' : ''}><span class="check-label">${r.label}</span>`;
     ribbonGrid.appendChild(wrap);
   });
 }
@@ -1098,7 +1097,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.070</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.072</div>
 
 </body>
 </html>

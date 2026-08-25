@@ -258,6 +258,12 @@ async function saveJSON(key, value){
   }catch(err){ console.log('Save failed for '+key, err); return false; }
 }
 
+async function saveJSONChecked(key, value){
+  const ok = await saveJSON(key, value);
+  if(!ok) showToast('Could not save that change — check your connection to the API.', 'error');
+  return ok;
+}
+
 function normalizeRanks(ranks){
   return ranks.map(r => typeof r === 'string' ? { name:r, insignia:null } : r);
 }
@@ -313,7 +319,7 @@ function renderMemberList(){
 }
 
 let trackerFilterMode = 'all';
-let trackerCategory = 'badges'; // 'badges' | 'ribbons'
+let trackerCategory = 'ribbons'; // 'badges' | 'ribbons'
 
 function currentCategoryData(){
   return trackerCategory === 'ribbons'
@@ -333,8 +339,8 @@ function renderTracker(){
   body.innerHTML = `
     <div class="tracker-header"><h2>${m.name}</h2><span class="tag">${m.rank} — ${m.unit}</span></div>
     <div class="tracker-category-tabs">
-      <button class="tracker-cat-btn" data-cat="badges">Badges</button>
       <button class="tracker-cat-btn" data-cat="ribbons">Ribbons</button>
+      <button class="tracker-cat-btn" data-cat="badges">Badges</button>
     </div>
     <div class="tracker-count" id="trackerCount"></div>
     <div class="tracker-filters">
@@ -382,7 +388,7 @@ function renderTracker(){
     if(e.target.checked) current.add(key); else current.delete(key);
     cat.tracker[m.id] = Array.from(current);
     updateCount(m.id);
-    await saveJSON(cat.storageKey, cat.tracker);
+    await saveJSONChecked(cat.storageKey, cat.tracker);
     if(trackerFilterMode === 'earned') renderTracker();
   });
   updateCount(m.id);
@@ -441,7 +447,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.070</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.072</div>
 
 </body>
 </html>

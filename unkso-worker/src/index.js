@@ -93,7 +93,10 @@ async function pruneOldBackups(env) {
 // the backup itself look like it failed.
 async function notifyDiscordBackup(env, date, snapshotText, automated) {
   const webhookUrl = env.DISCORD_BACKUP_WEBHOOK_URL;
-  if (!webhookUrl) return;
+  if (!webhookUrl) {
+    console.log("Discord notification skipped: DISCORD_BACKUP_WEBHOOK_URL secret is not set.");
+    return;
+  }
 
   const sizeBytes = new TextEncoder().encode(snapshotText).length;
   const sizeMB = (sizeBytes / (1024 * 1024)).toFixed(1);
@@ -115,21 +118,30 @@ async function notifyDiscordBackup(env, date, snapshotText, automated) {
       };
 
   try {
+    let res;
     if (sizeBytes <= DISCORD_ATTACH_LIMIT) {
       const form = new FormData();
       form.append("payload_json", JSON.stringify({ embeds: [embed] }));
       form.append("file", new Blob([snapshotText], { type: "application/json" }), `unkso-backup-${date}.json`);
-      await fetch(webhookUrl, { method: "POST", body: form });
+      res = await fetch(webhookUrl, { method: "POST", body: form });
     } else {
       embed.description += `\n\nToo large to attach here (${sizeMB} MB, over Discord's limit) — download it from the Backups panel on the Admin page instead.`;
-      await fetch(webhookUrl, {
+      res = await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ embeds: [embed] }),
       });
     }
+    if (!res.ok) {
+      const body = await res.text().catch(() => "(could not read response body)");
+      console.error(`Discord webhook rejected the notification: ${res.status} ${res.statusText} — ${body}`);
+    } else {
+      console.log(`Discord notification sent (${automated ? "automated" : "manual"}, ${sizeMB} MB).`);
+    }
   } catch (err) {
-    // Intentionally not re-thrown — see comment above.
+    // Never re-thrown — a Discord problem should never make the backup itself
+    // look like it failed. Logged so `wrangler tail` can show what happened.
+    console.error("Discord webhook request threw an error:", err);
   }
 }
 
