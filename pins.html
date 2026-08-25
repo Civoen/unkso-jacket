@@ -24,21 +24,6 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
   padding:6px 16px; border-radius:7px; font-weight:600; text-decoration:none; font-size:13px; cursor:pointer;
 }
 .subnav a.nav-secondary:hover{border-color:var(--orange-dim); color:var(--orange);}
-.nav-dropdown{position:relative;}
-.nav-dropdown > a{display:block;}
-.nav-dropdown-menu{
-  display:none; position:absolute; top:100%; left:0; padding-top:10px; z-index:20;
-}
-.nav-dropdown:hover .nav-dropdown-menu{display:block;}
-.nav-dropdown-menu-inner{
-  background:var(--bg-card); border:1px solid var(--border); border-radius:8px;
-  min-width:130px; padding:6px; box-shadow:0 8px 24px rgba(0,0,0,.4);
-}
-.nav-dropdown-menu a{
-  display:block; padding:8px 10px; border-radius:6px; font-size:13px;
-  color:var(--text-secondary); text-decoration:none; border-bottom:none;
-}
-.nav-dropdown-menu a:hover, .nav-dropdown-menu a.active{background:var(--bg-panel); color:var(--orange);}
 .subnav a.nav-cta{
   color:#1c1108; background:var(--orange); padding:7px 18px; border-radius:7px;
   font-weight:700; border-bottom:none; box-shadow:0 1px 0 rgba(0,0,0,.2);
@@ -58,8 +43,8 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   padding:10px 14px; border-radius:8px; font-size:14px; font-family:'Inter';
 }
 
-.col-labels{display:grid; grid-template-columns:22px 44px 1fr 100px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
-.pin-row{display:grid; grid-template-columns:22px 44px 1fr 100px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
+.col-labels{display:grid; grid-template-columns:22px 44px 1fr 90px 100px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
+.pin-row{display:grid; grid-template-columns:22px 44px 1fr 90px 100px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
 .pin-row:last-child{border-bottom:none;}
 .pin-row.dragging{opacity:.4;}
 .drag-handle{color:var(--text-muted); font-size:15px; text-align:center; cursor:grab; user-select:none;}
@@ -127,7 +112,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   .subnav a{flex-shrink:0;}
   main{padding:16px;}
   .panel{padding:14px; overflow-x:auto;}
-  .col-labels, .pin-row{grid-template-columns:18px 32px 1fr 76px 32px; gap:6px; min-width:380px;}
+  .col-labels, .pin-row{grid-template-columns:18px 32px 1fr 64px 76px 32px; gap:6px; min-width:440px;}
   .add-grid{grid-template-columns:1fr 90px auto; gap:6px;}
 }
 </style>
@@ -149,15 +134,8 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <a href="index.html">Jackets</a>
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
-  <div class="nav-dropdown">
-    <a href="badges.html">Badges</a>
-    <div class="nav-dropdown-menu">
-      <div class="nav-dropdown-menu-inner">
-        <a href="tracker.html">Tracker</a>
-        <a href="ncoa.html">NCOA</a>
-      </div>
-    </div>
-  </div>
+  <a href="badges.html">Badges</a>
+  <a href="tracker.html">Tracker</a>
   <a href="pins.html" class="active">Pins</a>
   <a href="index.html?autodownload=1" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta">Admin</a>
@@ -165,43 +143,25 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 <main>
   <h1>Pins</h1>
-  <div class="sub">CONTROLS THE PIN DROPDOWN ON THE ADMIN PAGE — A MEMBER'S PIN SHOWS ON THE LEFT COLLAR TIP</div>
+  <div class="sub">EACH PIN'S UNIT DETERMINES WHERE IT APPEARS — SEE NOTE BELOW.</div>
 
   <div class="panel">
     <div class="search-row"><input id="searchInput" type="text" placeholder="Search pins…"></div>
-    <div class="col-labels"><span></span><span>Preview</span><span>Name</span><span>Image</span><span></span></div>
+    <div class="col-labels"><span></span><span>Preview</span><span>Name</span><span>Unit</span><span>Image</span><span></span></div>
     <div id="pinList"></div>
 
     <div class="add-panel">
       <h3>Add a new pin</h3>
       <div class="dims-note">Upload any image — square or rectangular both work. It's scaled down only if taller than 180px; nothing gets cropped.</div>
-      <div class="add-grid">
+      <div class="add-grid" style="grid-template-columns:1fr 100px 130px auto;">
         <input id="newLabel" type="text" placeholder="Pin name">
+        <select id="newUnit"></select>
         <label class="upload-btn" id="newUploadLabel">Choose image<input type="file" id="newUpload" accept="image/*"></label>
         <button class="add-btn" id="addBtn" disabled>Add pin</button>
       </div>
     </div>
   </div>
-  <div class="note">A member can have one pin at a time (picked from a dropdown on the Admin page, unlike the ribbon/badge checklists). It shows on the left collar tip only — the right tip is controlled by Officer/Enlisted below. Removing a pin here also unassigns it from any member currently wearing it.</div>
-
-  <h1 style="margin-top:36px;">Officer / Enlisted</h1>
-  <div class="sub">CONTROLS THE OFFICER/ENLISTED DROPDOWN ON THE ADMIN PAGE — SHOWS ON THE RIGHT COLLAR TIP</div>
-
-  <div class="panel">
-    <div class="col-labels"><span></span><span>Preview</span><span>Name</span><span>Image</span><span></span></div>
-    <div id="officerEnlistedList"></div>
-
-    <div class="add-panel">
-      <h3>Add a new option</h3>
-      <div class="dims-note">Upload any image — square or rectangular both work. It's scaled down only if taller than 180px; nothing gets cropped.</div>
-      <div class="add-grid" style="grid-template-columns:1fr 130px auto;">
-        <input id="newOeLabel" type="text" placeholder="Option name">
-        <label class="upload-btn" id="newOeUploadLabel">Choose image<input type="file" id="newOeUpload" accept="image/*"></label>
-        <button class="add-btn" id="addOeBtn" disabled>Add option</button>
-      </div>
-    </div>
-  </div>
-  <div class="note">A member picks one option at a time from a dropdown on the Admin page — it shows on the right collar tip. Removing an option here also unassigns it from any member currently set to it.</div>
+  <div class="note">Collar pins are now automatic, not picked per member. The left collar always shows the Battalion pin. The right collar shows the Battalion pin too for Officers (CDT and above) — for Enlisted members (below CDT), it shows their own unit's pin instead. Tag one pin per unit here for this to work correctly. Removing a pin here also clears it from that unit's assignment.</div>
 </main>
 
 <script>
@@ -274,12 +234,8 @@ function showToast(message, type){
 }
 
 const MAX_PIN_HEIGHT = 180;
+const UNIT_OPTIONS = ["Battalion","Bravo","Charlie","Delta"];
 const DEFAULT_PINS = [];
-
-const DEFAULT_OFFICER_ENLISTED = [
-  { key:"officer",  label:"Officer",  image:null, width:1, height:1 },
-  { key:"enlisted", label:"Enlisted", image:null, width:1, height:1 }
-];
 
 const API_BASE = 'https://unkso-api.adambramfitt.workers.dev';
 
@@ -349,11 +305,9 @@ function filenameToLabel(filename){
 }
 
 let PINS = [];
-let OFFICER_ENLISTED = [];
 let MEMBERS = [];
 let searchTerm = '';
 let dragSrcIdx = null;
-let dragSrcOeIdx = null;
 
 async function pruneFromMembers(key){
   MEMBERS = MEMBERS.map(m => m.pin === key ? {...m, pin: null} : m);
@@ -381,11 +335,16 @@ function renderPins(){
       <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
       <div class="swatch" style="${p.image ? `background-image:url(${p.image})` : ''}"></div>
       <input type="text" value="${p.label}" data-field="label">
+      <select data-field="unit"><option value="">None</option>${UNIT_OPTIONS.map(u=>`<option ${u===p.unit?'selected':''}>${u}</option>`).join('')}</select>
       <label class="upload-btn">${p.image ? 'Replace' : 'Upload'}<input type="file" accept="image/*" data-field="image"></label>
       <button class="icon-btn" title="Remove">&times;</button>
     `;
     row.querySelector('[data-field="label"]').addEventListener('change', async (e)=>{
       PINS[idx].label = e.target.value;
+      await saveJSONChecked('pins', PINS);
+    });
+    row.querySelector('[data-field="unit"]').addEventListener('change', async (e)=>{
+      PINS[idx].unit = e.target.value || null;
       await saveJSONChecked('pins', PINS);
     });
     row.querySelector('[data-field="image"]').addEventListener('change', async (e)=>{
@@ -461,7 +420,8 @@ document.getElementById('newUpload').addEventListener('change', async (e)=>{
 document.getElementById('addBtn').addEventListener('click', async ()=>{
   const label = document.getElementById('newLabel').value.trim();
   if(!label || !pendingImage) return;
-  PINS.push({ key: newKey(label), label, image: pendingImage.dataUrl, width: pendingImage.width, height: pendingImage.height });
+  const unit = document.getElementById('newUnit').value || null;
+  PINS.push({ key: newKey(label), label, image: pendingImage.dataUrl, width: pendingImage.width, height: pendingImage.height, unit });
   document.getElementById('newLabel').value = '';
   document.getElementById('newUpload').value = '';
   document.getElementById('newUploadLabel').firstChild.textContent = 'Choose image';
@@ -471,121 +431,16 @@ document.getElementById('addBtn').addEventListener('click', async ()=>{
   renderPins();
 });
 
-async function pruneOeFromMembers(key){
-  MEMBERS = MEMBERS.map(m => m.officerType === key ? {...m, officerType: null} : m);
-  await saveJSON('members', MEMBERS);
-}
-
-function renderOfficerEnlisted(){
-  const list = document.getElementById('officerEnlistedList');
-  list.innerHTML = '';
-  OFFICER_ENLISTED.forEach((o, idx)=>{
-    const row = document.createElement('div');
-    row.className = 'pin-row';
-    row.draggable = true;
-    row.dataset.idx = idx;
-    row.innerHTML = `
-      <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
-      <div class="swatch" style="${o.image ? `background-image:url(${o.image})` : ''}"></div>
-      <input type="text" value="${o.label}" data-field="label">
-      <label class="upload-btn">${o.image ? 'Replace' : 'Upload'}<input type="file" accept="image/*" data-field="image"></label>
-      <button class="icon-btn" title="Remove">&times;</button>
-    `;
-    row.querySelector('[data-field="label"]').addEventListener('change', async (e)=>{
-      OFFICER_ENLISTED[idx].label = e.target.value;
-      await saveJSONChecked('officerenlisted', OFFICER_ENLISTED);
-    });
-    row.querySelector('[data-field="image"]').addEventListener('change', async (e)=>{
-      const file = e.target.files[0];
-      if(!file) return;
-      try{
-        const result = await resizePinImage(file);
-        OFFICER_ENLISTED[idx].image = result.dataUrl;
-        OFFICER_ENLISTED[idx].width = result.width;
-        OFFICER_ENLISTED[idx].height = result.height;
-        await saveJSONChecked('officerenlisted', OFFICER_ENLISTED);
-        row.querySelector('.swatch').style.backgroundImage = `url(${result.dataUrl})`;
-        row.querySelector('[data-field="image"]').closest('label').firstChild.textContent = 'Replace';
-      }catch(err){
-        showToast('Could not process that image. Try a different file.', 'error');
-      }
-    });
-    row.querySelector('.icon-btn').addEventListener('click', async ()=>{
-      if(!confirm(`Remove "${o.label}"? This will unassign it from any member currently set to it.`)) return;
-      await pruneOeFromMembers(o.key);
-      OFFICER_ENLISTED.splice(idx,1);
-      await saveJSONChecked('officerenlisted', OFFICER_ENLISTED);
-      renderOfficerEnlisted();
-    });
-    row.addEventListener('dragstart', ()=>{
-      dragSrcOeIdx = idx;
-      row.classList.add('dragging');
-    });
-    row.addEventListener('dragend', ()=> row.classList.remove('dragging'));
-    row.addEventListener('dragover', (e)=> e.preventDefault());
-    row.addEventListener('drop', async (e)=>{
-      e.preventDefault();
-      if(dragSrcOeIdx === null || dragSrcOeIdx === idx) return;
-      const targetKey = OFFICER_ENLISTED[idx].key;
-      const [moved] = OFFICER_ENLISTED.splice(dragSrcOeIdx, 1);
-      const newTargetIdx = OFFICER_ENLISTED.findIndex(x=>x.key===targetKey);
-      OFFICER_ENLISTED.splice(newTargetIdx, 0, moved);
-      dragSrcOeIdx = null;
-      await saveJSONChecked('officerenlisted', OFFICER_ENLISTED);
-      renderOfficerEnlisted();
-    });
-    list.appendChild(row);
-  });
-}
-
-let pendingOeImage = null;
-
-function refreshOeAddButton(){
-  const label = document.getElementById('newOeLabel').value.trim();
-  document.getElementById('addOeBtn').disabled = !(label && pendingOeImage);
-}
-
-document.getElementById('newOeLabel').addEventListener('input', refreshOeAddButton);
-
-document.getElementById('newOeUpload').addEventListener('change', async (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  try{
-    pendingOeImage = await resizePinImage(file);
-    document.getElementById('newOeUploadLabel').firstChild.textContent = 'Change image';
-    if(!document.getElementById('newOeLabel').value.trim()){
-      document.getElementById('newOeLabel').value = filenameToLabel(file.name);
-    }
-    refreshOeAddButton();
-  }catch(err){
-    showToast('Could not process that image. Try a different file.', 'error');
-  }
-});
-
-document.getElementById('addOeBtn').addEventListener('click', async ()=>{
-  const label = document.getElementById('newOeLabel').value.trim();
-  if(!label || !pendingOeImage) return;
-  OFFICER_ENLISTED.push({ key: newKey(label), label, image: pendingOeImage.dataUrl, width: pendingOeImage.width, height: pendingOeImage.height });
-  document.getElementById('newOeLabel').value = '';
-  document.getElementById('newOeUpload').value = '';
-  document.getElementById('newOeUploadLabel').firstChild.textContent = 'Choose image';
-  pendingOeImage = null;
-  refreshOeAddButton();
-  await saveJSONChecked('officerenlisted', OFFICER_ENLISTED);
-  renderOfficerEnlisted();
-});
-
 async function init(){
+  document.getElementById('newUnit').innerHTML = UNIT_OPTIONS.map(u=>`<option>${u}</option>`).join('');
   PINS = await loadJSON('pins', DEFAULT_PINS);
-  OFFICER_ENLISTED = await loadJSON('officerenlisted', DEFAULT_OFFICER_ENLISTED);
   MEMBERS = await loadJSON('members', []);
   renderPins();
-  renderOfficerEnlisted();
 }
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.064</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.070</div>
 
 </body>
 </html>

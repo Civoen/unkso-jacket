@@ -24,21 +24,6 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
   padding:6px 16px; border-radius:7px; font-weight:600; text-decoration:none; font-size:13px; cursor:pointer;
 }
 .subnav a.nav-secondary:hover{border-color:var(--orange-dim); color:var(--orange);}
-.nav-dropdown{position:relative;}
-.nav-dropdown > a{display:block;}
-.nav-dropdown-menu{
-  display:none; position:absolute; top:100%; left:0; padding-top:10px; z-index:20;
-}
-.nav-dropdown:hover .nav-dropdown-menu{display:block;}
-.nav-dropdown-menu-inner{
-  background:var(--bg-card); border:1px solid var(--border); border-radius:8px;
-  min-width:130px; padding:6px; box-shadow:0 8px 24px rgba(0,0,0,.4);
-}
-.nav-dropdown-menu a{
-  display:block; padding:8px 10px; border-radius:6px; font-size:13px;
-  color:var(--text-secondary); text-decoration:none; border-bottom:none;
-}
-.nav-dropdown-menu a:hover, .nav-dropdown-menu a.active{background:var(--bg-panel); color:var(--orange);}
 .subnav a.nav-cta{
   color:#1c1108; background:var(--orange); padding:7px 18px; border-radius:7px;
   font-weight:700; border-bottom:none; box-shadow:0 1px 0 rgba(0,0,0,.2);
@@ -148,15 +133,8 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <a href="index.html">Jackets</a>
   <a href="ranks.html" class="active">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
-  <div class="nav-dropdown">
-    <a href="badges.html">Badges</a>
-    <div class="nav-dropdown-menu">
-      <div class="nav-dropdown-menu-inner">
-        <a href="tracker.html">Tracker</a>
-        <a href="ncoa.html">NCOA</a>
-      </div>
-    </div>
-  </div>
+  <a href="badges.html">Badges</a>
+  <a href="tracker.html">Tracker</a>
   <a href="pins.html">Pins</a>
   <a href="index.html?autodownload=1" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta">Admin</a>
@@ -447,7 +425,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.064</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.070</div>
 
 </body>
 </html>

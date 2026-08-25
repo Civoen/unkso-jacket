@@ -18,21 +18,6 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
 .subnav{display:flex; align-items:center; gap:30px; padding:16px 32px; background:var(--bg-panel); border-bottom:1px solid var(--border);}
 .subnav a{color:var(--text-secondary); text-decoration:none; font-size:14px; font-weight:500; padding-bottom:4px; border-bottom:2px solid transparent;}
 .subnav a.active{color:var(--orange); border-color:var(--orange);}
-.nav-dropdown{position:relative;}
-.nav-dropdown > a{display:block;}
-.nav-dropdown-menu{
-  display:none; position:absolute; top:100%; left:0; padding-top:10px; z-index:20;
-}
-.nav-dropdown:hover .nav-dropdown-menu{display:block;}
-.nav-dropdown-menu-inner{
-  background:var(--bg-card); border:1px solid var(--border); border-radius:8px;
-  min-width:130px; padding:6px; box-shadow:0 8px 24px rgba(0,0,0,.4);
-}
-.nav-dropdown-menu a{
-  display:block; padding:8px 10px; border-radius:6px; font-size:13px;
-  color:var(--text-secondary); text-decoration:none; border-bottom:none;
-}
-.nav-dropdown-menu a:hover, .nav-dropdown-menu a.active{background:var(--bg-panel); color:var(--orange);}
 .subnav a.nav-cta{
   color:#1c1108; background:var(--orange); padding:7px 18px; border-radius:7px;
   font-weight:700; border-bottom:none; box-shadow:0 1px 0 rgba(0,0,0,.2);
@@ -190,15 +175,8 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
   <a href="index.html" class="active">Jackets</a>
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
-  <div class="nav-dropdown">
-    <a href="badges.html">Badges</a>
-    <div class="nav-dropdown-menu">
-      <div class="nav-dropdown-menu-inner">
-        <a href="tracker.html">Tracker</a>
-        <a href="ncoa.html">NCOA</a>
-      </div>
-    </div>
-  </div>
+  <a href="badges.html">Badges</a>
+  <a href="tracker.html">Tracker</a>
   <a href="pins.html">Pins</a>
   <a href="#" id="downloadAllBtn" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta">Admin</a>
@@ -457,15 +435,33 @@ function claspStackHTML(def, coreLeft, coreTop, coreW, coreH, jacketHtoW){
   return html;
 }
 
-function badgeHTML(badgeKeys, badgeMap){
+// Which badges show, and where, is now fully automatic — driven by what's
+// marked earned in Tracker, not manually picked. Right pocket: top 3 earned
+// Battalion badges by hierarchy (drag-order on the Badges page). Left (above
+// the name tape): top 3 earned non-Battalion badges, with the member's own
+// unit prioritized over other units' badges when there isn't room for both.
+function computeDisplayedBadges(memberId, memberUnit){
+  const earnedKeys = new Set(TRACKER[memberId] || []);
+  const earnedBadges = BADGES.filter(b => earnedKeys.has(b.key));
+  const rank = b => BADGES.indexOf(b);
+
+  const battalionEarned = earnedBadges.filter(b => (b.unit||'Battalion') === 'Battalion').sort((a,b)=>rank(a)-rank(b));
+  const rightBadges = battalionEarned.slice(0, MAX_BADGES_PER_POCKET);
+
+  const nonBattalionEarned = earnedBadges.filter(b => (b.unit||'Battalion') !== 'Battalion');
+  const ownUnit = nonBattalionEarned.filter(b => b.unit === memberUnit).sort((a,b)=>rank(a)-rank(b));
+  const otherUnits = nonBattalionEarned.filter(b => b.unit !== memberUnit).sort((a,b)=>rank(a)-rank(b));
+  const leftBadges = [...ownUnit, ...otherUnits].slice(0, MAX_BADGES_PER_POCKET);
+
+  return { rightKeys: rightBadges.map(b=>b.key), leftKeys: leftBadges.map(b=>b.key) };
+}
+
+function badgeHTML(rightKeys, leftKeys, badgeMap){
   const gap = 0.35;
   // Converts a badge's own real-pixel aspect ratio into a jacket-mini WIDTH
   // percentage for a given HEIGHT percentage — % width and % height don't map
   // to equal real distances since the jacket art itself isn't square.
   const jacketHtoW = 2052/3023;
-  const keys = (badgeKeys||[]).slice(0, MAX_BADGES);
-  const rightKeys = keys.slice(0, MAX_BADGES_PER_POCKET);          // right pocket, above the button
-  const leftKeys = keys.slice(MAX_BADGES_PER_POCKET, MAX_BADGES);  // left pocket, raised to sit level with the ribbon rack
 
   function renderRow(rowKeys, centerX, cellH, rowBottom){
     if(rowKeys.length === 0) return '';
@@ -578,12 +574,24 @@ function collarImageHTML(def, centerX, centerY, rotateDeg){
   return `<div class="pin" style="left:${centerX-w/2}%; top:${centerY-cellH/2}%; width:${w}%; height:${cellH}%; background-image:url(${def.image}); transform:rotate(${rotateDeg}deg);"></div>`;
 }
 
-// Left collar tip shows the member's Unit Pin; right shows Officer/Enlisted —
-// two independent images now, not the same one mirrored on both sides.
-function pinHTML(pinKey, pinMap, officerType, officerEnlistedMap){
+function pinForUnit(unit){
+  return PINS.find(p => p.unit === unit) || null;
+}
+
+// Left collar tip always shows the Battalion pin, for every member regardless
+// of their own unit. Right collar tip shows the Battalion pin too for
+// Officers (CDT and above) -- for Enlisted (below CDT), it shows their own
+// unit's pin instead. Fully automatic now, driven by rank + unit, not a
+// per-member manual selection.
+function pinHTML(memberRank, pinMap, memberUnit, officerEnlistedMap){
+  const cdtIdx = RANKS.findIndex(r=>r.name==='CDT');
+  const rankIdx = RANKS.findIndex(r=>r.name===memberRank);
+  const isEnlisted = cdtIdx !== -1 && rankIdx > cdtIdx;
+  const battalionPin = pinForUnit('Battalion');
   const leftCenterX = 36.0, rightCenterX = 64.0, centerY = 21.9;
-  const left = pinKey ? collarImageHTML(pinMap[pinKey], leftCenterX, centerY, -3) : '';
-  const right = officerType ? collarImageHTML(officerEnlistedMap[officerType], rightCenterX, centerY, 3) : '';
+  const left = battalionPin ? collarImageHTML(battalionPin, leftCenterX, centerY, -3) : '';
+  const rightPin = isEnlisted ? pinForUnit(memberUnit) : battalionPin;
+  const right = rightPin ? collarImageHTML(rightPin, rightCenterX, centerY, 3) : '';
   return left + right;
 }
 
@@ -603,19 +611,28 @@ function ncoaHTML(ncoaType, ncoaMap){
 }
 
 function jacketHTML(member, ribbonMap, badgeMap, rankMap, pinMap, officerEnlistedMap, ncoaMap){
+  // Ribbon rack fills bottom-heavy (full rows of 4 at the bottom, the
+  // remainder — fewer, more prominent — at the top). Sorting by hierarchy
+  // here, same ranking as badges, puts the highest-hierarchy ribbons first
+  // in the array, which lands them in that smaller top row.
+  const earnedRibbons = (RIBBON_TRACKER[member.id] || []).slice()
+    .sort((a,b) => RIBBONS.findIndex(r=>r.key===a) - RIBBONS.findIndex(r=>r.key===b));
+  const { rightKeys, leftKeys } = computeDisplayedBadges(member.id, member.unit);
   return `
     ${insigniaHTML(member.rank, rankMap)}
-    ${pinHTML(member.pin, pinMap, member.officerType, officerEnlistedMap)}
+    ${pinHTML(member.rank, pinMap, member.unit, officerEnlistedMap)}
     <div class="name-tape" style="left:23.25%; top:57%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
-    ${ribbonHTML(member.ribbons, ribbonMap)}
-    ${badgeHTML(member.badges||[], badgeMap)}
+    ${ribbonHTML(earnedRibbons, ribbonMap)}
+    ${badgeHTML(rightKeys, leftKeys, badgeMap)}
     ${ncoaHTML(member.ncoaType, ncoaMap)}
     <div class="jacket-overlay"></div>
-    ${neckMedalHTML(member.ribbons, ribbonMap)}
+    ${neckMedalHTML(earnedRibbons, ribbonMap)}
   `;
 }
 
 let MEMBERS = [];
+let TRACKER = {};
+let RIBBON_TRACKER = {};
 let RANKS = [];
 let RIBBONS = [];
 let BADGES = [];
@@ -820,10 +837,21 @@ async function downloadMemberPNG(member, ribbonMap, badgeMap, rankMap, pinMap, o
 }
 
 function buildAwardsJSON(member, ribbonMap, badgeMap, pinMap, officerEnlistedMap, ncoaMap){
-  const ribbons = (member.ribbons||[]).map(k => ribbonMap[k]?.label).filter(Boolean);
-  const badges = (member.badges||[]).map(k => badgeMap[k]?.label).filter(Boolean);
-  const pin = member.pin ? (pinMap[member.pin]?.label || null) : null;
-  const officerType = member.officerType ? (officerEnlistedMap[member.officerType]?.label || null) : null;
+  const earnedRibbonKeys = RIBBON_TRACKER[member.id] || [];
+  const ribbons = earnedRibbonKeys.map(k => ribbonMap[k]?.label).filter(Boolean);
+  const { rightKeys, leftKeys } = computeDisplayedBadges(member.id, member.unit);
+  const badges = [...rightKeys, ...leftKeys].map(k => badgeMap[k]?.label).filter(Boolean);
+  // Collar pins are automatic now (rank + unit driven, see pinHTML) rather than
+  // manually picked, so these two fields report what's actually shown on the
+  // collar rather than a stale manual selection. Field names kept as-is
+  // (pin/officerType) since the Discord bot's sidecar parser expects them.
+  const cdtIdx = RANKS.findIndex(r=>r.name==='CDT');
+  const rankIdx = RANKS.findIndex(r=>r.name===member.rank);
+  const isEnlisted = cdtIdx !== -1 && rankIdx > cdtIdx;
+  const leftCollarPin = pinForUnit('Battalion');
+  const rightCollarPin = isEnlisted ? pinForUnit(member.unit) : leftCollarPin;
+  const pin = leftCollarPin ? leftCollarPin.label : null;
+  const officerType = rightCollarPin ? rightCollarPin.label : null;
   const ncoa = member.ncoaType ? (ncoaMap[member.ncoaType]?.label || null) : null;
   return JSON.stringify({
     name: member.name,
@@ -920,6 +948,33 @@ async function init(){
   PINS = await loadJSON('pins', []);
   OFFICER_ENLISTED = await loadJSON('officerenlisted', DEFAULT_OFFICER_ENLISTED);
   NCOA = await loadJSON('ncoa', DEFAULT_NCOA);
+  TRACKER = await loadJSON('tracker', {});
+  RIBBON_TRACKER = await loadJSON('ribbontracker', {});
+  // Badges/ribbons used to be manually selected separately from Tracker's
+  // earned record; that manual list is retired as of this version in favor
+  // of a single earned-record source of truth. This folds any pre-existing
+  // manual selections into that record one last time so nothing already on
+  // a jacket silently disappears during the transition.
+  let trackerNeedsBackfill = false;
+  let ribbonTrackerNeedsBackfill = false;
+  MEMBERS.forEach(m=>{
+    const earnedSet = new Set(TRACKER[m.id] || []);
+    const before = earnedSet.size;
+    (m.badges||[]).forEach(key=>earnedSet.add(key));
+    if(earnedSet.size !== before){
+      TRACKER[m.id] = Array.from(earnedSet);
+      trackerNeedsBackfill = true;
+    }
+    const earnedRibbonSet = new Set(RIBBON_TRACKER[m.id] || []);
+    const ribbonBefore = earnedRibbonSet.size;
+    (m.ribbons||[]).forEach(key=>earnedRibbonSet.add(key));
+    if(earnedRibbonSet.size !== ribbonBefore){
+      RIBBON_TRACKER[m.id] = Array.from(earnedRibbonSet);
+      ribbonTrackerNeedsBackfill = true;
+    }
+  });
+  if(trackerNeedsBackfill) await saveJSON('tracker', TRACKER);
+  if(ribbonTrackerNeedsBackfill) await saveJSON('ribbontracker', RIBBON_TRACKER);
   renderRoster();
 
   // Reached via the "Download All" link on another page — kick off the same
@@ -935,7 +990,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.064</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.070</div>
 
 </body>
 </html>

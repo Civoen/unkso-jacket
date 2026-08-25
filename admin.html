@@ -18,21 +18,6 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
 .subnav{display:flex; align-items:center; gap:30px; padding:16px 32px; background:var(--bg-panel); border-bottom:1px solid var(--border);}
 .subnav a{color:var(--text-secondary); text-decoration:none; font-size:14px; font-weight:500; padding-bottom:4px; border-bottom:2px solid transparent;}
 .subnav a.active{color:var(--orange); border-color:var(--orange);}
-.nav-dropdown{position:relative;}
-.nav-dropdown > a{display:block;}
-.nav-dropdown-menu{
-  display:none; position:absolute; top:100%; left:0; padding-top:10px; z-index:20;
-}
-.nav-dropdown:hover .nav-dropdown-menu{display:block;}
-.nav-dropdown-menu-inner{
-  background:var(--bg-card); border:1px solid var(--border); border-radius:8px;
-  min-width:130px; padding:6px; box-shadow:0 8px 24px rgba(0,0,0,.4);
-}
-.nav-dropdown-menu a{
-  display:block; padding:8px 10px; border-radius:6px; font-size:13px;
-  color:var(--text-secondary); text-decoration:none; border-bottom:none;
-}
-.nav-dropdown-menu a:hover, .nav-dropdown-menu a.active{background:var(--bg-panel); color:var(--orange);}
 .subnav a.nav-cta{
   color:#1c1108; background:var(--orange); padding:7px 18px; border-radius:7px;
   font-weight:700; border-bottom:none; box-shadow:0 1px 0 rgba(0,0,0,.2);
@@ -47,7 +32,7 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
 .subnav a.nav-secondary:hover{border-color:var(--orange-dim); color:var(--orange);}
 .subnav a.nav-secondary.busy{opacity:.6; pointer-events:none;}
 
-main{max-width:1360px; margin:0 auto; padding:32px; display:grid; grid-template-columns:1fr 640px; gap:24px;}
+main{max-width:1360px; margin:0 auto; padding:32px; display:grid; grid-template-columns:1fr 460px; gap:24px;}
 
 h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .sub{color:var(--text-muted); font-size:12.5px; margin-bottom:22px; letter-spacing:.03em;}
@@ -121,6 +106,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   border:solid #1c1108; border-width:0 2px 2px 0; transform:rotate(45deg);
 }
 .ribbon-check .swatch{width:26px; height:10px; border-radius:1.5px; border:1px solid rgba(0,0,0,.35); flex-shrink:0; background-size:cover; background-position:center; background-color:#2a2d22;}
+.check-label{min-width:0; overflow-wrap:break-word;}
 
 .badge-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
 .badge-check{display:flex; align-items:center; gap:8px; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:12.5px; cursor:pointer;}
@@ -212,15 +198,8 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <a href="index.html">Jackets</a>
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
-  <div class="nav-dropdown">
-    <a href="badges.html">Badges</a>
-    <div class="nav-dropdown-menu">
-      <div class="nav-dropdown-menu-inner">
-        <a href="tracker.html">Tracker</a>
-        <a href="ncoa.html">NCOA</a>
-      </div>
-    </div>
-  </div>
+  <a href="badges.html">Badges</a>
+  <a href="tracker.html">Tracker</a>
   <a href="pins.html">Pins</a>
   <a href="index.html?autodownload=1" id="downloadAllBtn" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta active">Admin</a>
@@ -274,15 +253,6 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
           </div>
         </div>
         <div class="badge-grid" id="badgeGrid"></div>
-        <div id="badgeLimitNote" class="badge-limit-note" style="display:none;">Maximum amount of Badges reached (6)</div>
-      </div>
-      <div class="field">
-        <label>Pin</label>
-        <select id="pinSelect"></select>
-      </div>
-      <div class="field">
-        <label>Officer / Enlisted</label>
-        <select id="officerEnlistedSelect"></select>
       </div>
       <div class="field">
         <label>NCOA</label>
@@ -472,6 +442,12 @@ async function saveJSON(key, value){
   }catch(err){ console.log('Save failed for '+key, err); return false; }
 }
 
+async function saveJSONChecked(key, value){
+  const ok = await saveJSON(key, value);
+  if(!ok) showToast('Could not save that change — check your connection to the API.', 'error');
+  return ok;
+}
+
 function ribbonBackground(r){
   return r.image ? `url(${r.image})` : `repeating-linear-gradient(45deg,#33362a 0 6px,#25271e 6px 12px)`;
 }
@@ -553,12 +529,30 @@ function claspStackHTML(def, coreLeft, coreTop, coreW, coreH, jacketHtoW){
   return html;
 }
 
-function badgeHTML(badgeKeys, badgeMap){
+// Which badges show, and where, is now fully automatic — driven by what's
+// marked earned in Tracker, not manually picked. Right pocket: top 3 earned
+// Battalion badges by hierarchy (drag-order on the Badges page). Left (above
+// the name tape): top 3 earned non-Battalion badges, with the member's own
+// unit prioritized over other units' badges when there isn't room for both.
+function computeDisplayedBadges(memberId, memberUnit){
+  const earnedKeys = new Set(TRACKER[memberId] || []);
+  const earnedBadges = BADGES.filter(b => earnedKeys.has(b.key));
+  const rank = b => BADGES.indexOf(b);
+
+  const battalionEarned = earnedBadges.filter(b => (b.unit||'Battalion') === 'Battalion').sort((a,b)=>rank(a)-rank(b));
+  const rightBadges = battalionEarned.slice(0, MAX_BADGES_PER_POCKET);
+
+  const nonBattalionEarned = earnedBadges.filter(b => (b.unit||'Battalion') !== 'Battalion');
+  const ownUnit = nonBattalionEarned.filter(b => b.unit === memberUnit).sort((a,b)=>rank(a)-rank(b));
+  const otherUnits = nonBattalionEarned.filter(b => b.unit !== memberUnit).sort((a,b)=>rank(a)-rank(b));
+  const leftBadges = [...ownUnit, ...otherUnits].slice(0, MAX_BADGES_PER_POCKET);
+
+  return { rightKeys: rightBadges.map(b=>b.key), leftKeys: leftBadges.map(b=>b.key) };
+}
+
+function badgeHTML(rightKeys, leftKeys, badgeMap){
   const gap = 0.35;
   const jacketHtoW = 2052/3023;
-  const keys = (badgeKeys||[]).slice(0, MAX_BADGES);
-  const rightKeys = keys.slice(0, MAX_BADGES_PER_POCKET);
-  const leftKeys = keys.slice(MAX_BADGES_PER_POCKET, MAX_BADGES);
 
   function renderRow(rowKeys, centerX, cellH, rowBottom){
     if(rowKeys.length === 0) return '';
@@ -655,6 +649,7 @@ let PINS = [];
 let OFFICER_ENLISTED = [];
 let NCOA = [];
 let TRACKER = {};
+let RIBBON_TRACKER = {};
 
 function ribbonMapOf(){ const m={}; (Array.isArray(RIBBONS)?RIBBONS:[]).forEach(r=>m[r.key]=r); return m; }
 function badgeMapOf(){ const m={}; (Array.isArray(BADGES)?BADGES:[]).forEach(b=>m[b.key]=b); return m; }
@@ -681,12 +676,24 @@ function collarImageHTML(def, centerX, centerY, rotateDeg){
   return `<div class="pin" style="left:${centerX-w/2}%; top:${centerY-cellH/2}%; width:${w}%; height:${cellH}%; background-image:url(${def.image}); transform:rotate(${rotateDeg}deg);"></div>`;
 }
 
-// Left collar tip shows the member's Unit Pin; right shows Officer/Enlisted —
-// two independent images now, not the same one mirrored on both sides.
-function pinHTML(pinKey, pinMap, officerType, officerEnlistedMap){
+function pinForUnit(unit){
+  return PINS.find(p => p.unit === unit) || null;
+}
+
+// Left collar tip always shows the Battalion pin, for every member regardless
+// of their own unit. Right collar tip shows the Battalion pin too for
+// Officers (CDT and above) -- for Enlisted (below CDT), it shows their own
+// unit's pin instead. Fully automatic now, driven by rank + unit, not a
+// per-member manual selection.
+function pinHTML(memberRank, pinMap, memberUnit, officerEnlistedMap){
+  const cdtIdx = RANKS.findIndex(r=>r.name==='CDT');
+  const rankIdx = RANKS.findIndex(r=>r.name===memberRank);
+  const isEnlisted = cdtIdx !== -1 && rankIdx > cdtIdx;
+  const battalionPin = pinForUnit('Battalion');
   const leftCenterX = 36.0, rightCenterX = 64.0, centerY = 21.9;
-  const left = pinKey ? collarImageHTML(pinMap[pinKey], leftCenterX, centerY, -3) : '';
-  const right = officerType ? collarImageHTML(officerEnlistedMap[officerType], rightCenterX, centerY, 3) : '';
+  const left = battalionPin ? collarImageHTML(battalionPin, leftCenterX, centerY, -3) : '';
+  const rightPin = isEnlisted ? pinForUnit(memberUnit) : battalionPin;
+  const right = rightPin ? collarImageHTML(rightPin, rightCenterX, centerY, 3) : '';
   return left + right;
 }
 
@@ -712,15 +719,22 @@ function renderJacket(stage, member){
   const pinMap = pinMapOf();
   const officerEnlistedMap = officerEnlistedMapOf();
   const ncoaMap = ncoaMapOf();
+  // Ribbon rack fills bottom-heavy (full rows of 4 at the bottom, the
+  // remainder — fewer, more prominent — at the top). Sorting by hierarchy
+  // here, same ranking as badges, puts the highest-hierarchy ribbons first
+  // in the array, which lands them in that smaller top row.
+  const earnedRibbons = (RIBBON_TRACKER[member.id] || []).slice()
+    .sort((a,b) => RIBBONS.findIndex(r=>r.key===a) - RIBBONS.findIndex(r=>r.key===b));
+  const { rightKeys, leftKeys } = computeDisplayedBadges(member.id, member.unit);
   stage.innerHTML = `
     ${insigniaHTML(member.rank, rankMap)}
-    ${pinHTML(member.pin, pinMap, member.officerType, officerEnlistedMap)}
+    ${pinHTML(member.rank, pinMap, member.unit, officerEnlistedMap)}
     <div class="name-tape" style="left:23.25%; top:57%; width:16%; height:6.2%;"><span>${member.name.toUpperCase()}</span></div>
-    ${ribbonHTML(member.ribbons, ribbonMap)}
-    ${badgeHTML(member.badges||[], badgeMap)}
+    ${ribbonHTML(earnedRibbons, ribbonMap)}
+    ${badgeHTML(rightKeys, leftKeys, badgeMap)}
     ${ncoaHTML(member.ncoaType, ncoaMap)}
     <div class="jacket-overlay"></div>
-    ${neckMedalHTML(member.ribbons, ribbonMap)}
+    ${neckMedalHTML(earnedRibbons, ribbonMap)}
   `;
   const tape = stage.querySelector('.name-tape');
   if(tape) fitNameTape(tape);
@@ -734,19 +748,17 @@ const positionSelect = document.getElementById('positionSelect');
 const ribbonGrid = document.getElementById('ribbonGrid');
 const badgeGrid = document.getElementById('badgeGrid');
 const badgeViewSelect = document.getElementById('badgeViewSelect');
-const pinSelect = document.getElementById('pinSelect');
-const officerEnlistedSelect = document.getElementById('officerEnlistedSelect');
 const ncoaSelect = document.getElementById('ncoaSelect');
 const stage = document.getElementById('stage');
 
-// currentMemberBadges is the source of truth for which badges the member being
-// edited actually has — independent of badgeViewUnit. The grid only ever shows
-// badges belonging to the selected Company (no Battalion crossover, even though
-// Battalion badges are available to every member); a badge earned in a
-// different Company stays checked in currentMemberBadges (so it's never lost
-// on save) even while it's filtered out of view.
+// Ribbons/badges are marked earned here exactly like on the Tracker page —
+// this IS Tracker's data, not a separate list, so checking a box here and
+// checking the same box on Tracker are the same action. No more separate
+// "selected for display" list to keep in sync: earning IS the source of
+// truth, and which badges actually show on the jacket (up to 3 per pocket)
+// is computed automatically — see computeDisplayedBadges.
 let badgeViewUnit = UNIT_OPTIONS[0];
-let currentMemberBadges = [];
+let currentMemberId = null;
 
 function populateStaticSelects(){
   unitSelect.innerHTML = UNIT_OPTIONS.map(u=>`<option>${u}</option>`).join('');
@@ -760,10 +772,11 @@ function populateRankSelect(){
 
 function populateRibbonGrid(){
   ribbonGrid.innerHTML = '';
+  const earned = new Set(RIBBON_TRACKER[currentMemberId] || []);
   RIBBONS.forEach(r=>{
     const wrap = document.createElement('label');
     wrap.className = 'ribbon-check';
-    wrap.innerHTML = `<input type="checkbox" data-key="${r.key}"><span class="swatch" style="${r.image ? `background-image:url(${r.image})` : ''}"></span>${r.label}`;
+    wrap.innerHTML = `<input type="checkbox" data-key="${r.key}"${earned.has(r.key) ? ' checked' : ''}><span class="swatch" style="${r.image ? `background-image:url(${r.image})` : ''}"></span><span class="check-label">${r.label}</span>`;
     ribbonGrid.appendChild(wrap);
   });
 }
@@ -774,40 +787,17 @@ function visibleBadgesForUnit(unit){
 
 function populateBadgeGrid(unit){
   badgeGrid.innerHTML = '';
+  const earned = new Set(TRACKER[currentMemberId] || []);
   visibleBadgesForUnit(unit).forEach(b=>{
     const wrap = document.createElement('label');
     wrap.className = 'badge-check';
-    wrap.innerHTML = `<input type="checkbox" data-key="${b.key}"${currentMemberBadges.includes(b.key) ? ' checked' : ''}><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span>${b.label}<span class="unit-tag">${b.unit || 'Battalion'}</span>`;
+    wrap.innerHTML = `<input type="checkbox" data-key="${b.key}"${earned.has(b.key) ? ' checked' : ''}><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span><span class="check-label">${b.label}</span><span class="unit-tag">${b.unit || 'Battalion'}</span>`;
     badgeGrid.appendChild(wrap);
   });
 }
 
-function populatePinSelect(){
-  pinSelect.innerHTML = '<option value="">None</option>' + PINS.map(p=>`<option value="${p.key}">${p.label}</option>`).join('');
-}
-
-function populateOfficerEnlistedSelect(){
-  officerEnlistedSelect.innerHTML = '<option value="">None</option>' + OFFICER_ENLISTED.map(o=>`<option value="${o.key}">${o.label}</option>`).join('');
-}
-
 function populateNcoaSelect(){
   ncoaSelect.innerHTML = '<option value="">None</option>' + NCOA.map(n=>`<option value="${n.key}">${n.label}</option>`).join('');
-}
-
-function enforceBadgeLimit(){
-  const atLimit = currentMemberBadges.length >= MAX_BADGES;
-  const boxes = Array.from(badgeGrid.querySelectorAll('input[type=checkbox]'));
-  boxes.forEach(cb=>{
-    const wrap = cb.closest('.badge-check');
-    if(!cb.checked && atLimit){
-      cb.disabled = true;
-      wrap.classList.add('disabled');
-    } else {
-      cb.disabled = false;
-      wrap.classList.remove('disabled');
-    }
-  });
-  document.getElementById('badgeLimitNote').style.display = atLimit ? 'block' : 'none';
 }
 
 function sortMembersBySeniority(){
@@ -828,64 +818,56 @@ function populateMemberSelect(selectedId){
 function loadMember(id){
   const m = MEMBERS.find(x=>x.id===id);
   if(!m) return;
+  currentMemberId = id;
   nameInput.value = m.name;
   rankSelect.value = m.rank;
   unitSelect.value = m.unit;
   positionSelect.value = m.position;
-  pinSelect.value = m.pin || '';
-  officerEnlistedSelect.value = m.officerType || '';
   ncoaSelect.value = m.ncoaType || '';
-  ribbonGrid.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-    cb.checked = m.ribbons.includes(cb.dataset.key);
-  });
+  populateRibbonGrid();
   badgeViewUnit = m.unit;
   badgeViewSelect.value = badgeViewUnit;
-  currentMemberBadges = [...(m.badges||[])];
   populateBadgeGrid(badgeViewUnit);
-  enforceBadgeLimit();
   renderJacket(stage, m);
 }
 
 function currentEdits(){
   const m = MEMBERS.find(x=>x.id===memberSelect.value);
-  const ribbons = Array.from(ribbonGrid.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.dataset.key);
-  const badges = currentMemberBadges.slice(0, MAX_BADGES);
-  const pin = pinSelect.value || null;
-  const officerType = officerEnlistedSelect.value || null;
   const ncoaType = ncoaSelect.value || null;
-  return { id:m.id, name:nameInput.value, rank:rankSelect.value, unit:unitSelect.value, position:positionSelect.value, ribbons, badges, pin, officerType, ncoaType };
+  return { id:m.id, name:nameInput.value, rank:rankSelect.value, unit:unitSelect.value, position:positionSelect.value, ncoaType };
 }
 
 function refreshPreview(){ renderJacket(stage, currentEdits()); }
 
 memberSelect.addEventListener('change', e=>loadMember(e.target.value));
 nameInput.addEventListener('input', refreshPreview);
-pinSelect.addEventListener('change', refreshPreview);
-officerEnlistedSelect.addEventListener('change', refreshPreview);
 ncoaSelect.addEventListener('change', refreshPreview);
 rankSelect.addEventListener('change', refreshPreview);
 unitSelect.addEventListener('change', ()=>{
   badgeViewUnit = unitSelect.value;
   badgeViewSelect.value = badgeViewUnit;
   populateBadgeGrid(badgeViewUnit);
-  enforceBadgeLimit();
   refreshPreview();
 });
 badgeViewSelect.addEventListener('change', ()=>{
   badgeViewUnit = badgeViewSelect.value;
   populateBadgeGrid(badgeViewUnit);
-  enforceBadgeLimit();
 });
 positionSelect.addEventListener('change', refreshPreview);
-ribbonGrid.addEventListener('change', refreshPreview);
-badgeGrid.addEventListener('change', (e)=>{
+ribbonGrid.addEventListener('change', async (e)=>{
   const key = e.target.dataset.key;
-  if(e.target.checked){
-    if(!currentMemberBadges.includes(key)) currentMemberBadges.push(key);
-  } else {
-    currentMemberBadges = currentMemberBadges.filter(k=>k!==key);
-  }
-  enforceBadgeLimit();
+  const current = new Set(RIBBON_TRACKER[currentMemberId] || []);
+  if(e.target.checked) current.add(key); else current.delete(key);
+  RIBBON_TRACKER[currentMemberId] = Array.from(current);
+  await saveJSONChecked('ribbontracker', RIBBON_TRACKER);
+  refreshPreview();
+});
+badgeGrid.addEventListener('change', async (e)=>{
+  const key = e.target.dataset.key;
+  const current = new Set(TRACKER[currentMemberId] || []);
+  if(e.target.checked) current.add(key); else current.delete(key);
+  TRACKER[currentMemberId] = Array.from(current);
+  await saveJSONChecked('tracker', TRACKER);
   refreshPreview();
 });
 
@@ -904,19 +886,10 @@ setupCollapsible('badgesField', 'badgesToggle');
 document.getElementById('saveBtn').addEventListener('click', async ()=>{
   const edits = currentEdits();
   MEMBERS = MEMBERS.map(m => m.id===edits.id ? edits : m);
-  // A badge selected for display on the jacket is, by definition, earned —
-  // fold it into Tracker's record so the two never drift apart. This only
-  // flows one direction: Tracker can hold MORE earned badges than the 6
-  // slots Admin can display, so marking something "earned" there never
-  // forces it onto the jacket automatically.
-  const earnedSet = new Set(TRACKER[edits.id] || []);
-  edits.badges.forEach(key => earnedSet.add(key));
-  TRACKER[edits.id] = Array.from(earnedSet);
   const btn = document.getElementById('saveBtn');
   const original = btn.textContent;
   btn.textContent = 'Saving…';
   const ok = await saveJSON('members', MEMBERS);
-  await saveJSON('tracker', TRACKER);
   sortMembersBySeniority();
   populateMemberSelect(edits.id);
   btn.textContent = ok ? 'Saved' : 'Save failed — retry';
@@ -925,7 +898,7 @@ document.getElementById('saveBtn').addEventListener('click', async ()=>{
 });
 
 document.getElementById('newBtn').addEventListener('click', async ()=>{
-  const member = { id:newId(), name:"New Member", rank: (RANKS[0] && RANKS[0].name) || "PVT", unit: UNIT_OPTIONS[0], position:"Member", ribbons:[], badges:[], pin:null, officerType:null, ncoaType:null };
+  const member = { id:newId(), name:"New Member", rank: (RANKS[0] && RANKS[0].name) || "PVT", unit: UNIT_OPTIONS[0], position:"Member", ncoaType:null };
   MEMBERS.push(member);
   await saveJSON('members', MEMBERS);
   sortMembersBySeniority();
@@ -1084,10 +1057,12 @@ async function init(){
   OFFICER_ENLISTED = await loadJSON('officerenlisted', DEFAULT_OFFICER_ENLISTED);
   NCOA = await loadJSON('ncoa', DEFAULT_NCOA);
   TRACKER = await loadJSON('tracker', {});
-  // One-time reconciliation: a badge already selected for display on a
-  // member's jacket counts as earned, even for members whose data predates
-  // the save-time sync that now keeps these two in step going forward.
+  RIBBON_TRACKER = await loadJSON('ribbontracker', {});
+  // One-time reconciliation: a badge or ribbon already selected for display
+  // on a member's jacket counts as earned, even for members whose data
+  // predates the save-time sync that now keeps these in step going forward.
   let trackerNeedsBackfill = false;
+  let ribbonTrackerNeedsBackfill = false;
   MEMBERS.forEach(m=>{
     const earnedSet = new Set(TRACKER[m.id] || []);
     const before = earnedSet.size;
@@ -1096,14 +1071,20 @@ async function init(){
       TRACKER[m.id] = Array.from(earnedSet);
       trackerNeedsBackfill = true;
     }
+    const earnedRibbonSet = new Set(RIBBON_TRACKER[m.id] || []);
+    const ribbonBefore = earnedRibbonSet.size;
+    (m.ribbons||[]).forEach(key=>earnedRibbonSet.add(key));
+    if(earnedRibbonSet.size !== ribbonBefore){
+      RIBBON_TRACKER[m.id] = Array.from(earnedRibbonSet);
+      ribbonTrackerNeedsBackfill = true;
+    }
   });
   if(trackerNeedsBackfill) await saveJSON('tracker', TRACKER);
+  if(ribbonTrackerNeedsBackfill) await saveJSON('ribbontracker', RIBBON_TRACKER);
   sortMembersBySeniority();
   populateStaticSelects();
   populateRankSelect();
   populateRibbonGrid();
-  populatePinSelect();
-  populateOfficerEnlistedSelect();
   populateNcoaSelect();
 
   const requestedId = new URLSearchParams(window.location.search).get('member');
@@ -1117,7 +1098,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.064</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.070</div>
 
 </body>
 </html>

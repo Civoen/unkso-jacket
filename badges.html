@@ -24,21 +24,6 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
   padding:6px 16px; border-radius:7px; font-weight:600; text-decoration:none; font-size:13px; cursor:pointer;
 }
 .subnav a.nav-secondary:hover{border-color:var(--orange-dim); color:var(--orange);}
-.nav-dropdown{position:relative;}
-.nav-dropdown > a{display:block;}
-.nav-dropdown-menu{
-  display:none; position:absolute; top:100%; left:0; padding-top:10px; z-index:20;
-}
-.nav-dropdown:hover .nav-dropdown-menu{display:block;}
-.nav-dropdown-menu-inner{
-  background:var(--bg-card); border:1px solid var(--border); border-radius:8px;
-  min-width:130px; padding:6px; box-shadow:0 8px 24px rgba(0,0,0,.4);
-}
-.nav-dropdown-menu a{
-  display:block; padding:8px 10px; border-radius:6px; font-size:13px;
-  color:var(--text-secondary); text-decoration:none; border-bottom:none;
-}
-.nav-dropdown-menu a:hover, .nav-dropdown-menu a.active{background:var(--bg-panel); color:var(--orange);}
 .subnav a.nav-cta{
   color:#1c1108; background:var(--orange); padding:7px 18px; border-radius:7px;
   font-weight:700; border-bottom:none; box-shadow:0 1px 0 rgba(0,0,0,.2);
@@ -101,6 +86,13 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .add-panel h3{font-family:'Poppins'; font-size:14px; font-weight:600; margin:0 0 4px; color:var(--orange);}
 .add-panel .dims-note{font-size:11.5px; color:var(--text-muted); margin-bottom:12px;}
 .add-grid{display:grid; grid-template-columns:40px 1fr 120px 130px auto; align-items:center; gap:10px;}
+.ncoa-row{display:grid; grid-template-columns:56px 1fr 130px 36px; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
+.ncoa-row:last-child{border-bottom:none;}
+.ncoa-row .swatch{width:56px; height:56px;}
+.ncoa-row input[type=text]{
+  background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
+  padding:9px 12px; border-radius:6px; font-size:13.5px; font-family:'Inter'; font-weight:600;
+}
 .add-grid input[type=text]{
   background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
   padding:9px 12px; border-radius:6px; font-size:13.5px; font-family:'Inter';
@@ -140,6 +132,8 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   .panel{padding:14px; overflow-x:auto;}
   .col-labels, .badge-row{grid-template-columns:18px 32px 1fr 76px 32px; gap:6px; min-width:400px;}
   .add-grid{grid-template-columns:32px 1fr 70px 90px auto; gap:6px;}
+  .ncoa-row{grid-template-columns:40px 1fr 90px 32px; gap:6px;}
+  .ncoa-row .swatch{width:40px; height:40px;}
 }
 /* Clasp manager (Weapon Mastery badge only) */
 .clasp-manager{background:var(--bg-card); border:1px solid var(--border); border-top:none; border-radius:0 0 8px 8px; padding:14px 16px 16px; margin:-1px 0 4px;}
@@ -185,15 +179,8 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <a href="index.html">Jackets</a>
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
-  <div class="nav-dropdown">
-    <a href="badges.html" class="active">Badges</a>
-    <div class="nav-dropdown-menu">
-      <div class="nav-dropdown-menu-inner">
-        <a href="tracker.html">Tracker</a>
-        <a href="ncoa.html">NCOA</a>
-      </div>
-    </div>
-  </div>
+  <a href="badges.html" class="active">Badges</a>
+  <a href="tracker.html">Tracker</a>
   <a href="pins.html">Pins</a>
   <a href="index.html?autodownload=1" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta">Admin</a>
@@ -225,6 +212,25 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
     </div>
   </div>
   <div class="note">Removing a badge here also removes it from any jacket it's currently assigned to.</div>
+
+  <h1 style="margin-top:36px;">NCOA</h1>
+  <div class="sub">CONTROLS THE NCOA DROPDOWN ON THE ADMIN PAGE — SHOWN LARGE ON THE RIGHT POCKET. NAME EACH TIER AND UPLOAD ITS IMAGE.</div>
+
+  <div class="panel">
+    <div class="col-labels" style="grid-template-columns:56px 1fr 130px 36px;"><span>Preview</span><span>Name</span><span>Image</span><span></span></div>
+    <div id="ncoaList"></div>
+
+    <div class="add-panel">
+      <h3>Add a new tier</h3>
+      <div class="dims-note">Upload any image — square or rectangular both work. It's scaled down only if taller than 300px; nothing gets cropped.</div>
+      <div class="add-grid" style="grid-template-columns:1fr 130px auto;">
+        <input id="newNcoaLabel" type="text" placeholder="Tier name">
+        <label class="upload-btn" id="newNcoaUploadLabel">Choose image<input type="file" id="newNcoaUpload" accept="image/*"></label>
+        <button class="add-btn" id="addNcoaBtn" disabled>Add tier</button>
+      </div>
+    </div>
+  </div>
+  <div class="note">A member can have one tier at a time (picked from a dropdown on the Admin page) — it renders large on the right pocket, below the button. Removing a tier here also unassigns it from any member currently set to it.</div>
 </main>
 
 <script>
@@ -348,6 +354,136 @@ async function saveBadgesChecked(){
   return ok;
 }
 
+async function saveJSONChecked(key, value){
+  const ok = await saveJSON(key, value);
+  if(!ok) showToast('Could not save that change — check your connection to the API.', 'error');
+  return ok;
+}
+
+const MAX_NCOA_HEIGHT = 300; // this renders large on the pocket, so allow more source resolution than a small badge
+
+function resizeNcoaImage(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const scale = Math.min(1, MAX_NCOA_HEIGHT / img.height);
+        const w = Math.round(img.width*scale), h = Math.round(img.height*scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve({ dataUrl: canvas.toDataURL('image/png'), width: w, height: h });
+      };
+      img.onerror = () => reject(new Error('Could not read that image'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('Could not read that file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+const DEFAULT_NCOA = [
+  { key:"ncoa1", label:"Tier 1", image:null, width:1, height:1 },
+  { key:"ncoa2", label:"Tier 2", image:null, width:1, height:1 },
+  { key:"ncoa3", label:"Tier 3", image:null, width:1, height:1 }
+];
+let NCOA = DEFAULT_NCOA;
+
+async function pruneNcoaFromMembers(key){
+  try{
+    const members = await loadJSON('members', []);
+    const updated = members.map(m => m.ncoaType === key ? {...m, ncoaType: null} : m);
+    await saveJSON('members', updated);
+  }catch(err){
+    console.log('Could not prune NCOA from members', err);
+  }
+}
+
+function renderNcoa(){
+  const list = document.getElementById('ncoaList');
+  list.innerHTML = '';
+  NCOA.forEach((n, idx)=>{
+    const row = document.createElement('div');
+    row.className = 'ncoa-row';
+    row.innerHTML = `
+      <div class="swatch" style="${n.image ? `background-image:url(${n.image})` : ''}"></div>
+      <input type="text" value="${n.label}" data-field="label">
+      <label class="upload-btn">${n.image ? 'Replace' : 'Upload'} image<input type="file" accept="image/*"></label>
+      <button class="icon-btn" title="Remove">&times;</button>
+    `;
+    row.querySelector('[data-field="label"]').addEventListener('change', async (e)=>{
+      NCOA[idx].label = e.target.value;
+      await saveJSONChecked('ncoa', NCOA);
+    });
+    row.querySelector('.icon-btn').addEventListener('click', async ()=>{
+      if(!confirm(`Remove "${n.label}"? This will unassign it from any member currently set to it.`)) return;
+      await pruneNcoaFromMembers(n.key);
+      NCOA.splice(idx,1);
+      await saveJSONChecked('ncoa', NCOA);
+      renderNcoa();
+    });
+    row.querySelector('input[type=file]').addEventListener('change', async (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      try{
+        const result = await resizeNcoaImage(file);
+        NCOA[idx].image = result.dataUrl;
+        NCOA[idx].width = result.width;
+        NCOA[idx].height = result.height;
+        await saveJSONChecked('ncoa', NCOA);
+        renderNcoa();
+      }catch(err){
+        showToast('Could not process that image. Try a different file.', 'error');
+      }
+    });
+    list.appendChild(row);
+  });
+}
+
+let pendingNcoaImage = null;
+
+function refreshNcoaAddButton(){
+  const label = document.getElementById('newNcoaLabel').value.trim();
+  document.getElementById('addNcoaBtn').disabled = !(label && pendingNcoaImage);
+}
+
+document.getElementById('newNcoaLabel').addEventListener('input', refreshNcoaAddButton);
+
+function filenameToLabelNcoa(filename){
+  const base = filename.replace(/\.[^.]+$/, '');
+  return base.replace(/[_\-]+/g, ' ').trim();
+}
+
+document.getElementById('newNcoaUpload').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    pendingNcoaImage = await resizeNcoaImage(file);
+    document.getElementById('newNcoaUploadLabel').firstChild.textContent = 'Change image';
+    if(!document.getElementById('newNcoaLabel').value.trim()){
+      document.getElementById('newNcoaLabel').value = filenameToLabelNcoa(file.name);
+    }
+    refreshNcoaAddButton();
+  }catch(err){
+    showToast('Could not process that image. Try a different file.', 'error');
+  }
+});
+
+document.getElementById('addNcoaBtn').addEventListener('click', async ()=>{
+  const label = document.getElementById('newNcoaLabel').value.trim();
+  if(!label || !pendingNcoaImage) return;
+  const key = 'ncoa_' + label.toLowerCase().replace(/[^a-z0-9]+/g,'_').slice(0,24) + '_' + Math.random().toString(36).slice(2,5);
+  NCOA.push({ key, label, image: pendingNcoaImage.dataUrl, width: pendingNcoaImage.width, height: pendingNcoaImage.height });
+  document.getElementById('newNcoaLabel').value = '';
+  document.getElementById('newNcoaUpload').value = '';
+  document.getElementById('newNcoaUploadLabel').firstChild.textContent = 'Choose image';
+  pendingNcoaImage = null;
+  refreshNcoaAddButton();
+  await saveJSONChecked('ncoa', NCOA);
+  renderNcoa();
+});
+
 function resizeToBadgeSize(file){
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
@@ -385,8 +521,18 @@ function isWeaponMastery(b){
 }
 
 async function pruneFromMembers(key){
-  MEMBERS = MEMBERS.map(m => ({...m, badges: (m.badges||[]).filter(k=>k!==key)}));
-  await saveJSON('members', MEMBERS);
+  // Badges are tracked as "earned" in TRACKER now, not on the member record
+  // itself — that's the single source of truth Tracker and Admin both
+  // read/write, so a removed badge needs clearing from there.
+  const tracker = await loadJSON('tracker', {});
+  let changed = false;
+  Object.keys(tracker).forEach(memberId=>{
+    if(tracker[memberId].includes(key)){
+      tracker[memberId] = tracker[memberId].filter(k=>k!==key);
+      changed = true;
+    }
+  });
+  if(changed) await saveJSON('tracker', tracker);
 }
 
 function buildClaspManager(b, idx){
@@ -612,11 +758,13 @@ async function init(){
   if(badgesNeedMigration) await saveJSON('badges', BADGES);
   MEMBERS = await loadJSON('members', []);
   renderBadges();
+  NCOA = await loadJSON('ncoa', DEFAULT_NCOA);
+  renderNcoa();
 }
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.064</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.070</div>
 
 </body>
 </html>

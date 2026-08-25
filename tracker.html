@@ -30,21 +30,6 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
 }
 .subnav a.nav-cta:hover{background:#f06c37;}
 
-.nav-dropdown{position:relative;}
-.nav-dropdown > a{display:block;}
-.nav-dropdown-menu{
-  display:none; position:absolute; top:100%; left:0; padding-top:10px; z-index:20;
-}
-.nav-dropdown:hover .nav-dropdown-menu{display:block;}
-.nav-dropdown-menu-inner{
-  background:var(--bg-card); border:1px solid var(--border); border-radius:8px;
-  min-width:130px; padding:6px; box-shadow:0 8px 24px rgba(0,0,0,.4);
-}
-.nav-dropdown-menu a{
-  display:block; padding:8px 10px; border-radius:6px; font-size:13px;
-  color:var(--text-secondary); text-decoration:none; border-bottom:none;
-}
-.nav-dropdown-menu a:hover, .nav-dropdown-menu a.active{background:var(--bg-panel); color:var(--orange);}
 
 main{max-width:1200px; margin:0 auto; padding:32px; display:grid; grid-template-columns:320px 1fr; gap:24px; align-items:start;}
 h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
@@ -78,6 +63,13 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .tracker-header h2{font-family:'Poppins'; font-weight:600; font-size:18px; margin:0;}
 .tracker-header .tag{color:var(--text-muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em;}
 .tracker-count{color:var(--text-muted); font-size:12.5px; margin-bottom:12px;}
+.tracker-category-tabs{display:flex; gap:4px; margin-bottom:14px; border-bottom:1px solid var(--border);}
+.tracker-cat-btn{
+  background:none; border:none; color:var(--text-secondary); padding:8px 4px; margin-right:16px;
+  font-size:13.5px; font-weight:600; font-family:'Poppins'; cursor:pointer; border-bottom:2px solid transparent;
+}
+.tracker-cat-btn:hover{color:var(--orange);}
+.tracker-cat-btn.active{color:var(--orange); border-bottom-color:var(--orange);}
 .tracker-filters{display:flex; gap:8px; margin-bottom:16px;}
 .tracker-filter-btn{
   background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary);
@@ -151,15 +143,8 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <a href="index.html">Jackets</a>
   <a href="ranks.html">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
-  <div class="nav-dropdown">
-    <a href="badges.html">Badges</a>
-    <div class="nav-dropdown-menu">
-      <div class="nav-dropdown-menu-inner">
-        <a href="tracker.html" class="active">Tracker</a>
-        <a href="ncoa.html">NCOA</a>
-      </div>
-    </div>
-  </div>
+  <a href="badges.html">Badges</a>
+  <a href="tracker.html" class="active">Tracker</a>
   <a href="pins.html">Pins</a>
   <a href="index.html?autodownload=1" class="nav-secondary">Download All</a>
   <a href="admin.html" class="nav-cta">Admin</a>
@@ -279,8 +264,10 @@ function normalizeRanks(ranks){
 
 let MEMBERS = [];
 let BADGES = [];
+let RIBBONS = [];
 let RANKS = [];
 let TRACKER = {};
+let RIBBON_TRACKER = {};
 let searchTerm = '';
 let unitFilter = UNITS[0];
 let selectedMemberId = null;
@@ -326,25 +313,45 @@ function renderMemberList(){
 }
 
 let trackerFilterMode = 'all';
+let trackerCategory = 'badges'; // 'badges' | 'ribbons'
+
+function currentCategoryData(){
+  return trackerCategory === 'ribbons'
+    ? { items: RIBBONS, tracker: RIBBON_TRACKER, storageKey: 'ribbontracker', hasUnit: false, noun: 'ribbons' }
+    : { items: BADGES, tracker: TRACKER, storageKey: 'tracker', hasUnit: true, noun: 'badges' };
+}
 
 function renderTracker(){
   const body = document.getElementById('trackerBody');
   const m = MEMBERS.find(x=>x.id===selectedMemberId);
   if(!m){
-    body.innerHTML = '<div class="empty-state">Select a member to view their badge record.</div>';
+    body.innerHTML = '<div class="empty-state">Select a member to view their record.</div>';
     return;
   }
-  const earned = new Set(TRACKER[m.id] || []);
+  const cat = currentCategoryData();
+  const earned = new Set(cat.tracker[m.id] || []);
   body.innerHTML = `
     <div class="tracker-header"><h2>${m.name}</h2><span class="tag">${m.rank} — ${m.unit}</span></div>
+    <div class="tracker-category-tabs">
+      <button class="tracker-cat-btn" data-cat="badges">Badges</button>
+      <button class="tracker-cat-btn" data-cat="ribbons">Ribbons</button>
+    </div>
     <div class="tracker-count" id="trackerCount"></div>
     <div class="tracker-filters">
       <button class="tracker-filter-btn" data-mode="earned">Show Earned</button>
-      <button class="tracker-filter-btn" data-mode="company">Show Company</button>
+      ${cat.hasUnit ? '<button class="tracker-filter-btn" data-mode="company">Show Company</button>' : ''}
       <button class="tracker-filter-btn" data-mode="all">Show All</button>
     </div>
     <div class="badge-grid" id="trackerBadgeGrid"></div>
   `;
+  body.querySelectorAll('.tracker-cat-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.cat === trackerCategory);
+    btn.addEventListener('click', ()=>{
+      trackerCategory = btn.dataset.cat;
+      if(trackerFilterMode === 'company' && !currentCategoryData().hasUnit) trackerFilterMode = 'all';
+      renderTracker();
+    });
+  });
   body.querySelectorAll('.tracker-filter-btn').forEach(btn=>{
     btn.classList.toggle('active', btn.dataset.mode === trackerFilterMode);
     btn.addEventListener('click', ()=>{
@@ -352,37 +359,39 @@ function renderTracker(){
       renderTracker();
     });
   });
-  const visibleBadges = BADGES.filter(b=>{
+  const visibleItems = cat.items.filter(b=>{
     if(trackerFilterMode === 'earned') return earned.has(b.key);
-    if(trackerFilterMode === 'company') return (b.unit || 'Battalion') === m.unit;
+    if(trackerFilterMode === 'company' && cat.hasUnit) return (b.unit || 'Battalion') === m.unit;
     return true;
   });
   const grid = document.getElementById('trackerBadgeGrid');
-  if(visibleBadges.length === 0){
-    grid.innerHTML = '<div class="no-results">No badges match this filter.</div>';
+  if(visibleItems.length === 0){
+    grid.innerHTML = `<div class="no-results">No ${cat.noun} match this filter.</div>`;
   } else {
-    visibleBadges.forEach(b=>{
+    visibleItems.forEach(b=>{
       const wrap = document.createElement('label');
       wrap.className = 'badge-check';
-      wrap.innerHTML = `<input type="checkbox" data-key="${b.key}"${earned.has(b.key) ? ' checked' : ''}><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span>${b.label}<span class="unit-tag">${b.unit || 'Battalion'}</span>`;
+      const tag = cat.hasUnit ? `<span class="unit-tag">${b.unit || 'Battalion'}</span>` : '';
+      wrap.innerHTML = `<input type="checkbox" data-key="${b.key}"${earned.has(b.key) ? ' checked' : ''}><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span>${b.label}${tag}`;
       grid.appendChild(wrap);
     });
   }
   grid.addEventListener('change', async (e)=>{
     const key = e.target.dataset.key;
-    const current = new Set(TRACKER[m.id] || []);
+    const current = new Set(cat.tracker[m.id] || []);
     if(e.target.checked) current.add(key); else current.delete(key);
-    TRACKER[m.id] = Array.from(current);
+    cat.tracker[m.id] = Array.from(current);
     updateCount(m.id);
-    await saveJSON('tracker', TRACKER);
+    await saveJSON(cat.storageKey, cat.tracker);
     if(trackerFilterMode === 'earned') renderTracker();
   });
   updateCount(m.id);
 }
 
 function updateCount(memberId){
-  const count = (TRACKER[memberId] || []).length;
-  document.getElementById('trackerCount').textContent = `${count} of ${BADGES.length} badges recorded as earned`;
+  const cat = currentCategoryData();
+  const count = (cat.tracker[memberId] || []).length;
+  document.getElementById('trackerCount').textContent = `${count} of ${cat.items.length} ${cat.noun} recorded as earned`;
 }
 
 document.getElementById('searchInput').addEventListener('input', (e)=>{
@@ -399,13 +408,16 @@ document.getElementById('unitFilterSelect').addEventListener('change', (e)=>{
 async function init(){
   MEMBERS = await loadJSON('members', []);
   BADGES = await loadJSON('badges', []);
+  RIBBONS = await loadJSON('ribbons', []);
   const rawRanks = await loadJSON('ranks', []);
   RANKS = normalizeRanks(rawRanks);
   TRACKER = await loadJSON('tracker', {});
-  // One-time reconciliation: a badge already selected for display on a
-  // member's jacket counts as earned, even for members whose data predates
-  // the save-time sync that now keeps these two in step going forward.
+  RIBBON_TRACKER = await loadJSON('ribbontracker', {});
+  // One-time reconciliation: a badge or ribbon already selected for display
+  // on a member's jacket counts as earned, even for members whose data
+  // predates the save-time sync that now keeps these in step going forward.
   let trackerNeedsBackfill = false;
+  let ribbonTrackerNeedsBackfill = false;
   MEMBERS.forEach(m=>{
     const earnedSet = new Set(TRACKER[m.id] || []);
     const before = earnedSet.size;
@@ -414,14 +426,22 @@ async function init(){
       TRACKER[m.id] = Array.from(earnedSet);
       trackerNeedsBackfill = true;
     }
+    const earnedRibbonSet = new Set(RIBBON_TRACKER[m.id] || []);
+    const ribbonBefore = earnedRibbonSet.size;
+    (m.ribbons||[]).forEach(key=>earnedRibbonSet.add(key));
+    if(earnedRibbonSet.size !== ribbonBefore){
+      RIBBON_TRACKER[m.id] = Array.from(earnedRibbonSet);
+      ribbonTrackerNeedsBackfill = true;
+    }
   });
   if(trackerNeedsBackfill) await saveJSON('tracker', TRACKER);
+  if(ribbonTrackerNeedsBackfill) await saveJSON('ribbontracker', RIBBON_TRACKER);
   renderMemberList();
 }
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.064</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.070</div>
 
 </body>
 </html>
