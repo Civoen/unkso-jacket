@@ -19,10 +19,10 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
 .subnav a{color:var(--text-secondary); text-decoration:none; font-size:14px; font-weight:500; padding-bottom:4px; border-bottom:2px solid transparent;}
 .subnav a.active{color:var(--orange); border-color:var(--orange);}
 .subnav a.nav-secondary{
-  margin-left:auto;
   color:var(--text-secondary); background:var(--bg-card); border:1px solid var(--border);
   padding:6px 16px; border-radius:7px; font-weight:600; text-decoration:none; font-size:13px; cursor:pointer;
 }
+.subnav a.nav-group-start{margin-left:auto;}
 .subnav a.nav-secondary:hover{border-color:var(--orange-dim); color:var(--orange);}
 .subnav a.nav-cta{
   color:#1c1108; background:var(--orange); padding:7px 18px; border-radius:7px;
@@ -43,12 +43,23 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   padding:10px 14px; border-radius:8px; font-size:14px; font-family:'Inter';
 }
 
-.col-labels{display:grid; grid-template-columns:22px 60px 1fr 100px 36px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
-.ribbon-row{display:grid; grid-template-columns:22px 60px 1fr 100px 36px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
+.col-labels{display:grid; grid-template-columns:22px 60px 1fr 100px 60px 36px 36px; gap:10px; padding:0 4px 8px; font-size:11px; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase;}
+.ribbon-row{display:grid; grid-template-columns:22px 60px 1fr 100px 60px 36px 36px; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
 .ribbon-row:last-child{border-bottom:none;}
 .ribbon-row.dragging{opacity:.4;}
 .drag-handle{color:var(--text-muted); font-size:15px; text-align:center; cursor:grab; user-select:none;}
 
+.inactive-toggle{display:flex; justify-content:center; cursor:pointer;}
+.inactive-toggle input{
+  appearance:none; -webkit-appearance:none; margin:0; cursor:pointer;
+  width:16px; height:16px; border-radius:4px; border:1px solid var(--border);
+  background:var(--bg-page); position:relative;
+}
+.inactive-toggle input:checked{background:var(--orange); border-color:var(--orange);}
+.inactive-toggle input:checked::after{
+  content:''; position:absolute; left:4px; top:1px; width:5px; height:9px;
+  border:solid #1c1108; border-width:0 2px 2px 0; transform:rotate(45deg);
+}
 .swatch{
   width:56px; height:15.2px; border:1px solid rgba(0,0,0,.35); border-radius:2px;
   background-size:cover; background-position:center;
@@ -82,6 +93,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .add-panel h3{font-family:'Poppins'; font-size:14px; font-weight:600; margin:0 0 4px; color:var(--orange);}
 .add-panel .dims-note{font-size:11.5px; color:var(--text-muted); margin-bottom:12px;}
 .add-grid{display:grid; grid-template-columns:56px 1fr 130px auto; align-items:center; gap:10px;}
+.oe-row{display:grid; align-items:center; gap:12px; padding:12px 4px;}
 .add-grid input[type=text]{
   background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
   padding:9px 12px; border-radius:6px; font-size:13.5px; font-family:'Inter';
@@ -119,7 +131,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   .subnav a{flex-shrink:0;}
   main{padding:16px;}
   .panel{padding:14px; overflow-x:auto;}
-  .col-labels, .ribbon-row{grid-template-columns:18px 40px 1fr 64px 32px 32px; gap:6px; min-width:460px;}
+  .col-labels, .ribbon-row{grid-template-columns:18px 40px 1fr 64px 50px 32px 32px; gap:6px; min-width:520px;}
   .add-grid{grid-template-columns:40px 1fr 90px auto; gap:6px;}
 }
 </style>
@@ -139,13 +151,13 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 <div class="subnav">
   <a href="index.html">Jackets</a>
-  <a href="ranks.html">Ranks</a>
+  <a href="tracker.html">Tracker</a>
+  <a href="ranks.html" class="nav-group-start">Ranks</a>
   <a href="ribbons.html" class="active">Ribbons</a>
   <a href="badges.html">Badges</a>
   <a href="pins.html">Pins</a>
-  <a href="tracker.html">Tracker</a>
   <a href="index.html?autodownload=1" class="nav-secondary">Download All</a>
-  <a href="admin.html" class="nav-cta">Admin</a>
+  <a href="backups.html">Backups</a>
 </div>
 
 <main>
@@ -154,7 +166,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
   <div class="panel">
     <div class="search-row"><input id="searchInput" type="text" placeholder="Search ribbons…"></div>
-    <div class="col-labels"><span></span><span>Preview</span><span>Name</span><span>Image</span><span>Neck</span><span></span></div>
+    <div class="col-labels"><span></span><span>Preview</span><span>Name</span><span>Image</span><span>Inactive</span><span>Neck</span><span></span></div>
     <div id="ribbonList"></div>
 
     <div class="add-panel">
@@ -169,6 +181,18 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
     </div>
   </div>
   <div class="note">Removing a ribbon here also removes it from any jacket it's currently assigned to. The + button under Neck adds an image that shows around the member's neck on their jacket (in addition to the ribbon appearing in their rack as normal) — click the × that replaces it to remove it. Neck art should be a full jacket-canvas image (same dimensions as the jacket art itself) with the medal already positioned correctly and everything else transparent. If more than one of a member's ribbons has neck art set, only the first one is shown.</div>
+
+  <h1 style="margin-top:36px;">Inactive Overlay</h1>
+  <div class="sub">SHOWN OVER ANY RIBBON MARKED "INACTIVE" ABOVE, WHEN IT APPEARS ON A JACKET — ONE SHARED IMAGE FOR ALL OF THEM</div>
+
+  <div class="panel">
+    <div class="oe-row" style="grid-template-columns:70px 1fr 130px;">
+      <div class="swatch" id="overlayPreview" style="width:70px; height:30px;"></div>
+      <span class="oe-label">Inactive ribbon overlay</span>
+      <label class="upload-btn" id="overlayUploadLabel">Choose image<input type="file" id="overlayUpload" accept="image/*"></label>
+    </div>
+  </div>
+  <div class="note">Marked-inactive ribbons also sort to the bottom of the checklist on the Tracker page, below all active ribbons.</div>
 </main>
 
 <script>
@@ -318,6 +342,30 @@ function resizeToRibbonSize(file){
   });
 }
 
+// The inactive-ribbon overlay is one shared image, cropped to the exact same
+// 350x95 ribbon-bar shape so it drops directly on top of any ribbon with no
+// extra positioning math needed at render time.
+let RIBBON_OVERLAY = null;
+
+function renderOverlayPreview(){
+  document.getElementById('overlayPreview').style.backgroundImage = RIBBON_OVERLAY ? `url(${RIBBON_OVERLAY})` : '';
+  document.getElementById('overlayUploadLabel').firstChild.textContent = RIBBON_OVERLAY ? 'Replace image' : 'Choose image';
+}
+
+document.getElementById('overlayUpload').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const dataUrl = await resizeToRibbonSize(file);
+    RIBBON_OVERLAY = dataUrl;
+    await saveJSON('ribbonoverlay', { image: dataUrl });
+    renderOverlayPreview();
+    showToast('Overlay image updated.', 'success');
+  }catch(err){
+    showToast('Could not process that image. Try a different file.', 'error');
+  }
+});
+
 // Neck art (medals worn around the neck, like the Medal of Honor) keeps its own
 // natural aspect ratio rather than being force-cropped like a ribbon bar — it's
 // rendered with background-size:contain on the jacket, not cover.
@@ -398,6 +446,7 @@ function renderRibbons(){
       <div class="swatch" style="${r.image ? `background-image:url(${r.image})` : ''}"></div>
       <input type="text" value="${r.label}" data-field="label">
       <label class="upload-btn small">${r.image ? 'Replace' : 'Upload'}<input type="file" accept="image/*" data-field="image"></label>
+      <label class="inactive-toggle" title="Show the inactive overlay on this ribbon when earned"><input type="checkbox" data-field="inactive"${r.inactive ? ' checked' : ''}></label>
       ${neckBtnHTML}
       <button class="icon-btn" data-action="remove-ribbon" title="Remove">&times;</button>
     `;
@@ -405,6 +454,10 @@ function renderRibbons(){
       RIBBONS[idx].label = e.target.value;
       await saveJSON('ribbons', RIBBONS);
       renderRibbons();
+    });
+    row.querySelector('[data-field="inactive"]').addEventListener('change', async (e)=>{
+      RIBBONS[idx].inactive = e.target.checked;
+      await saveJSON('ribbons', RIBBONS);
     });
     row.querySelector('[data-field="image"]').addEventListener('change', async (e)=>{
       const file = e.target.files[0];
@@ -521,11 +574,14 @@ async function init(){
   RIBBONS = await loadJSON('ribbons', DEFAULT_RIBBONS);
   MEMBERS = await loadJSON('members', []);
   renderRibbons();
+  const overlayData = await loadJSON('ribbonoverlay', { image: null });
+  RIBBON_OVERLAY = overlayData.image;
+  renderOverlayPreview();
 }
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.076</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.082</div>
 
 </body>
 </html>

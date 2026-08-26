@@ -19,10 +19,10 @@ body{margin:0; background:var(--bg-page); color:var(--text-primary); font-family
 .subnav a{color:var(--text-secondary); text-decoration:none; font-size:14px; font-weight:500; padding-bottom:4px; border-bottom:2px solid transparent;}
 .subnav a.active{color:var(--orange); border-color:var(--orange);}
 .subnav a.nav-secondary{
-  margin-left:auto;
   color:var(--text-secondary); background:var(--bg-card); border:1px solid var(--border);
   padding:6px 16px; border-radius:7px; font-weight:600; text-decoration:none; font-size:13px; cursor:pointer;
 }
+.subnav a.nav-group-start{margin-left:auto;}
 .subnav a.nav-secondary:hover{border-color:var(--orange-dim); color:var(--orange);}
 .subnav a.nav-cta{
   color:#1c1108; background:var(--orange); padding:7px 18px; border-radius:7px;
@@ -37,6 +37,12 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 .panel{background:var(--bg-panel); border:1px solid var(--border); border-radius:14px; padding:20px;}
 
+.new-member-btn{
+  width:100%; background:var(--orange); color:#1c1108; border:none; border-radius:8px;
+  padding:10px; font-family:'Poppins'; font-weight:600; font-size:13.5px; cursor:pointer;
+  margin-bottom:12px;
+}
+.new-member-btn:hover{background:#f06c37;}
 .search-row{margin-bottom:12px;}
 .search-row input{
   width:100%; background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
@@ -59,9 +65,24 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .member-item.selected .unit-tag{color:var(--orange-dim);}
 .no-results{color:var(--text-muted); font-size:12.5px; padding:8px 4px;}
 
-.tracker-header{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:4px;}
-.tracker-header h2{font-family:'Poppins'; font-weight:600; font-size:18px; margin:0;}
-.tracker-header .tag{color:var(--text-muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em;}
+.member-edit-header{margin-bottom:18px; padding-bottom:16px; border-bottom:1px solid var(--border);}
+.member-edit-top{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+.member-name-input{
+  flex:1; background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
+  padding:9px 12px; border-radius:8px; font-family:'Poppins'; font-weight:600; font-size:16px;
+}
+.delete-member-btn{
+  background:var(--bg-card); border:1px solid var(--border); color:var(--text-muted);
+  padding:9px 14px; border-radius:8px; font-size:12.5px; font-weight:600; cursor:pointer; font-family:'Inter';
+  flex-shrink:0;
+}
+.delete-member-btn:hover{border-color:var(--red); color:var(--red);}
+.member-edit-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
+.member-edit-grid label{display:block; font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px;}
+.member-edit-grid select{
+  width:100%; background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary);
+  padding:8px 10px; border-radius:6px; font-size:13px; font-family:'Inter';
+}
 .tracker-count{color:var(--text-muted); font-size:12.5px; margin-bottom:12px;}
 .tracker-category-tabs{display:flex; gap:4px; margin-bottom:14px; border-bottom:1px solid var(--border);}
 .tracker-cat-btn{
@@ -79,7 +100,19 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .tracker-filter-btn.active{background:var(--orange); border-color:var(--orange); color:#1c1108;}
 
 .badge-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+.badge-group-header{
+  grid-column:1/-1; color:var(--orange); font-size:11.5px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.05em; padding:10px 2px 2px; border-top:1px solid var(--border); margin-top:4px;
+}
+.badge-group-header:first-child{border-top:none; margin-top:0; padding-top:2px;}
 .badge-check{display:flex; align-items:center; gap:8px; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:12.5px; cursor:pointer;}
+.badge-check .rank-tag{
+  background:var(--bg-panel); color:var(--text-muted); font-size:10px; font-weight:700;
+  border-radius:4px; padding:2px 5px; flex-shrink:0;
+}
+.badge-check .inactive-tag{
+  color:var(--text-muted); font-size:10.5px; margin-left:auto; text-transform:uppercase; letter-spacing:.03em;
+}
 .check-label{min-width:0; overflow-wrap:break-word;}
 .badge-check input{
   appearance:none; -webkit-appearance:none; margin:0; flex-shrink:0; cursor:pointer;
@@ -92,7 +125,6 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   border:solid #1c1108; border-width:0 2px 2px 0; transform:rotate(45deg);
 }
 .badge-check .swatch{width:16px; height:16px; border-radius:3px; border:1px solid rgba(0,0,0,.35); flex-shrink:0; background-size:contain; background-position:center; background-repeat:no-repeat;}
-.badge-check .unit-tag{color:var(--text-muted); font-size:10.5px; margin-left:auto; text-transform:uppercase; letter-spacing:.03em;}
 
 .empty-state{color:var(--text-muted); font-size:13px; padding:40px 0; text-align:center;}
 
@@ -117,6 +149,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 /* Mobile */
 @media (max-width:800px){
   main{grid-template-columns:1fr; padding:20px; gap:16px;}
+  .member-edit-grid{grid-template-columns:1fr 1fr;}
 }
 @media (max-width:520px){
   .subnav{padding:12px 16px; gap:18px; overflow-x:auto; -webkit-overflow-scrolling:touch;}
@@ -124,6 +157,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   main{padding:14px;}
   .panel{padding:14px;}
   .badge-grid{grid-template-columns:1fr;}
+  .member-edit-grid{grid-template-columns:1fr 1fr;}
 }
 </style>
 </head>
@@ -142,17 +176,18 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 <div class="subnav">
   <a href="index.html">Jackets</a>
-  <a href="ranks.html">Ranks</a>
+  <a href="tracker.html" class="active">Tracker</a>
+  <a href="ranks.html" class="nav-group-start">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
   <a href="badges.html">Badges</a>
   <a href="pins.html">Pins</a>
-  <a href="tracker.html" class="active">Tracker</a>
   <a href="index.html?autodownload=1" class="nav-secondary">Download All</a>
-  <a href="admin.html" class="nav-cta">Admin</a>
+  <a href="backups.html">Backups</a>
 </div>
 
 <main>
   <div class="panel">
+    <button class="new-member-btn" id="newMemberBtn">+ New member</button>
     <div class="search-row"><input id="searchInput" type="text" placeholder="Search members…"></div>
     <div class="filter-row">
       <select id="unitFilterSelect"></select>
@@ -273,6 +308,16 @@ let MEMBERS = [];
 let BADGES = [];
 let RIBBONS = [];
 let RANKS = [];
+let NCOA = [];
+const UNIT_OPTIONS = ["Battalion","Bravo","Charlie","Delta"];
+const POSITION_OPTIONS = ["Member","SL","PS","1SG","XO","CO"];
+const DEFAULT_NCOA = [
+  { key:"ncoa1", label:"Tier 1", image:null, width:1, height:1 },
+  { key:"ncoa2", label:"Tier 2", image:null, width:1, height:1 },
+  { key:"ncoa3", label:"Tier 3", image:null, width:1, height:1 }
+];
+
+function newId(){ return 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 let TRACKER = {};
 let RIBBON_TRACKER = {};
 let searchTerm = '';
@@ -338,7 +383,18 @@ function renderTracker(){
   const cat = currentCategoryData();
   const earned = new Set(cat.tracker[m.id] || []);
   body.innerHTML = `
-    <div class="tracker-header"><h2>${m.name}</h2><span class="tag">${m.rank} — ${m.unit}</span></div>
+    <div class="member-edit-header">
+      <div class="member-edit-top">
+        <input type="text" id="editName" class="member-name-input" value="${m.name}">
+        <button class="delete-member-btn" id="deleteMemberBtn" title="Delete member">Delete</button>
+      </div>
+      <div class="member-edit-grid">
+        <div><label>Rank</label><select id="editRank"></select></div>
+        <div><label>Unit</label><select id="editUnit"></select></div>
+        <div><label>Position</label><select id="editPosition"></select></div>
+        <div><label>NCOA</label><select id="editNcoa"></select></div>
+      </div>
+    </div>
     <div class="tracker-category-tabs">
       <button class="tracker-cat-btn" data-cat="ribbons">Ribbons</button>
       <button class="tracker-cat-btn" data-cat="badges">Badges</button>
@@ -351,6 +407,52 @@ function renderTracker(){
     </div>
     <div class="badge-grid" id="trackerBadgeGrid"></div>
   `;
+
+  const editRank = document.getElementById('editRank');
+  const editUnit = document.getElementById('editUnit');
+  const editPosition = document.getElementById('editPosition');
+  const editNcoa = document.getElementById('editNcoa');
+  editRank.innerHTML = RANKS.map(r=>`<option>${r.name}</option>`).join('');
+  editUnit.innerHTML = UNIT_OPTIONS.map(u=>`<option>${u}</option>`).join('');
+  editPosition.innerHTML = POSITION_OPTIONS.map(p=>`<option>${p}</option>`).join('');
+  editNcoa.innerHTML = '<option value="">None</option>' + NCOA.map(n=>`<option value="${n.key}">${n.label}</option>`).join('');
+  editRank.value = m.rank;
+  editUnit.value = m.unit;
+  editPosition.value = m.position;
+  editNcoa.value = m.ncoaType || '';
+
+  async function saveMemberField(){
+    const edits = {
+      id: m.id,
+      name: document.getElementById('editName').value,
+      rank: editRank.value,
+      unit: editUnit.value,
+      position: editPosition.value,
+      ncoaType: editNcoa.value || null
+    };
+    MEMBERS = MEMBERS.map(x => x.id===m.id ? edits : x);
+    await saveJSONChecked('members', MEMBERS);
+    renderMemberList();
+  }
+  document.getElementById('editName').addEventListener('change', saveMemberField);
+  editRank.addEventListener('change', ()=>{ saveMemberField(); });
+  editUnit.addEventListener('change', ()=>{ saveMemberField(); renderTracker(); });
+  editPosition.addEventListener('change', saveMemberField);
+  editNcoa.addEventListener('change', saveMemberField);
+
+  document.getElementById('deleteMemberBtn').addEventListener('click', async ()=>{
+    if(!confirm(`Delete ${m.name}? This removes them and their earned records entirely — this cannot be undone.`)) return;
+    MEMBERS = MEMBERS.filter(x => x.id !== m.id);
+    delete TRACKER[m.id];
+    delete RIBBON_TRACKER[m.id];
+    selectedMemberId = null;
+    await saveJSONChecked('members', MEMBERS);
+    await saveJSONChecked('tracker', TRACKER);
+    await saveJSONChecked('ribbontracker', RIBBON_TRACKER);
+    renderMemberList();
+    renderTracker();
+  });
+
   body.querySelectorAll('.tracker-cat-btn').forEach(btn=>{
     btn.classList.toggle('active', btn.dataset.cat === trackerCategory);
     btn.addEventListener('click', ()=>{
@@ -366,20 +468,62 @@ function renderTracker(){
       renderTracker();
     });
   });
+// Groups badges by unit so a member's own hierarchy isn't interleaved with
+// other units' hierarchies -- own unit first, Battalion always second,
+// remaining units alphabetical. Hierarchy (drag-order on the Badges page)
+// still decides order within each group.
+function groupRankForUnit(unit, memberUnit){
+  if(unit === memberUnit) return 0;
+  if(unit === 'Battalion') return 1;
+  return 2;
+}
+function sortBadgesForDisplay(items, memberUnit){
+  return [...items].sort((a,b)=>{
+    const ua = a.unit || 'Battalion', ub = b.unit || 'Battalion';
+    const ga = groupRankForUnit(ua, memberUnit), gb = groupRankForUnit(ub, memberUnit);
+    if(ga !== gb) return ga - gb;
+    if(ga === 2 && ua !== ub) return ua.localeCompare(ub);
+    return BADGES.indexOf(a) - BADGES.indexOf(b);
+  });
+}
+
+function sortRibbonsForDisplay(items){
+  return [...items].sort((a,b)=>{
+    const ia = a.inactive ? 1 : 0, ib = b.inactive ? 1 : 0;
+    if(ia !== ib) return ia - ib;
+    return RIBBONS.indexOf(a) - RIBBONS.indexOf(b);
+  });
+}
+
   const visibleItems = cat.items.filter(b=>{
     if(trackerFilterMode === 'earned') return earned.has(b.key);
     if(trackerFilterMode === 'company' && cat.hasUnit) return (b.unit || 'Battalion') === m.unit;
     return true;
   });
+  const orderedItems = cat.hasUnit ? sortBadgesForDisplay(visibleItems, m.unit) : sortRibbonsForDisplay(visibleItems);
   const grid = document.getElementById('trackerBadgeGrid');
-  if(visibleItems.length === 0){
+  if(orderedItems.length === 0){
     grid.innerHTML = `<div class="no-results">No ${cat.noun} match this filter.</div>`;
   } else {
-    visibleItems.forEach(b=>{
+    grid.innerHTML = '';
+    let lastUnit = null;
+    let rankInGroup = 0;
+    orderedItems.forEach(b=>{
+      const itemUnit = b.unit || 'Battalion';
+      if(cat.hasUnit && itemUnit !== lastUnit){
+        const header = document.createElement('div');
+        header.className = 'badge-group-header';
+        header.textContent = itemUnit;
+        grid.appendChild(header);
+        lastUnit = itemUnit;
+        rankInGroup = 0;
+      }
+      rankInGroup++;
       const wrap = document.createElement('label');
       wrap.className = 'badge-check';
-      const tag = cat.hasUnit ? `<span class="unit-tag">${b.unit || 'Battalion'}</span>` : '';
-      wrap.innerHTML = `<input type="checkbox" data-key="${b.key}"${earned.has(b.key) ? ' checked' : ''}><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span><span class="check-label">${b.label}</span>${tag}`;
+      const rankTag = cat.hasUnit ? `<span class="rank-tag">#${rankInGroup}</span>` : '';
+      const inactiveTag = b.inactive ? '<span class="inactive-tag">Inactive</span>' : '';
+      wrap.innerHTML = `${rankTag}<input type="checkbox" data-key="${b.key}"${earned.has(b.key) ? ' checked' : ''}><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span><span class="check-label">${b.label}</span>${inactiveTag}`;
       grid.appendChild(wrap);
     });
   }
@@ -418,6 +562,7 @@ async function init(){
   RIBBONS = await loadJSON('ribbons', []);
   const rawRanks = await loadJSON('ranks', []);
   RANKS = normalizeRanks(rawRanks);
+  NCOA = await loadJSON('ncoa', DEFAULT_NCOA);
   TRACKER = await loadJSON('tracker', {});
   RIBBON_TRACKER = await loadJSON('ribbontracker', {});
   // One-time reconciliation: a badge or ribbon already selected for display
@@ -425,6 +570,7 @@ async function init(){
   // predates the save-time sync that now keeps these in step going forward.
   let trackerNeedsBackfill = false;
   let ribbonTrackerNeedsBackfill = false;
+  let membersNeedCleanup = false;
   MEMBERS.forEach(m=>{
     const earnedSet = new Set(TRACKER[m.id] || []);
     const before = earnedSet.size;
@@ -440,15 +586,48 @@ async function init(){
       RIBBON_TRACKER[m.id] = Array.from(earnedRibbonSet);
       ribbonTrackerNeedsBackfill = true;
     }
+    // This backfill only needs to run once per member -- if the old fields
+    // are left in place, every future page load re-folds them back in,
+    // silently undoing anything unchecked on Tracker/Admin since. Clearing
+    // them here is what actually makes this "one last time" rather than
+    // "every time."
+    if('badges' in m || 'ribbons' in m){
+      delete m.badges;
+      delete m.ribbons;
+      membersNeedCleanup = true;
+    }
   });
   if(trackerNeedsBackfill) await saveJSON('tracker', TRACKER);
   if(ribbonTrackerNeedsBackfill) await saveJSON('ribbontracker', RIBBON_TRACKER);
+  if(membersNeedCleanup) await saveJSON('members', MEMBERS);
+
+  // Reached via a jacket card's click-through from the roster page — jump
+  // straight to that member, and switch the unit filter to theirs so they're
+  // actually visible in the list rather than selected-but-hidden.
+  const requestedId = new URLSearchParams(window.location.search).get('member');
+  const requestedMember = requestedId ? MEMBERS.find(m=>m.id===requestedId) : null;
+  if(requestedMember){
+    selectedMemberId = requestedMember.id;
+    unitFilter = requestedMember.unit;
+    document.getElementById('unitFilterSelect').value = unitFilter;
+  }
+
   renderMemberList();
+  renderTracker();
 }
 init();
+
+document.getElementById('newMemberBtn').addEventListener('click', async ()=>{
+  const member = { id:newId(), name:"New Member", rank: (RANKS[0] && RANKS[0].name) || "PVT", unit: UNIT_OPTIONS[0], position:"Member", ncoaType:null };
+  MEMBERS.push(member);
+  await saveJSONChecked('members', MEMBERS);
+  selectedMemberId = member.id;
+  renderMemberList();
+  renderTracker();
+});
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.076</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.082</div>
 
 </body>
 </html>

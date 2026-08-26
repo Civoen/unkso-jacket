@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>UNKSO — Ranks</title>
+<title>UNKSO — Backups</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
@@ -36,6 +36,29 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 .sub{color:var(--text-muted); font-size:12.5px; margin-bottom:22px; letter-spacing:.03em;}
 
 .panel{background:var(--bg-panel); border:1px solid var(--border); border-radius:14px; padding:20px;}
+
+.backup-actions{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:22px;}
+.backup-btn{
+  background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary);
+  padding:11px 18px; border-radius:8px; font-family:'Poppins'; font-weight:600; font-size:13.5px;
+  cursor:pointer; text-align:center;
+}
+.backup-btn:hover{border-color:var(--orange-dim); color:var(--orange);}
+.backup-btn.primary{background:var(--orange); color:#1c1108; border-color:var(--orange);}
+.backup-btn.primary:hover{background:#f06c37;}
+.upload-btn input{display:none;}
+.backup-list-wrap{border-top:1px solid var(--border); padding-top:18px;}
+.backup-list-wrap h3{font-family:'Poppins'; font-weight:600; font-size:14px; margin:0 0 4px;}
+.backup-list{display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+.backup-row{display:flex; align-items:center; justify-content:space-between; background:var(--bg-panel); padding:10px 14px; font-size:13px; gap:12px;}
+.backup-row .backup-date{font-family:'JetBrains Mono'; font-weight:600;}
+.backup-row .backup-info{display:flex; align-items:center; gap:10px;}
+.backup-type-tag{font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px; text-transform:uppercase; letter-spacing:.03em;}
+.backup-type-tag.automated{background:rgba(227,95,46,.15); color:var(--orange);}
+.backup-type-tag.manual{background:rgba(107,114,128,.2); color:var(--text-muted);}
+.backup-row-actions{display:flex; gap:8px;}
+.backup-row button{background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary); padding:6px 12px; border-radius:6px; font-size:12px; cursor:pointer; font-family:'Inter';}
+.backup-row button:hover{border-color:var(--orange-dim); color:var(--orange);}
 
 .search-row{margin-bottom:16px;}
 .search-row input{
@@ -132,34 +155,29 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 <div class="subnav">
   <a href="index.html">Jackets</a>
   <a href="tracker.html">Tracker</a>
-  <a href="ranks.html" class="nav-group-start active">Ranks</a>
+  <a href="ranks.html" class="nav-group-start">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
   <a href="badges.html">Badges</a>
   <a href="pins.html">Pins</a>
   <a href="index.html?autodownload=1" class="nav-secondary">Download All</a>
-  <a href="backups.html">Backups</a>
+  <a href="backups.html" class="active">Backups</a>
 </div>
 
-<main>
-  <h1>Ranks</h1>
-  <div class="sub">CONTROLS THE RANK DROPDOWN ON ADMIN, AND THE SHOULDER INSIGNIA ON EACH JACKET</div>
+<main style="max-width:900px;">
+  <h1>Backups</h1>
+  <div class="sub">A FULL SNAPSHOT OF EVERY COLLECTION — MEMBERS, RANKS, RIBBONS, BADGES, PINS, TRACKER, AND MORE</div>
 
   <div class="panel">
-    <div class="search-row"><input id="searchInput" type="text" placeholder="Search ranks…"></div>
-    <div id="rankList"></div>
-
-    <div class="add-panel">
-      <h3>Add a new rank</h3>
-      <div class="dims-note">Insignia is optional at first — you can upload it any time from the list above.</div>
-      <div class="add-grid">
-        <div class="insignia-swatch" id="newPreview"></div>
-        <input id="newRankInput" type="text" placeholder="e.g. WO1" maxlength="6">
-        <label class="upload-btn" id="newUploadLabel">Choose insignia<input type="file" id="newUpload" accept="image/*"></label>
-        <button class="add-btn" id="addBtn">Add rank</button>
-      </div>
+    <div class="backup-actions">
+      <button class="backup-btn primary" id="backupNowBtn">Download Backup Now</button>
+      <label class="backup-btn upload-btn" id="restoreLabel">Restore from Backup<input type="file" accept="application/json" id="restoreInput"></label>
+    </div>
+    <div class="backup-list-wrap">
+      <h3>Automated Backups</h3>
+      <div class="sub" style="margin-bottom:10px;">Runs automatically every Sunday. Showing the most recent 12.</div>
+      <div id="backupList" class="backup-list"><div class="note">Loading…</div></div>
     </div>
   </div>
-  <div class="note">Order here is the order ranks appear in the Admin dropdown and defines seniority across the site. Editing a rank's text updates it everywhere it's already assigned to a member.</div>
 </main>
 
 <script>
@@ -264,163 +282,139 @@ async function saveJSON(key, value){
   }catch(err){ console.log('Save failed for '+key, err); return false; }
 }
 
-// Reads an uploaded insignia file and returns a data URL. Insignia are small and
-// mostly transparent/flat-color, so we just cap the max dimension rather than
-// forcing a fixed crop like ribbons — the jacket rendering scales it to fit.
-function readInsigniaFile(file){
-  return new Promise((resolve, reject)=>{
-    const reader = new FileReader();
-    reader.onload = (e)=>{
-      const img = new Image();
-      img.onload = ()=>{
-        const MAX = 300;
-        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
-        const w = Math.round(img.width*scale), h = Math.round(img.height*scale);
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        resolve({ dataUrl: canvas.toDataURL('image/png'), width: w, height: h });
-      };
-      img.onerror = () => reject(new Error('Could not read that image'));
-      img.src = e.target.result;
-    };
-    reader.onerror = () => reject(new Error('Could not read that file'));
-    reader.readAsDataURL(file);
-  });
+async function loadJSON(key, defaults){
+  try{
+    const res = await fetch(`${API_BASE}/api/${key}`);
+    if(res.ok){
+      const data = await res.json();
+      if(data !== null) return data;
+    }
+  }catch(err){ console.log('Could not load '+key+' from API, using defaults', err); }
+  return defaults;
 }
 
-let RANKS = [];
-let searchTerm = '';
-let dragSrcIdx = null;
+function triggerJSONDownload(obj, filename){
+  const blob = new Blob([JSON.stringify(obj, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
-function renderRanks(){
-  const list = document.getElementById('rankList');
-  list.innerHTML = '';
-  const q = searchTerm.trim().toLowerCase();
-  const visibleIdx = RANKS.map((_,i)=>i).filter(i => !q || RANKS[i].name.toLowerCase().includes(q));
+// Restores every collection a backup snapshot might contain -- kept as an
+// explicit list (rather than just looping every key in the file) so that
+// restoring an old backup missing newer collections doesn't wipe them out
+// by writing an empty value for keys that were never in that snapshot.
+const RESTORABLE_KEYS = ["members","ranks","ribbons","badges","pins","tracker","ribbontracker","officerenlisted","ncoa","ribbonoverlay"];
 
-  if(visibleIdx.length === 0){
-    list.innerHTML = '<div class="note" style="margin-top:6px;">No ranks match your search.</div>';
-    return;
+async function applyRestoredSnapshot(snapshot){
+  const data = snapshot.data || snapshot; // tolerate either the wrapped or raw shape
+  const jobs = [];
+  RESTORABLE_KEYS.forEach(key=>{
+    if(data[key] !== undefined && data[key] !== null) jobs.push(saveJSON(key, data[key]));
+  });
+  const results = await Promise.all(jobs);
+  return results.every(Boolean);
+}
+
+async function loadBackupList(){
+  const list = document.getElementById('backupList');
+  try{
+    const res = await fetch(`${API_BASE}/api/backups`);
+    if(!res.ok) throw new Error('bad response');
+    const backups = await res.json();
+    if(backups.length === 0){
+      list.innerHTML = '<div class="note">No backups yet — the first automated one runs this Sunday, or click "Download Backup Now" to create one immediately.</div>';
+      return;
+    }
+    list.innerHTML = '';
+    backups.forEach(b=>{
+      const when = b.createdAt ? new Date(b.createdAt).toLocaleString(undefined, {dateStyle:'medium', timeStyle:'short'}) : b.date;
+      const tag = b.automated
+        ? '<span class="backup-type-tag automated">Automated</span>'
+        : '<span class="backup-type-tag manual">Manual</span>';
+      const row = document.createElement('div');
+      row.className = 'backup-row';
+      row.innerHTML = `
+        <div class="backup-info">${tag}<span class="backup-date">${when}</span></div>
+        <div class="backup-row-actions">
+          <button data-action="download">Download</button>
+          <button data-action="restore">Restore</button>
+        </div>
+      `;
+      row.querySelector('[data-action="download"]').addEventListener('click', async ()=>{
+        const r = await fetch(`${API_BASE}/api/backups/${b.id}`);
+        if(!r.ok){ showToast('Could not fetch that backup.', 'error'); return; }
+        const snapshot = await r.json();
+        triggerJSONDownload(snapshot, `unkso-backup-${b.date}-${b.automated ? 'auto' : 'manual'}.json`);
+      });
+      row.querySelector('[data-action="restore"]').addEventListener('click', async ()=>{
+        if(!confirm(`Restore everything to the ${when} backup? This overwrites all current data across every collection — this cannot be undone.`)) return;
+        const r = await fetch(`${API_BASE}/api/backups/${b.id}`);
+        if(!r.ok){ showToast('Could not fetch that backup.', 'error'); return; }
+        const snapshot = await r.json();
+        const ok = await applyRestoredSnapshot(snapshot);
+        if(ok){
+          showToast(`Restored to the ${when} backup. Reloading…`, 'success');
+          setTimeout(()=> window.location.reload(), 1200);
+        } else {
+          showToast('Restore failed partway through — check your connection and try again.', 'error');
+        }
+      });
+      list.appendChild(row);
+    });
+  }catch(err){
+    list.innerHTML = '<div class="note">Could not load the backup list — check your connection to the API.</div>';
   }
-
-  visibleIdx.forEach(idx=>{
-    const rank = RANKS[idx];
-    const row = document.createElement('div');
-    row.className = 'rank-row';
-    row.draggable = true;
-    row.dataset.idx = idx;
-    row.innerHTML = `
-      <span class="handle" title="Drag to reorder">&#8942;&#8942;</span>
-      <div class="insignia-swatch" style="${rank.insignia ? `background-image:url(${rank.insignia})` : ''}"></div>
-      <input type="text" value="${rank.name}" maxlength="6" data-field="name">
-      <label class="upload-btn">${rank.insignia ? 'Replace insignia' : 'Upload insignia'}<input type="file" accept="image/*" data-field="insignia"></label>
-      <button class="icon-btn" title="Remove">&times;</button>
-    `;
-    row.querySelector('[data-field="name"]').addEventListener('change', async (e)=>{
-      const val = e.target.value.trim().toUpperCase();
-      if(!val) { e.target.value = RANKS[idx].name; return; }
-      RANKS[idx].name = val;
-      await saveJSON('ranks', RANKS);
-    });
-    row.querySelector('[data-field="insignia"]').addEventListener('change', async (e)=>{
-      const file = e.target.files[0];
-      if(!file) return;
-      try{
-        const result = await readInsigniaFile(file);
-        RANKS[idx].insignia = result.dataUrl;
-        RANKS[idx].insigniaWidth = result.width;
-        RANKS[idx].insigniaHeight = result.height;
-        await saveJSON('ranks', RANKS);
-        row.querySelector('.insignia-swatch').style.backgroundImage = `url(${result.dataUrl})`;
-        row.querySelector('.upload-btn').firstChild.textContent = 'Replace insignia';
-      }catch(err){
-        showToast('Could not process that image. Try a different file.', 'error');
-      }
-    });
-    row.querySelector('.icon-btn').addEventListener('click', async ()=>{
-      if(RANKS.length <= 1){ showToast("You need at least one rank.", 'error'); return; }
-      if(!confirm(`Remove rank "${rank.name}"?`)) return;
-      RANKS.splice(idx,1);
-      await saveJSON('ranks', RANKS);
-      renderRanks();
-    });
-    row.addEventListener('dragstart', ()=>{
-      dragSrcIdx = idx;
-      row.classList.add('dragging');
-    });
-    row.addEventListener('dragend', ()=> row.classList.remove('dragging'));
-    row.addEventListener('dragover', (e)=> e.preventDefault());
-    row.addEventListener('drop', async (e)=>{
-      e.preventDefault();
-      if(dragSrcIdx === null || dragSrcIdx === idx) return;
-      const targetRef = RANKS[idx];
-      const [moved] = RANKS.splice(dragSrcIdx, 1);
-      const newTargetIdx = RANKS.indexOf(targetRef);
-      RANKS.splice(newTargetIdx, 0, moved);
-      dragSrcIdx = null;
-      await saveJSON('ranks', RANKS);
-      renderRanks();
-    });
-    list.appendChild(row);
-  });
 }
 
-document.getElementById('searchInput').addEventListener('input', (e)=>{
-  searchTerm = e.target.value;
-  renderRanks();
+document.getElementById('backupNowBtn').addEventListener('click', async (e)=>{
+  const btn = e.currentTarget;
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Backing up…';
+  try{
+    const res = await fetch(`${API_BASE}/api/backup-now`, { method:'POST' });
+    if(!res.ok) throw new Error('bad response');
+    const { id, date } = await res.json();
+    const snapRes = await fetch(`${API_BASE}/api/backups/${id}`);
+    const snapshot = await snapRes.json();
+    triggerJSONDownload(snapshot, `unkso-backup-${date}-manual.json`);
+    showToast('Backup created and downloaded.', 'success');
+    loadBackupList();
+  }catch(err){
+    showToast('Could not create a backup. Check your connection to the API.', 'error');
+  }
+  btn.disabled = false;
+  btn.textContent = original;
 });
 
-let pendingInsignia = null;
-
-document.getElementById('newUpload').addEventListener('change', async (e)=>{
+document.getElementById('restoreInput').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
-  try{
-    pendingInsignia = await readInsigniaFile(file);
-    document.getElementById('newPreview').style.backgroundImage = `url(${pendingInsignia.dataUrl})`;
-    document.getElementById('newUploadLabel').firstChild.textContent = 'Change insignia';
-  }catch(err){
-    showToast('Could not process that image. Try a different file.', 'error');
+  if(!confirm('Restore from this file? This overwrites all current data across every collection — this cannot be undone.')){
+    e.target.value = '';
+    return;
   }
+  try{
+    const text = await file.text();
+    const snapshot = JSON.parse(text);
+    const ok = await applyRestoredSnapshot(snapshot);
+    if(ok){
+      showToast('Restore complete. Reloading…', 'success');
+      setTimeout(()=> window.location.reload(), 1200);
+    } else {
+      showToast('Restore failed partway through — check your connection and try again.', 'error');
+    }
+  }catch(err){
+    showToast('That file could not be read as a valid backup.', 'error');
+  }
+  e.target.value = '';
 });
-
-document.getElementById('addBtn').addEventListener('click', async ()=>{
-  const input = document.getElementById('newRankInput');
-  const val = input.value.trim().toUpperCase();
-  if(!val) return;
-  if(RANKS.some(r=>r.name === val)){ showToast('That rank already exists.', 'error'); return; }
-  RANKS.push({
-    name: val,
-    insignia: pendingInsignia ? pendingInsignia.dataUrl : null,
-    insigniaWidth: pendingInsignia ? pendingInsignia.width : null,
-    insigniaHeight: pendingInsignia ? pendingInsignia.height : null
-  });
-  input.value = '';
-  pendingInsignia = null;
-  document.getElementById('newUpload').value = '';
-  document.getElementById('newPreview').style.backgroundImage = '';
-  document.getElementById('newUploadLabel').firstChild.textContent = 'Choose insignia';
-  await saveJSON('ranks', RANKS);
-  renderRanks();
-});
-
-document.getElementById('newRankInput').addEventListener('keydown', (e)=>{
-  if(e.key === 'Enter') document.getElementById('addBtn').click();
-});
-
-// Older saved data may still be a plain array of strings (from before ranks carried
-// insignia images) — convert those into the object shape so edits actually persist.
-function normalizeRanks(ranks){
-  return ranks.map(r => typeof r === 'string' ? { name:r, insignia:null } : r);
-}
 
 async function init(){
-  const raw = await loadJSON('ranks', DEFAULT_RANKS);
-  const needsMigration = raw.some(r => typeof r === 'string');
-  RANKS = normalizeRanks(raw);
-  if(needsMigration) await saveJSON('ranks', RANKS);
-  renderRanks();
+  loadBackupList();
 }
 init();
 </script>

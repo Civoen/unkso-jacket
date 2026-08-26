@@ -29,7 +29,7 @@
 // (bold/orange for the automated weekly one, plain/grey for manual) so
 // they're easy to tell apart in the channel.
 
-const ALLOWED_KEYS = ["members", "ranks", "ribbons", "badges", "pins", "tracker", "ribbontracker", "officerenlisted", "ncoa"];
+const ALLOWED_KEYS = ["members", "ranks", "ribbons", "badges", "pins", "tracker", "ribbontracker", "officerenlisted", "ncoa", "ribbonoverlay"];
 const BACKUP_PREFIX = "unkso-backup-";
 const BACKUP_RETENTION = 12; // keep the last 12 backups (~3 months at a weekly cadence), prune older ones
 const DISCORD_ATTACH_LIMIT = 7.5 * 1024 * 1024; // stay safely under Discord's 8MB default webhook cap

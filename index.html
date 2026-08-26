@@ -73,10 +73,10 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
 .unit-download-btn:disabled{opacity:.6; cursor:default;}
 
 .subnav a.nav-secondary{
-  margin-left:auto;
   color:var(--text-secondary); background:var(--bg-card); border:1px solid var(--border);
   padding:6px 16px; border-radius:7px; font-weight:600; text-decoration:none; font-size:13px; cursor:pointer;
 }
+.subnav a.nav-group-start{margin-left:auto;}
 .subnav a.nav-secondary:hover{border-color:var(--orange-dim); color:var(--orange);}
 .subnav a.nav-secondary:disabled, .subnav a.nav-secondary.busy{opacity:.6; pointer-events:none;}
 
@@ -173,13 +173,13 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
 
 <div class="subnav">
   <a href="index.html" class="active">Jackets</a>
-  <a href="ranks.html">Ranks</a>
+  <a href="tracker.html">Tracker</a>
+  <a href="ranks.html" class="nav-group-start">Ranks</a>
   <a href="ribbons.html">Ribbons</a>
   <a href="badges.html">Badges</a>
   <a href="pins.html">Pins</a>
-  <a href="tracker.html">Tracker</a>
   <a href="#" id="downloadAllBtn" class="nav-secondary">Download All</a>
-  <a href="admin.html" class="nav-cta">Admin</a>
+  <a href="backups.html">Backups</a>
 </div>
 
 <main>
@@ -396,6 +396,9 @@ function ribbonHTML(ribbonKeys, ribbonMap){
       const def = ribbonMap[key];
       if(!def) return;
       html += `<div class="ribbon" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background-image:${ribbonBackground(def)};"></div>`;
+      if(def.inactive && RIBBON_OVERLAY){
+        html += `<div class="ribbon" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background-image:url(${RIBBON_OVERLAY});"></div>`;
+      }
     });
   });
   return html;
@@ -627,11 +630,16 @@ function ncoaHTML(ncoaType, ncoaMap){
 
 function jacketHTML(member, ribbonMap, badgeMap, rankMap, pinMap, officerEnlistedMap, ncoaMap){
   // Ribbon rack fills bottom-heavy (full rows of 4 at the bottom, the
-  // remainder — fewer, more prominent — at the top). Sorting by hierarchy
-  // here, same ranking as badges, puts the highest-hierarchy ribbons first
-  // in the array, which lands them in that smaller top row.
+  // remainder — fewer, more prominent — at the top). Active ribbons sort
+  // ahead of inactive ones (landing inactive ribbons in the lower rows),
+  // and hierarchy still decides order within each of those two groups.
   const earnedRibbons = (RIBBON_TRACKER[member.id] || []).slice()
-    .sort((a,b) => RIBBONS.findIndex(r=>r.key===a) - RIBBONS.findIndex(r=>r.key===b));
+    .sort((a,b) => {
+      const ia = (ribbonMap[a] && ribbonMap[a].inactive) ? 1 : 0;
+      const ib = (ribbonMap[b] && ribbonMap[b].inactive) ? 1 : 0;
+      if(ia !== ib) return ia - ib;
+      return RIBBONS.findIndex(r=>r.key===a) - RIBBONS.findIndex(r=>r.key===b);
+    });
   const { rightKeys, leftKeys } = computeDisplayedBadges(member.id, member.unit);
   return `
     ${insigniaHTML(member.rank, rankMap)}
@@ -650,6 +658,7 @@ let TRACKER = {};
 let RIBBON_TRACKER = {};
 let RANKS = [];
 let RIBBONS = [];
+let RIBBON_OVERLAY = null;
 let BADGES = [];
 let PINS = [];
 let OFFICER_ENLISTED = [];
@@ -773,7 +782,7 @@ function renderRoster(){
         downloadMemberPNG(m, ribbonMap, badgeMap, rankMap, pinMap, officerEnlistedMap, ncoaMap, e.currentTarget);
       });
       card.addEventListener('click', ()=>{
-        window.location.href = withAuth('admin.html?member=' + encodeURIComponent(m.id));
+        window.location.href = withAuth('tracker.html?member=' + encodeURIComponent(m.id));
       });
       grid.appendChild(card);
     });
@@ -959,6 +968,8 @@ async function init(){
   RANKS = normalizeRanks(rawRanks);
   if(ranksNeedMigration) await saveJSON('ranks', RANKS);
   RIBBONS = await loadJSON('ribbons', DEFAULT_RIBBONS);
+  const ribbonOverlayData = await loadJSON('ribbonoverlay', { image: null });
+  RIBBON_OVERLAY = ribbonOverlayData.image;
   BADGES = await loadJSON('badges', DEFAULT_BADGES);
   PINS = await loadJSON('pins', []);
   OFFICER_ENLISTED = await loadJSON('officerenlisted', DEFAULT_OFFICER_ENLISTED);
@@ -972,6 +983,7 @@ async function init(){
   // a jacket silently disappears during the transition.
   let trackerNeedsBackfill = false;
   let ribbonTrackerNeedsBackfill = false;
+  let membersNeedCleanup = false;
   MEMBERS.forEach(m=>{
     const earnedSet = new Set(TRACKER[m.id] || []);
     const before = earnedSet.size;
@@ -987,9 +999,20 @@ async function init(){
       RIBBON_TRACKER[m.id] = Array.from(earnedRibbonSet);
       ribbonTrackerNeedsBackfill = true;
     }
+    // This backfill only needs to run once per member -- if the old fields
+    // are left in place, every future page load re-folds them back in,
+    // silently undoing anything unchecked on Tracker/Admin since. Clearing
+    // them here is what actually makes this "one last time" rather than
+    // "every time."
+    if('badges' in m || 'ribbons' in m){
+      delete m.badges;
+      delete m.ribbons;
+      membersNeedCleanup = true;
+    }
   });
   if(trackerNeedsBackfill) await saveJSON('tracker', TRACKER);
   if(ribbonTrackerNeedsBackfill) await saveJSON('ribbontracker', RIBBON_TRACKER);
+  if(membersNeedCleanup) await saveJSON('members', MEMBERS);
   renderRoster();
 
   // Reached via the "Download All" link on another page — kick off the same
@@ -1005,7 +1028,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.076</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.082</div>
 
 </body>
 </html>
