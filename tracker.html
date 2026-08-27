@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>UNKSO — Badge Tracker</title>
+<title>UNKSO, Badge Tracker</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
@@ -294,7 +294,7 @@ async function saveJSON(key, value){
 
 async function saveJSONChecked(key, value){
   const ok = await saveJSON(key, value);
-  if(!ok) showToast('Could not save that change — check your connection to the API.', 'error');
+  if(!ok) showToast('Could not save that change, check your connection to the API.', 'error');
   return ok;
 }
 
@@ -439,7 +439,7 @@ function renderTracker(){
   editNcoa.addEventListener('change', saveMemberField);
 
   document.getElementById('deleteMemberBtn').addEventListener('click', async ()=>{
-    if(!confirm(`Delete ${m.name}? This removes them and their earned records entirely — this cannot be undone.`)) return;
+    if(!confirm(`Delete ${m.name}? This removes them and their earned records entirely, this cannot be undone.`)) return;
     MEMBERS = MEMBERS.filter(x => x.id !== m.id);
     delete TRACKER[m.id];
     delete RIBBON_TRACKER[m.id];
@@ -626,7 +626,7 @@ document.getElementById('newMemberBtn').addEventListener('click', async ()=>{
 });
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.086</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.088</div>
 
 </body>
 </html>

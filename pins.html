@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>UNKSO — Pins</title>
+<title>UNKSO, Pins</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
@@ -148,7 +148,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 <main>
   <h1>Pins</h1>
-  <div class="sub">EACH PIN'S UNIT DETERMINES WHERE IT APPEARS — SEE NOTE BELOW.</div>
+  <div class="sub">EACH PIN'S UNIT DETERMINES WHERE IT APPEARS, SEE NOTE BELOW.</div>
 
   <div class="panel">
     <div class="search-row"><input id="searchInput" type="text" placeholder="Search pins…"></div>
@@ -157,7 +157,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
     <div class="add-panel">
       <h3>Add a new pin</h3>
-      <div class="dims-note">Upload any image — square or rectangular both work. It's scaled down only if taller than 180px; nothing gets cropped.</div>
+      <div class="dims-note">Upload any image, square or rectangular both work. It's scaled down only if taller than 180px; nothing gets cropped.</div>
       <div class="add-grid" style="grid-template-columns:1fr 100px 130px auto;">
         <input id="newLabel" type="text" placeholder="Pin name">
         <select id="newUnit"></select>
@@ -166,7 +166,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
       </div>
     </div>
   </div>
-  <div class="note">Collar pins are now automatic, not picked per member. The left collar always shows the Battalion pin. The right collar shows the Battalion pin too for Officers (CDT and above) — for Enlisted members (below CDT), it shows their own unit's pin instead. Tag one pin per unit here for this to work correctly. Removing a pin here also clears it from that unit's assignment.</div>
+  <div class="note">Collar pins are now automatic, not picked per member. The left collar always shows the Battalion pin. The right collar shows the Battalion pin too for Officers (CDT and above), for Enlisted members (below CDT), it shows their own unit's pin instead. Tag one pin per unit here for this to work correctly. Removing a pin here also clears it from that unit's assignment.</div>
 </main>
 
 <script>
@@ -275,7 +275,7 @@ async function saveJSON(key, value){
 
 async function saveJSONChecked(key, value){
   const ok = await saveJSON(key, value);
-  if(!ok) showToast('Could not save that change — check your connection to the API.', 'error');
+  if(!ok) showToast('Could not save that change, check your connection to the API.', 'error');
   return ok;
 }
 
@@ -445,7 +445,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.086</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.088</div>
 
 </body>
 </html>

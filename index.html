@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>UNKSO — Jackets</title>
+<title>UNKSO, Jackets</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
@@ -863,7 +863,16 @@ async function downloadMemberPNG(member, ribbonMap, badgeMap, rankMap, pinMap, o
 }
 
 function buildAwardsJSON(member, ribbonMap, badgeMap, pinMap, officerEnlistedMap, ncoaMap){
-  const earnedRibbonKeys = RIBBON_TRACKER[member.id] || [];
+  // Same ordering the jacket rack itself uses -- active ribbons by hierarchy,
+  // then inactive ones by hierarchy among themselves -- so this list reads
+  // in the same order they'd actually appear, not arbitrary insertion order.
+  const earnedRibbonKeys = (RIBBON_TRACKER[member.id] || []).slice()
+    .sort((a,b) => {
+      const ia = (ribbonMap[a] && ribbonMap[a].inactive) ? 1 : 0;
+      const ib = (ribbonMap[b] && ribbonMap[b].inactive) ? 1 : 0;
+      if(ia !== ib) return ia - ib;
+      return RIBBONS.findIndex(r=>r.key===a) - RIBBONS.findIndex(r=>r.key===b);
+    });
   const ribbons = earnedRibbonKeys.map(k => ribbonMap[k]?.label).filter(Boolean);
   const { rightKeys, leftKeys } = computeDisplayedBadges(member.id, member.unit);
   const badges = [...rightKeys, ...leftKeys].map(k => badgeMap[k]?.label).filter(Boolean);
@@ -1030,7 +1039,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.086</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.088</div>
 
 </body>
 </html>

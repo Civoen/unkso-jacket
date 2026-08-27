@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>UNKSO — Backups</title>
+<title>UNKSO, Backups</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
@@ -166,7 +166,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 <main style="max-width:900px;">
   <h1>Backups</h1>
-  <div class="sub">A FULL SNAPSHOT OF EVERY COLLECTION — MEMBERS, RANKS, RIBBONS, BADGES, PINS, TRACKER, AND MORE</div>
+  <div class="sub">A FULL SNAPSHOT OF EVERY COLLECTION, MEMBERS, RANKS, RIBBONS, BADGES, PINS, TRACKER, AND MORE</div>
 
   <div class="panel">
     <div class="backup-actions">
@@ -326,7 +326,7 @@ async function loadBackupList(){
     if(!res.ok) throw new Error('bad response');
     const backups = await res.json();
     if(backups.length === 0){
-      list.innerHTML = '<div class="note">No backups yet — the first automated one runs this Sunday, or click "Download Backup Now" to create one immediately.</div>';
+      list.innerHTML = '<div class="note">No backups yet, the first automated one runs this Sunday, or click "Download Backup Now" to create one immediately.</div>';
       return;
     }
     list.innerHTML = '';
@@ -351,7 +351,7 @@ async function loadBackupList(){
         triggerJSONDownload(snapshot, `unkso-backup-${b.date}-${b.automated ? 'auto' : 'manual'}.json`);
       });
       row.querySelector('[data-action="restore"]').addEventListener('click', async ()=>{
-        if(!confirm(`Restore everything to the ${when} backup? This overwrites all current data across every collection — this cannot be undone.`)) return;
+        if(!confirm(`Restore everything to the ${when} backup? This overwrites all current data across every collection, this cannot be undone.`)) return;
         const r = await fetch(`${API_BASE}/api/backups/${b.id}`);
         if(!r.ok){ showToast('Could not fetch that backup.', 'error'); return; }
         const snapshot = await r.json();
@@ -360,13 +360,13 @@ async function loadBackupList(){
           showToast(`Restored to the ${when} backup. Reloading…`, 'success');
           setTimeout(()=> window.location.reload(), 1200);
         } else {
-          showToast('Restore failed partway through — check your connection and try again.', 'error');
+          showToast('Restore failed partway through, check your connection and try again.', 'error');
         }
       });
       list.appendChild(row);
     });
   }catch(err){
-    list.innerHTML = '<div class="note">Could not load the backup list — check your connection to the API.</div>';
+    list.innerHTML = '<div class="note">Could not load the backup list, check your connection to the API.</div>';
   }
 }
 
@@ -394,7 +394,7 @@ document.getElementById('backupNowBtn').addEventListener('click', async (e)=>{
 document.getElementById('restoreInput').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
-  if(!confirm('Restore from this file? This overwrites all current data across every collection — this cannot be undone.')){
+  if(!confirm('Restore from this file? This overwrites all current data across every collection, this cannot be undone.')){
     e.target.value = '';
     return;
   }
@@ -406,7 +406,7 @@ document.getElementById('restoreInput').addEventListener('change', async (e)=>{
       showToast('Restore complete. Reloading…', 'success');
       setTimeout(()=> window.location.reload(), 1200);
     } else {
-      showToast('Restore failed partway through — check your connection and try again.', 'error');
+      showToast('Restore failed partway through, check your connection and try again.', 'error');
     }
   }catch(err){
     showToast('That file could not be read as a valid backup.', 'error');
@@ -420,7 +420,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.086</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.088</div>
 
 </body>
 </html>

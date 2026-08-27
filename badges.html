@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>UNKSO — Badges</title>
+<title>UNKSO, Badges</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
@@ -189,7 +189,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 <main>
   <h1>Badges</h1>
-  <div class="sub">CONTROLS THE BADGES CHECKLIST ON THE ADMIN PAGE — YOUR IMAGE'S OWN SHAPE IS KEPT, SCALED DOWN IF TALLER THAN 180PX. EACH BADGE BELONGS TO ONE UNIT — BATTALION BADGES ARE AVAILABLE TO EVERY MEMBER, COMPANY BADGES ONLY TO THAT COMPANY.</div>
+  <div class="sub">CONTROLS THE BADGES CHECKLIST ON THE ADMIN PAGE, YOUR IMAGE'S OWN SHAPE IS KEPT, SCALED DOWN IF TALLER THAN 180PX. EACH BADGE BELONGS TO ONE UNIT, BATTALION BADGES ARE AVAILABLE TO EVERY MEMBER, COMPANY BADGES ONLY TO THAT COMPANY.</div>
 
   <div class="panel">
     <div class="search-row"><input id="searchInput" type="text" placeholder="Search badges…"></div>
@@ -202,7 +202,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
     <div class="add-panel">
       <h3>Add a new badge</h3>
-      <div class="dims-note">Upload any image — square or rectangular both work. It's scaled down only if taller than 180px; nothing gets cropped.</div>
+      <div class="dims-note">Upload any image, square or rectangular both work. It's scaled down only if taller than 180px; nothing gets cropped.</div>
       <div class="add-grid">
         <div class="swatch" id="newPreview"></div>
         <input id="newLabel" type="text" placeholder="Badge name">
@@ -215,7 +215,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   <div class="note">Removing a badge here also removes it from any jacket it's currently assigned to.</div>
 
   <h1 style="margin-top:36px;">NCOA</h1>
-  <div class="sub">CONTROLS THE NCOA DROPDOWN ON THE ADMIN PAGE — SHOWN LARGE ON THE RIGHT POCKET. NAME EACH TIER AND UPLOAD ITS IMAGE.</div>
+  <div class="sub">CONTROLS THE NCOA DROPDOWN ON THE ADMIN PAGE, SHOWN LARGE ON THE RIGHT POCKET. NAME EACH TIER AND UPLOAD ITS IMAGE.</div>
 
   <div class="panel">
     <div class="col-labels" style="grid-template-columns:56px 1fr 130px 36px;"><span>Preview</span><span>Name</span><span>Image</span><span></span></div>
@@ -223,7 +223,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
     <div class="add-panel">
       <h3>Add a new tier</h3>
-      <div class="dims-note">Upload any image — square or rectangular both work. It's scaled down only if taller than 300px; nothing gets cropped.</div>
+      <div class="dims-note">Upload any image, square or rectangular both work. It's scaled down only if taller than 300px; nothing gets cropped.</div>
       <div class="add-grid" style="grid-template-columns:1fr 130px auto;">
         <input id="newNcoaLabel" type="text" placeholder="Tier name">
         <label class="upload-btn" id="newNcoaUploadLabel">Choose image<input type="file" id="newNcoaUpload" accept="image/*"></label>
@@ -231,7 +231,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
       </div>
     </div>
   </div>
-  <div class="note">A member can have one tier at a time (picked from a dropdown on the Admin page) — it renders large on the right pocket, below the button. Removing a tier here also unassigns it from any member currently set to it.</div>
+  <div class="note">A member can have one tier at a time (picked from a dropdown on the Admin page), it renders large on the right pocket, below the button. Removing a tier here also unassigns it from any member currently set to it.</div>
 </main>
 
 <script>
@@ -351,13 +351,13 @@ async function saveJSON(key, value){
 
 async function saveBadgesChecked(){
   const ok = await saveJSON('badges', BADGES);
-  if(!ok) showToast('Could not save that change. Check your connection to the API — see the browser console for details.', 'error');
+  if(!ok) showToast('Could not save that change. Check your connection to the API, see the browser console for details.', 'error');
   return ok;
 }
 
 async function saveJSONChecked(key, value){
   const ok = await saveJSON(key, value);
-  if(!ok) showToast('Could not save that change — check your connection to the API.', 'error');
+  if(!ok) showToast('Could not save that change, check your connection to the API.', 'error');
   return ok;
 }
 
@@ -542,7 +542,7 @@ function buildClaspManager(b, idx){
 
   const linkSet = !!b.linkImage;
   wrap.innerHTML = `
-    <h4>Clasps — Weapon Mastery only</h4>
+    <h4>Clasps, Weapon Mastery only</h4>
     <div class="clasp-sub">Each clasp is its own small image (e.g. a "RIFLE" bar). They hang below this badge's core image on the jacket, connected by the link image below. Up to ${MAX_CLASPS}.</div>
     <div class="clasp-link-row">
       <div class="swatch clasp-swatch" id="claspLinkSwatch" style="${b.linkImage ? `background-image:url(${b.linkImage})` : ''}"></div>
@@ -765,7 +765,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.086</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.088</div>
 
 </body>
 </html>

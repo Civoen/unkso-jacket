@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>UNKSO — Ribbons</title>
+<title>UNKSO, Ribbons</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
@@ -163,7 +163,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
 <main>
   <h1>Ribbons</h1>
-  <div class="sub">CONTROLS THE RIBBON CHECKLIST ON THE ADMIN PAGE — EACH IMAGE IS RESIZED TO 350×95</div>
+  <div class="sub">CONTROLS THE RIBBON CHECKLIST ON THE ADMIN PAGE, EACH IMAGE IS RESIZED TO 350×95</div>
 
   <div class="panel">
     <div class="search-row"><input id="searchInput" type="text" placeholder="Search ribbons…"></div>
@@ -172,7 +172,7 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
 
     <div class="add-panel">
       <h3>Add a new ribbon</h3>
-      <div class="dims-note">Upload any image — it'll be auto-cropped and resized to 350×95.</div>
+      <div class="dims-note">Upload any image, it'll be auto-cropped and resized to 350×95.</div>
       <div class="add-grid">
         <div class="swatch" id="newPreview"></div>
         <input id="newLabel" type="text" placeholder="Ribbon name">
@@ -181,10 +181,10 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
       </div>
     </div>
   </div>
-  <div class="note">Removing a ribbon here also removes it from any jacket it's currently assigned to. The + button under Neck adds an image that shows around the member's neck on their jacket (in addition to the ribbon appearing in their rack as normal) — click the × that replaces it to remove it. Neck art should be a full jacket-canvas image (same dimensions as the jacket art itself) with the medal already positioned correctly and everything else transparent. If more than one of a member's ribbons has neck art set, only the first one is shown.</div>
+  <div class="note">Removing a ribbon here also removes it from any jacket it's currently assigned to. The + button under Neck adds an image that shows around the member's neck on their jacket (in addition to the ribbon appearing in their rack as normal), click the × that replaces it to remove it. Neck art should be a full jacket-canvas image (same dimensions as the jacket art itself) with the medal already positioned correctly and everything else transparent. If more than one of a member's ribbons has neck art set, only the first one is shown.</div>
 
   <h1 style="margin-top:36px;">Inactive Overlay</h1>
-  <div class="sub">SHOWN OVER ANY RIBBON MARKED "INACTIVE" ABOVE, WHEN IT APPEARS ON A JACKET — ONE SHARED IMAGE FOR ALL OF THEM</div>
+  <div class="sub">SHOWN OVER ANY RIBBON MARKED "INACTIVE" ABOVE, WHEN IT APPEARS ON A JACKET, ONE SHARED IMAGE FOR ALL OF THEM</div>
 
   <div class="panel">
     <div class="oe-row" style="grid-template-columns:70px 1fr 130px;">
@@ -316,7 +316,7 @@ async function saveJSON(key, value){
 
 async function saveJSONChecked(key, value){
   const ok = await saveJSON(key, value);
-  if(!ok) showToast('Could not save that change — check your connection to the API.', 'error');
+  if(!ok) showToast('Could not save that change, check your connection to the API.', 'error');
   return ok;
 }
 
@@ -588,7 +588,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.086</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.088</div>
 
 </body>
 </html>

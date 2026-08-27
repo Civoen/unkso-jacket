@@ -63,6 +63,37 @@ async function createBackup(env, automated) {
     const raw = await env.UNKSO_KV.get("unkso-" + key);
     snapshot.data[key] = raw ? JSON.parse(raw) : null;
   }
+
+  // Sort each member's earned-item list into the same order the site itself
+  // displays things in -- hierarchy (drag-order in the Badges/Ribbons
+  // definitions), with inactive ribbons pushed after active ones -- rather
+  // than leaving it in arbitrary insertion order.
+  function sortEarnedByHierarchy(trackerData, definitions) {
+    if (!trackerData || !definitions) return trackerData;
+    const byKey = {};
+    definitions.forEach((d, i) => { byKey[d.key] = { index: i, inactive: !!d.inactive }; });
+    const rank = (key) => {
+      const info = byKey[key];
+      if (!info) return { group: 1, index: definitions.length }; // unknown/deleted items sort last
+      return { group: info.inactive ? 1 : 0, index: info.index };
+    };
+    const sorted = {};
+    for (const memberId of Object.keys(trackerData)) {
+      const entries = trackerData[memberId];
+      sorted[memberId] = Array.isArray(entries)
+        ? [...entries].sort((a, b) => {
+            const ra = rank(a), rb = rank(b);
+            if (ra.group !== rb.group) return ra.group - rb.group;
+            return ra.index - rb.index;
+          })
+        : entries;
+    }
+    return sorted;
+  }
+
+  snapshot.data.tracker = sortEarnedByHierarchy(snapshot.data.tracker, snapshot.data.badges);
+  snapshot.data.ribbontracker = sortEarnedByHierarchy(snapshot.data.ribbontracker, snapshot.data.ribbons);
+
   const backupKey = BACKUP_PREFIX + backupTimestampKey();
   await env.UNKSO_KV.put(backupKey, JSON.stringify(snapshot), {
     metadata: { automated, createdAt: timestamp },
