@@ -110,9 +110,6 @@ h1{font-family:'Poppins'; font-weight:600; font-size:22px; margin:0 0 4px;}
   background:var(--bg-panel); color:var(--text-muted); font-size:10px; font-weight:700;
   border-radius:4px; padding:2px 5px; flex-shrink:0;
 }
-.badge-check .inactive-tag{
-  color:var(--text-muted); font-size:10.5px; margin-left:auto; text-transform:uppercase; letter-spacing:.03em;
-}
 .check-label{min-width:0; overflow-wrap:break-word;}
 .badge-check input{
   appearance:none; -webkit-appearance:none; margin:0; flex-shrink:0; cursor:pointer;
@@ -369,8 +366,8 @@ let trackerCategory = 'ribbons'; // 'badges' | 'ribbons'
 
 function currentCategoryData(){
   return trackerCategory === 'ribbons'
-    ? { items: RIBBONS, tracker: RIBBON_TRACKER, storageKey: 'ribbontracker', hasUnit: false, noun: 'ribbons' }
-    : { items: BADGES, tracker: TRACKER, storageKey: 'tracker', hasUnit: true, noun: 'badges' };
+    ? { items: RIBBONS, tracker: RIBBON_TRACKER, storageKey: 'ribbontracker', hasUnit: false, noun: 'ribbons', groupOf: b => b.inactive ? 'Inactive' : 'Active' }
+    : { items: BADGES, tracker: TRACKER, storageKey: 'tracker', hasUnit: true, noun: 'badges', groupOf: b => b.unit || 'Battalion' };
 }
 
 function renderTracker(){
@@ -471,7 +468,9 @@ function renderTracker(){
 // Groups badges by unit so a member's own hierarchy isn't interleaved with
 // other units' hierarchies -- own unit first, Battalion always second,
 // remaining units alphabetical. Hierarchy (drag-order on the Badges page)
-// still decides order within each group.
+// still decides order within each group. Ribbons use the same treatment
+// via a simpler two-way group: active ribbons first, inactive ones pushed
+// to the bottom, hierarchy still deciding order within each of those.
 function groupRankForUnit(unit, memberUnit){
   if(unit === memberUnit) return 0;
   if(unit === 'Battalion') return 1;
@@ -506,24 +505,23 @@ function sortRibbonsForDisplay(items){
     grid.innerHTML = `<div class="no-results">No ${cat.noun} match this filter.</div>`;
   } else {
     grid.innerHTML = '';
-    let lastUnit = null;
+    let lastGroup = null;
     let rankInGroup = 0;
     orderedItems.forEach(b=>{
-      const itemUnit = b.unit || 'Battalion';
-      if(cat.hasUnit && itemUnit !== lastUnit){
+      const itemGroup = cat.groupOf(b);
+      if(itemGroup !== lastGroup){
         const header = document.createElement('div');
         header.className = 'badge-group-header';
-        header.textContent = itemUnit;
+        header.textContent = itemGroup;
         grid.appendChild(header);
-        lastUnit = itemUnit;
+        lastGroup = itemGroup;
         rankInGroup = 0;
       }
       rankInGroup++;
       const wrap = document.createElement('label');
       wrap.className = 'badge-check';
-      const rankTag = cat.hasUnit ? `<span class="rank-tag">#${rankInGroup}</span>` : '';
-      const inactiveTag = b.inactive ? '<span class="inactive-tag">Inactive</span>' : '';
-      wrap.innerHTML = `${rankTag}<input type="checkbox" data-key="${b.key}"${earned.has(b.key) ? ' checked' : ''}><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span><span class="check-label">${b.label}</span>${inactiveTag}`;
+      const rankTag = `<span class="rank-tag">#${rankInGroup}</span>`;
+      wrap.innerHTML = `${rankTag}<input type="checkbox" data-key="${b.key}"${earned.has(b.key) ? ' checked' : ''}><span class="swatch" style="${b.image ? `background-image:url(${b.image})` : ''}"></span><span class="check-label">${b.label}</span>`;
       grid.appendChild(wrap);
     });
   }
@@ -627,7 +625,7 @@ document.getElementById('newMemberBtn').addEventListener('click', async ()=>{
 });
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.082</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.085</div>
 
 </body>
 </html>

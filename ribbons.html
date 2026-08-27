@@ -313,6 +313,12 @@ async function saveJSON(key, value){
   }catch(err){ console.log('Save failed for '+key, err); return false; }
 }
 
+async function saveJSONChecked(key, value){
+  const ok = await saveJSON(key, value);
+  if(!ok) showToast('Could not save that change — check your connection to the API.', 'error');
+  return ok;
+}
+
 // Reads an uploaded file and returns a data URL cropped/resized to exactly RIBBON_W x RIBBON_H (cover-fit, no distortion).
 function resizeToRibbonSize(file){
   return new Promise((resolve, reject)=>{
@@ -358,9 +364,9 @@ document.getElementById('overlayUpload').addEventListener('change', async (e)=>{
   try{
     const dataUrl = await resizeToRibbonSize(file);
     RIBBON_OVERLAY = dataUrl;
-    await saveJSON('ribbonoverlay', { image: dataUrl });
     renderOverlayPreview();
-    showToast('Overlay image updated.', 'success');
+    const ok = await saveJSONChecked('ribbonoverlay', { image: dataUrl });
+    if(ok) showToast('Overlay image updated.', 'success');
   }catch(err){
     showToast('Could not process that image. Try a different file.', 'error');
   }
@@ -418,7 +424,7 @@ async function pruneFromMembers(key){
       changed = true;
     }
   });
-  if(changed) await saveJSON('ribbontracker', tracker);
+  if(changed) await saveJSONChecked('ribbontracker', tracker);
 }
 
 function renderRibbons(){
@@ -452,12 +458,12 @@ function renderRibbons(){
     `;
     row.querySelector('[data-field="label"]').addEventListener('change', async (e)=>{
       RIBBONS[idx].label = e.target.value;
-      await saveJSON('ribbons', RIBBONS);
+      await saveJSONChecked('ribbons', RIBBONS);
       renderRibbons();
     });
     row.querySelector('[data-field="inactive"]').addEventListener('change', async (e)=>{
       RIBBONS[idx].inactive = e.target.checked;
-      await saveJSON('ribbons', RIBBONS);
+      await saveJSONChecked('ribbons', RIBBONS);
     });
     row.querySelector('[data-field="image"]').addEventListener('change', async (e)=>{
       const file = e.target.files[0];
@@ -465,7 +471,7 @@ function renderRibbons(){
       try{
         const dataUrl = await resizeToRibbonSize(file);
         RIBBONS[idx].image = dataUrl;
-        await saveJSON('ribbons', RIBBONS);
+        await saveJSONChecked('ribbons', RIBBONS);
         row.querySelector('.swatch').style.backgroundImage = `url(${dataUrl})`;
         row.querySelector('[data-field="image"]').closest('label').firstChild.textContent = 'Replace';
       }catch(err){
@@ -480,7 +486,7 @@ function renderRibbons(){
         try{
           const dataUrl = await resizeNeckArt(file);
           RIBBONS[idx].neckImage = dataUrl;
-          await saveJSON('ribbons', RIBBONS);
+          await saveJSONChecked('ribbons', RIBBONS);
           renderRibbons();
         }catch(err){
           showToast('Could not process that image. Try a different file.', 'error');
@@ -491,7 +497,7 @@ function renderRibbons(){
     if(removeNeckBtn){
       removeNeckBtn.addEventListener('click', async ()=>{
         RIBBONS[idx].neckImage = null;
-        await saveJSON('ribbons', RIBBONS);
+        await saveJSONChecked('ribbons', RIBBONS);
         renderRibbons();
       });
     }
@@ -499,7 +505,7 @@ function renderRibbons(){
       if(!confirm(`Remove "${r.label}"? This will unassign it from any jackets that have it.`)) return;
       await pruneFromMembers(r.key);
       RIBBONS.splice(idx,1);
-      await saveJSON('ribbons', RIBBONS);
+      await saveJSONChecked('ribbons', RIBBONS);
       renderRibbons();
     });
     row.addEventListener('dragstart', ()=>{
@@ -516,7 +522,7 @@ function renderRibbons(){
       const newTargetIdx = RIBBONS.findIndex(x=>x.key===targetKey);
       RIBBONS.splice(newTargetIdx, 0, moved);
       dragSrcIdx = null;
-      await saveJSON('ribbons', RIBBONS);
+      await saveJSONChecked('ribbons', RIBBONS);
       renderRibbons();
     });
     list.appendChild(row);
@@ -566,7 +572,7 @@ document.getElementById('addBtn').addEventListener('click', async ()=>{
   document.getElementById('newUploadLabel').firstChild.textContent = 'Choose image';
   pendingImage = null;
   refreshAddButton();
-  await saveJSON('ribbons', RIBBONS);
+  await saveJSONChecked('ribbons', RIBBONS);
   renderRibbons();
 });
 
@@ -581,7 +587,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.082</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.085</div>
 
 </body>
 </html>

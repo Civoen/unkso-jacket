@@ -107,6 +107,7 @@ main{max-width:1200px; margin:0 auto; padding:32px;}
   pointer-events:none;
 }
 .ribbon{position:absolute; border-radius:1px; border:1px solid rgba(0,0,0,.35); background-size:cover; background-position:center; background-color:#2a2d22;}
+.ribbon-overlay{position:absolute; background-size:cover; background-position:center; background-repeat:no-repeat;}
 .badge{position:absolute; background-size:contain; background-position:center; background-repeat:no-repeat;}
 .pin{position:absolute; background-size:contain; background-position:center; background-repeat:no-repeat;}
 .badge-clasp{position:absolute; background-size:contain; background-position:center; background-repeat:no-repeat;}
@@ -397,7 +398,7 @@ function ribbonHTML(ribbonKeys, ribbonMap){
       if(!def) return;
       html += `<div class="ribbon" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background-image:${ribbonBackground(def)};"></div>`;
       if(def.inactive && RIBBON_OVERLAY){
-        html += `<div class="ribbon" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background-image:url(${RIBBON_OVERLAY});"></div>`;
+        html += `<div class="ribbon-overlay" style="left:${left}%; top:${top}%; width:${cellW}%; height:${cellH}%; background-image:url(${RIBBON_OVERLAY});"></div>`;
       }
     });
   });
@@ -1028,7 +1029,7 @@ async function init(){
 init();
 </script>
 
-<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.082</div>
+<div class="site-footer">Unknown Soldiers. Site created and maintained by Civoen. v.085</div>
 
 </body>
 </html>
